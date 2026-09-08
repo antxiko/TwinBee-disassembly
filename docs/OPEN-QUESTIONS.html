@@ -1,0 +1,110 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Open questions — Twin Bee (Konami, 1986)</title>
+<style>
+:root{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;--linea:#23262e;
+  --rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
+@media (prefers-color-scheme:light){:root{--tinta:#191a1e;--suave:#5a5d66;--fondo:#e9e7e1;
+  --panel:#f7f6f2;--linea:#d0cdc5;--rojo:#b23f34;--cyan:#1c6b7c;--verde:#2b7734;--oro:#8a7420}}
+:root[data-theme="dark"]{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;
+  --linea:#23262e;--rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
+:root[data-theme="light"]{--tinta:#191a1e;--suave:#5a5d66;--fondo:#e9e7e1;--panel:#f7f6f2;
+  --linea:#d0cdc5;--rojo:#b23f34;--cyan:#1c6b7c;--verde:#2b7734;--oro:#8a7420}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fondo);color:var(--tinta);padding:0 1.25rem 6rem;
+  font:15px/1.7 ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+.w{max-width:1120px;margin:0 auto}
+.n{max-width:68ch}
+h1,h2,h3,h4{font-weight:400;text-wrap:balance}
+a{color:var(--cyan)}
+img{image-rendering:pixelated;max-width:100%;height:auto;display:block}
+header.top{display:flex;flex-direction:column;align-items:center;gap:1.5rem;
+  padding:4rem 0 2rem;text-align:center}
+header.top img{width:min(100%,642px)}
+.claim{max-width:60ch;color:var(--suave);font-size:1.05rem}
+.claim b{color:var(--tinta);font-weight:400}
+.ficha{display:flex;flex-wrap:wrap;justify-content:center;gap:0 1.5rem;width:100%;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--suave);
+  border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);padding:.85rem 0}
+.ficha b{color:var(--rojo);font-weight:400}
+nav{display:flex;flex-wrap:wrap;gap:1.25rem;justify-content:center;padding:1.25rem 0;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+nav a{color:var(--suave);text-decoration:none;border-bottom:1px solid transparent}
+nav a:hover,nav a:focus{color:var(--tinta);border-bottom-color:var(--rojo)}
+nav.docs{border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);
+  margin-bottom:1rem}
+section{margin-top:4.5rem;scroll-margin-top:1rem}
+section>h2{font-size:1rem;letter-spacing:.1em;text-transform:uppercase;
+  border-left:3px solid var(--rojo);padding-left:.9rem;margin:0 0 1.5rem}
+.cifras{display:grid;gap:1px;background:var(--linea);border:1px solid var(--linea);
+  grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+.cifra{background:var(--panel);padding:1.1rem}
+.cifra b{display:block;font-size:1.7rem;color:var(--oro);font-weight:400;
+  font-variant-numeric:tabular-nums;line-height:1.2}
+.cifra span{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--suave)}
+.hall{border-top:1px solid var(--linea);padding-top:1.75rem;margin-top:2.5rem}
+.hall:first-of-type{border-top:0;padding-top:0;margin-top:0}
+.hall h3{margin:0 0 .75rem;font-size:1.15rem;color:var(--rojo)}
+.hall h4{color:var(--oro);margin:1.5rem 0 .5rem;font-size:.95rem}
+.hall p{margin:0 0 1rem}
+pre.asm{background:var(--panel);border-left:2px solid var(--verde);margin:1.25rem 0;
+  padding:1rem 1.1rem;overflow-x:auto;font-size:13px;line-height:1.6;color:var(--tinta)}
+.par{display:grid;gap:1.25rem;grid-template-columns:1fr}
+@media(min-width:820px){.par{grid-template-columns:1fr 1fr}}
+.par figure{margin:0}
+table{border-collapse:collapse;width:100%;margin:1.25rem 0;font-size:13px;display:block;
+  overflow-x:auto}
+th,td{text-align:left;padding:.5rem .75rem;border-bottom:1px solid var(--linea)}
+th{color:var(--suave);font-weight:400;font-size:11px;letter-spacing:.07em;text-transform:uppercase}
+td.num{font-variant-numeric:tabular-nums;color:var(--oro)}
+.nivel{margin-top:2rem}
+.nivel h3{margin:0 0 .9rem;font-size:.95rem;letter-spacing:.06em;text-transform:uppercase}
+.nivel em{color:var(--cyan);font-style:normal}
+.sep{color:var(--suave);margin:0 .6rem}
+.rejilla{display:grid;gap:.9rem;grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+.rejilla figure{margin:0;background:var(--panel);box-shadow:0 0 0 1px var(--linea)}
+.rejilla figcaption{display:flex;justify-content:space-between;padding:.45rem .65rem;
+  font-size:11px;color:var(--suave);border-top:1px solid var(--linea)}
+.dir{font-variant-numeric:tabular-nums;color:var(--verde)}
+footer{margin-top:5rem;padding-top:1.5rem;border-top:1px solid var(--linea);
+  color:var(--suave);font-size:12px}
+
+/* Aviso de trabajo en curso: tiene que verse antes que las cifras, porque un
+   100% mal leido hace mas dano que no ponerlo. */
+.aviso{background:#3a2a10;border-left:3px solid var(--oro);margin:1.5rem auto;
+  padding:1rem 1.2rem;max-width:900px;border-radius:4px}
+.aviso p{margin:0;color:var(--tinta);font-size:15px;line-height:1.65}
+/* Las ocho fases: en fila, a tamano real y con barra horizontal. En rejilla
+   una tira de 1952 px de alto sale como un churrete. */
+.fases{display:flex;gap:1.25rem;overflow-x:auto;padding-bottom:1rem;
+  margin:1.5rem 0;scroll-snap-type:x proximity}
+.fases figure{margin:0;flex:0 0 auto;width:256px;scroll-snap-align:start}
+.fases img{width:256px;height:auto;image-rendering:pixelated;
+  border:1px solid var(--linea);border-radius:3px}
+.fases figcaption{color:var(--suave);font-size:12.5px;margin-top:.5rem;
+  line-height:1.5}
+.galeria{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:1.5rem;margin:1.5rem 0}
+.galeria figure{margin:0}
+.galeria img{width:100%;height:auto;image-rendering:pixelated;
+  border:1px solid var(--linea);border-radius:3px}
+.galeria figcaption{color:var(--suave);font-size:13px;margin-top:.5rem}
+audio{display:block;width:100%;max-width:640px;margin:.75rem 0 1.5rem}
+</style>
+<div class="w"><nav class="top"><a href="index.html">Home</a><a href="GETTING-STARTED.html">Start</a><a href="THE-GAME.html">The game</a><a href="THE-CARTRIDGE.html">The cartridge</a><a href="THE-CODE.html">The code</a><a href="FINDINGS.html">Findings</a><a href="IN-THE-EMULATOR.html">In the emulator</a><a href="OPEN-QUESTIONS.html" style=color:var(--tinta)>Open questions</a><a href="es/PREGUNTAS-ABIERTAS.html" style="margin-left:auto;color:var(--oro)">Castellano</a></nav>
+<h1 id="open-questions">Open questions</h1>
+<p>What is <b>not</b> known. Nothing here is disguised as an answer.</p>
+<h2 id="the-forty-behaviours-are-named-by-number-not-by-what-they-do">The forty behaviours are named by number, not by what they do</h2>
+<p>The table at <code>0xAD60</code> dispatches forty enemy behaviours, and each one is a routine of its own. They are all traced, all commented and all reachable - but they are named <code>comportamiento_0</code> to <code>comportamiento_39</code>, which is the only thing that can be stated without playing each of them. Reading the code tells you <em>how</em> one moves; it does not tell you <em>which</em> enemy on screen it is. Tying each number to the thing you see would need a run per behaviour with a breakpoint on it.</p>
+<p>Five of the forty do double duty as the boss&#x27;s shots, which the table at <code>0xAE9E</code> names again: indices 6, 7, 8, 9 and 10.</p>
+<h2 id="what-the-tunes-are">What the tunes are</h2>
+<p>The 57 tunes at <code>0x511A</code> are decoded -the language the interpreter at <code>0x4F06</code> walks is documented- but none of them has been listened to and matched to a moment of the game. Which is the title tune, which the stage tune and which the one that plays when a bell is collected is not written down anywhere here.</p>
+<h2 id="the-three-per-stage-tables">The three per-stage tables</h2>
+<p><code>monta_la_fase_para_el_game_master</code> (<code>0x4103</code>) fills four variables out of four tables: <code>0x4153</code>, <code>0x6132</code>, <code>0x61D5</code> and <code>0x6210</code>. The first one is the height at which the boss appears, and the other three are landmarks the scenery compares itself against as it scrolls: <code>prepara_el_marcador</code> (<code>0x610E</code>) fires the boss when the map reaches <code>(0xEBB6)</code>, <code>mira_si_toca_nube</code> (<code>0x619D</code>) fires a cloud at <code>(0xEBB0)</code> and <code>mira_si_toca_musica</code> (<code>0x61E9</code>) changes the tune at <code>(0xEBB3)</code>. What is not clear is why the boss table has <b>four</b> entries for five stages, when the other three have five.</p>
+<h2 id="the-0x21-class">The 0x21 class</h2>
+<p><code>la_tanda_del_final</code> (<code>0xBD2B</code>) forces class <code>0x21</code> and sends them out one at a time, sixteen rounds, and <code>recarga_la_espera</code> (<code>0xAEFC</code>) gives that same class a special case: it does not reload its shot timer. It looks like the closing wave of a stage, but that has not been watched happening.</p>
+<h2 id="whether-anything-looks-for-twin-bee-besides-nemesis">Whether anything looks for Twin Bee besides Nemesis</h2>
+<p>Nemesis (RC-742) hunts for the six bytes of this cartridge&#x27;s mark through the slots. Whether Twin Bee looks for anybody in return has been checked and the answer is <b>no</b>: there is no <code>RDSLT</code>, no <code>CALSLT</code> and no slot walk anywhere in its code beyond the ENASLT of INIT. Whether any <em>other</em> Konami cartridge looks for Twin Bee is a question for those cartridges, not for this one.</p>
+<h2 id="the-0xf0ff-cheat-byte">The 0xF0FF cheat byte</h2>
+<p><code>0x44EC</code> writes into <code>0xF0FF</code> a value taken from the service bits of the second joystick read, and three places read it back: <code>0x5D73</code> gives you power at the start, <code>0x5D7A</code> gives you bells already loaded and <code>0xA3F7</code> doubles the weapon uses. What key combination produces each value has not been worked out - the byte comes out of <code>(0xE063)</code>, the whole row-5 keyboard read, and matching that to actual keys would need a run with a breakpoint and a hand on the keyboard.</p>
+<footer><p><em>Twin Bee</em> was published by Konami for the MSX in 1986; its catalogue number is RC-740 and it is 32 KB. All rights in the game remain with their holders. This is preservation, study and documentation work, and the cartridge image is not distributed.</p></footer></div>

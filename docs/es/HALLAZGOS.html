@@ -1,0 +1,136 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hallazgos — Twin Bee (Konami, 1986)</title>
+<style>
+:root{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;--linea:#23262e;
+  --rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
+@media (prefers-color-scheme:light){:root{--tinta:#191a1e;--suave:#5a5d66;--fondo:#e9e7e1;
+  --panel:#f7f6f2;--linea:#d0cdc5;--rojo:#b23f34;--cyan:#1c6b7c;--verde:#2b7734;--oro:#8a7420}}
+:root[data-theme="dark"]{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;
+  --linea:#23262e;--rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
+:root[data-theme="light"]{--tinta:#191a1e;--suave:#5a5d66;--fondo:#e9e7e1;--panel:#f7f6f2;
+  --linea:#d0cdc5;--rojo:#b23f34;--cyan:#1c6b7c;--verde:#2b7734;--oro:#8a7420}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fondo);color:var(--tinta);padding:0 1.25rem 6rem;
+  font:15px/1.7 ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+.w{max-width:1120px;margin:0 auto}
+.n{max-width:68ch}
+h1,h2,h3,h4{font-weight:400;text-wrap:balance}
+a{color:var(--cyan)}
+img{image-rendering:pixelated;max-width:100%;height:auto;display:block}
+header.top{display:flex;flex-direction:column;align-items:center;gap:1.5rem;
+  padding:4rem 0 2rem;text-align:center}
+header.top img{width:min(100%,642px)}
+.claim{max-width:60ch;color:var(--suave);font-size:1.05rem}
+.claim b{color:var(--tinta);font-weight:400}
+.ficha{display:flex;flex-wrap:wrap;justify-content:center;gap:0 1.5rem;width:100%;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--suave);
+  border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);padding:.85rem 0}
+.ficha b{color:var(--rojo);font-weight:400}
+nav{display:flex;flex-wrap:wrap;gap:1.25rem;justify-content:center;padding:1.25rem 0;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+nav a{color:var(--suave);text-decoration:none;border-bottom:1px solid transparent}
+nav a:hover,nav a:focus{color:var(--tinta);border-bottom-color:var(--rojo)}
+nav.docs{border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);
+  margin-bottom:1rem}
+section{margin-top:4.5rem;scroll-margin-top:1rem}
+section>h2{font-size:1rem;letter-spacing:.1em;text-transform:uppercase;
+  border-left:3px solid var(--rojo);padding-left:.9rem;margin:0 0 1.5rem}
+.cifras{display:grid;gap:1px;background:var(--linea);border:1px solid var(--linea);
+  grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+.cifra{background:var(--panel);padding:1.1rem}
+.cifra b{display:block;font-size:1.7rem;color:var(--oro);font-weight:400;
+  font-variant-numeric:tabular-nums;line-height:1.2}
+.cifra span{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--suave)}
+.hall{border-top:1px solid var(--linea);padding-top:1.75rem;margin-top:2.5rem}
+.hall:first-of-type{border-top:0;padding-top:0;margin-top:0}
+.hall h3{margin:0 0 .75rem;font-size:1.15rem;color:var(--rojo)}
+.hall h4{color:var(--oro);margin:1.5rem 0 .5rem;font-size:.95rem}
+.hall p{margin:0 0 1rem}
+pre.asm{background:var(--panel);border-left:2px solid var(--verde);margin:1.25rem 0;
+  padding:1rem 1.1rem;overflow-x:auto;font-size:13px;line-height:1.6;color:var(--tinta)}
+.par{display:grid;gap:1.25rem;grid-template-columns:1fr}
+@media(min-width:820px){.par{grid-template-columns:1fr 1fr}}
+.par figure{margin:0}
+table{border-collapse:collapse;width:100%;margin:1.25rem 0;font-size:13px;display:block;
+  overflow-x:auto}
+th,td{text-align:left;padding:.5rem .75rem;border-bottom:1px solid var(--linea)}
+th{color:var(--suave);font-weight:400;font-size:11px;letter-spacing:.07em;text-transform:uppercase}
+td.num{font-variant-numeric:tabular-nums;color:var(--oro)}
+.nivel{margin-top:2rem}
+.nivel h3{margin:0 0 .9rem;font-size:.95rem;letter-spacing:.06em;text-transform:uppercase}
+.nivel em{color:var(--cyan);font-style:normal}
+.sep{color:var(--suave);margin:0 .6rem}
+.rejilla{display:grid;gap:.9rem;grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+.rejilla figure{margin:0;background:var(--panel);box-shadow:0 0 0 1px var(--linea)}
+.rejilla figcaption{display:flex;justify-content:space-between;padding:.45rem .65rem;
+  font-size:11px;color:var(--suave);border-top:1px solid var(--linea)}
+.dir{font-variant-numeric:tabular-nums;color:var(--verde)}
+footer{margin-top:5rem;padding-top:1.5rem;border-top:1px solid var(--linea);
+  color:var(--suave);font-size:12px}
+
+/* Aviso de trabajo en curso: tiene que verse antes que las cifras, porque un
+   100% mal leido hace mas dano que no ponerlo. */
+.aviso{background:#3a2a10;border-left:3px solid var(--oro);margin:1.5rem auto;
+  padding:1rem 1.2rem;max-width:900px;border-radius:4px}
+.aviso p{margin:0;color:var(--tinta);font-size:15px;line-height:1.65}
+/* Las ocho fases: en fila, a tamano real y con barra horizontal. En rejilla
+   una tira de 1952 px de alto sale como un churrete. */
+.fases{display:flex;gap:1.25rem;overflow-x:auto;padding-bottom:1rem;
+  margin:1.5rem 0;scroll-snap-type:x proximity}
+.fases figure{margin:0;flex:0 0 auto;width:256px;scroll-snap-align:start}
+.fases img{width:256px;height:auto;image-rendering:pixelated;
+  border:1px solid var(--linea);border-radius:3px}
+.fases figcaption{color:var(--suave);font-size:12.5px;margin-top:.5rem;
+  line-height:1.5}
+.galeria{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:1.5rem;margin:1.5rem 0}
+.galeria figure{margin:0}
+.galeria img{width:100%;height:auto;image-rendering:pixelated;
+  border:1px solid var(--linea);border-radius:3px}
+.galeria figcaption{color:var(--suave);font-size:13px;margin-top:.5rem}
+audio{display:block;width:100%;max-width:640px;margin:.75rem 0 1.5rem}
+</style>
+<div class="w"><nav class="top"><a href="index.html">Portada</a><a href="EMPEZAR.html">Empezar</a><a href="EL-JUEGO.html">El juego</a><a href="EL-CARTUCHO.html">El cartucho</a><a href="EL-CODIGO.html">El código</a><a href="HALLAZGOS.html" style=color:var(--tinta)>Hallazgos</a><a href="EN-EL-EMULADOR.html">En el emulador</a><a href="PREGUNTAS-ABIERTAS.html">Preguntas abiertas</a><a href="../FINDINGS.html" style="margin-left:auto;color:var(--oro)">English</a></nav>
+<h1 id="hallazgos">Hallazgos</h1>
+<p>Lo que aparecio al desmontar el cartucho. Cada uno lleva la medida de la que sale, y casi todos estan vigilados por un test de <code>tests/test_listado.py</code> para que no dejen de ser ciertos sin que nadie se entere.</p>
+<h2 id="la-tabla-de-coseno-es-la-de-knightmare-con-dos-erratas-arregladas">La tabla de coseno es la de Knightmare, con dos erratas arregladas</h2>
+<p>Los 65 valores de <code>0xB950</code> son 255 × cos(k × 90/64), y son <b>la misma tabla</b> que la que Knightmare (RC-739) tiene en <code>0x844E</code>. De los 65 bytes solo se diferencian <b>tres</b>, y esos tres son justo los que Konami arreglo:</p>
+<table><tr><th>k</th><th>Knightmare</th><th>Twin Bee</th><th>255·cos(k·90/64)</th></tr><tr><td>46</td><td>105</td><td>105</td><td>109</td></tr><tr><td>56</td><td>46</td><td>48</td><td>50</td></tr><tr><td>58</td><td>47</td><td>37</td><td>37</td></tr><tr><td>64</td><td>1</td><td>0</td><td>0</td></tr></table>
+<p>Un cuadrante de coseno <b>solo puede bajar</b>. El de Knightmare sube en k=58 -47 donde la anterior vale 43-, que es lo unico que no puede hacer; el de Twin Bee pone ahi 37, que es lo que toca, y ademas deja cos(90) en cero en vez de uno.</p>
+<p>La que sobrevive es la de <b>k=46</b>: 105 donde tocaria 109. No rompe la monotonia, y por eso nadie la vio, y cuatro unidades de menos en un angulo de 64,7 grados no se notan jugando. Twin Bee es RC-740 y Knightmare RC-739: el arreglo viajo un cartucho adelante.</p>
+<h2 id="en-la-rom-solo-esta-media-nave">En la ROM solo esta media nave</h2>
+<p>De cada patron de sprite, el cartucho guarda <b>la mitad izquierda</b>: dieciseis bytes. La derecha la calcula <code>sube_patrones_de_sprite</code> (<code>0x4743</code>) invirtiendo cada byte bit a bit. Asi que todo lo que vuela en este juego es simetrico respecto a su eje vertical - y no es una decision artistica, son 16 bytes ahorrados por sprite.</p>
+<p>El mismo espejo mueve el decorado: <code>sube_espejado</code> (<code>0x4695</code>) sube el bloque comprimido con el bit 0 de C puesto, y el filtro del descompresor le da la vuelta a cada byte al salir.</p>
+<p>Comprobado: los 2.048 bytes de la tabla de patrones de sprite salen identicos a los del emulador en las cinco fases.</p>
+<h2 id="la-demostracion-es-una-partida-grabada">La demostracion es una partida grabada</h2>
+<p><code>arranca_la_demostracion</code> (<code>0x5FBF</code>) monta una partida de verdad -misma RAM, misma fase, mismo codigo- y le mete el mando por la <b>misma puerta</b> por la que entra el del jugador: <code>0x600E</code> salta a <code>guarda_lo_que_acaba_de_pulsarse</code> con HL en <code>0xE007</code>, que es donde el lector de mandos deja lo suyo.</p>
+<p>Lo que se juega son los <b>28 valores</b> de <code>0x6016</code>, uno cada 32 cuadros, hasta el <code>0xFF</code> que corta la partida.</p>
+<p>Y aqui esta lo que lo hace funcionar: para que la misma tira de pulsaciones de siempre la misma partida, el azar tiene que ser el mismo. Asi que <code>0x5FCF</code> pone <b>a cero el registro R</b> del Z80 antes de empezar. R es el contador de refresco, y es lo que este cartucho usa de dado en cinco sitios: <code>0xAF75</code>, <code>0xB2CE</code>, <code>0xB757</code>, <code>0xBE0C</code> y <code>0xBE36</code>. Sin ese <code>ld r,a</code> la demostracion se descarrilaria sola.</p>
+<h2 id="la-vram-de-mesa-de-trabajo">La VRAM de mesa de trabajo</h2>
+<p>El descompresor solo sabe escribir en la VRAM: saca los bytes por el puerto <code>0x98</code> y no tiene forma de dejarlos en la RAM. Asi que cuando el juego necesita una tabla comprimida <b>en memoria</b> -los 81 valores que deciden como se dan la mano las dos naves- la descomprime en <code>0x3B80</code>, un hueco de la tabla de atributos de sprites que nadie usa, y la trae de vuelta a <code>0xEB00</code> con LDIRMV (<code>0x5E0F</code>).</p>
+<h2 id="la-fase-3-no-tiene-color-propio">La fase 3 no tiene color propio</h2>
+<p><code>sube_el_color_comun</code> (<code>0x9F41</code>) mira la fase y, si es la tercera, sube el <b>mismo</b> bloque de color que las demas pero con el bit 7 del registro C puesto. Ese bit enciende la permuta de <code>0x47B5</code>, que cambia los nibbles: el 12 pasa a 6, el 6 a 12 y el 5 a 9. La misma hoja de casillas, otra paleta, y un juego entero de color ahorrado.</p>
+<h2 id="los-sprites-se-turnan-para-no-desaparecer-siempre-los-mismos">Los sprites se turnan para no desaparecer siempre los mismos</h2>
+<p>El TMS9918 pinta cuatro sprites por linea y descarta los de indice mas alto, asi que un juego con muchos enemigos parpadea siempre en los mismos. <code>sube_los_sprites</code> (<code>0x46CE</code>) deja los cuatro primeros fijos y sube los veintiocho restantes en un orden que <b>rota</b>: <code>(0xE00F)</code> avanza 0x10 en cada cuadro y da la vuelta al llegar a 0x1E, y dentro del bucle el paso es 0x44. Lo que se ve no es una desaparicion, es un parpadeo repartido.</p>
+<h2 id="tres-escrituras-a-la-propia-rom">Tres escrituras a la propia ROM</h2>
+<p><code>0x4028</code>, <code>0x4055</code> y <code>0x40FE</code> escriben en <code>0x4195</code>, <code>0x41A1</code> y <code>0x47F7</code>, los tres <b>dentro del cartucho</b>: el <code>ld</code> sale al bus y se pierde. De tener efecto, la primera dejaria un <code>pop hl / ret</code> donde hay un <code>djnz</code>, la segunda un <code>jp 0x0000</code> -o sea un reinicio- y la tercera apagaria la pantalla tocando el byte de R1 de la tabla de registros.</p>
+<p>Las dos primeras estan <b>iguales</b> en Knightmare (RC-739) y en The Goonies (RC-734), en las mismas posiciones relativas. Vienen del armazon, no de este juego.</p>
+<h2 id="veintisiete-bytes-de-codigo-al-que-no-llega-nadie">Veintisiete bytes de codigo al que no llega nadie</h2>
+<p>Cuatro trozos -<code>0x60CD</code> (5 bytes), <code>0xBB18</code> (5), <code>0xBB25</code> (6) y <code>0xBB38</code> (11)- son instrucciones validas y coherentes a las que <b>ningun salto entra</b>. En <code>0x60CD</code> se ve bien: el <code>jr z</code> de <code>0x60C9</code> cae en <code>0x60D2</code> y el <code>jr</code> de <code>0x60CB</code> en <code>0x60D6</code>, o sea justo por debajo y por encima, y lo que queda en medio hace lo mismo que <code>0x60DB</code>, que si se usa. Los otros tres son las variantes de 0x10 de codigo que si esta vivo.</p>
+<p>Comprobado en las dos direcciones: ningun salto cae ahi, y la palabra de esas direcciones no aparece en ninguna tabla del cartucho.</p>
+<h2 id="la-campana-da-lo-que-toca-por-turno-no-lo-que-dice-su-color">La campana da lo que toca por turno, no lo que dice su color</h2>
+<p>El premio de una campana no sale del color que se ve. Sale de un contador de 32 pasos, <code>(0xE364)</code>, que avanza una posicion cada vez que se recoge una y entra en una tabla de 32 casillas que empieza en <code>0xEB88</code>. Esa tabla <b>no esta en la ROM</b>: la escribe a mano <code>empieza_la_partida</code> con cinco <code>ld</code> y cuatro <code>rlca</code> (<code>0x5D41</code>–<code>0x5D51</code>), o sea que solo <b>cinco</b> de las treinta y dos posiciones traen premio -1 potencia, 2 doble disparo, 4 el brazo, 8 el arma y 0x10 el escudo- y las otras veintisiete solo dan puntos.</p>
+<p>Leido en el emulador, <code>0xEB88</code> tiene <code>00 00 00 00 01 00 00 00 02 … 04 … 08</code>. Exactamente eso.</p>
+<h2 id="un-escenario-noventa-y-nueve-fases">Un escenario, noventa y nueve fases</h2>
+<p>Hay cinco escenarios y noventa y nueve fases. <code>(0xE07D)</code> es el numero que se ve, en BCD, y sube de uno en uno hasta 99; <code>(0xE076)</code> es el escenario, y cuando su nibble bajo llega a seis vuelve a <code>0x11</code> -el primero otra vez, con el nibble alto contando vueltas. Llegar a la fase 99 es la unica manera de terminar Twin Bee.</p>
+<p>Y el escenario en si es un solo mapa de 1.761 filas -73 pantallas- montado con 248 bloques de 32 casillas. Lo que cambia de fase a fase son los dibujos de las casillas, no el mapa.</p>
+<h2 id="con-dos-jugadores-los-enemigos-tambien-se-turnan">Con dos jugadores, los enemigos tambien se turnan</h2>
+<p><code>elige_a_quien_apuntar</code> (<code>0xBA72</code>) conmuta <code>(0xE150)</code> con un <code>xor 1</code> en cada llamada. Un enemigo apunta a la primera nave y el siguiente a la segunda. Con un solo jugador vivo, todos van a por el.</p>
+<h2 id="la-segunda-cabecera-y-la-marca-que-busca-nemesis">La segunda cabecera, y la marca que busca Nemesis</h2>
+<p>En <code>0x4010</code> va la cabecera del <em>Konami Game Master</em>, y este cartucho no la lee nunca. El reparto de los bytes que siguen salio de ejecutar a mano el lector del propio Game Master, y <b>cuadra</b>: el ultimo campo acaba exactamente en <code>0x4025</code>, un byte antes de donde vuelve a haber codigo. Ese cuadre byte a byte es la prueba de que el reparto es ese y no otro.</p>
+<p>Y al final del todo, en <code>0xBFF7</code>, esta la marca oculta de Konami: <code>ba b7 9a ac 81 91 06 40 aa</code> - el titulo en katakana, la longitud, el <code>07 40</code> del RC-740 y el <code>0xAA</code> que cierra. <b>Lo descubrio Manuel Pazos</b>; sin su trabajo estos serian bytes de relleno.</p>
+<p>Y sus seis ultimos bytes son justamente los que Nemesis (RC-742) va buscando por las ranuras 0, <code>0x80</code>, <code>0x84</code>, <code>0x88</code> y <code>0x8C</code>, en su rutina de <code>0x505A</code>. Asi sabe Nemesis que Twin Bee esta enchufado al lado.</p>
+<h2 id="una-fuente-que-no-es-un-alfabeto">Una fuente que no es un alfabeto</h2>
+<p>La fuente de <code>0x49D0</code> tiene 0 a 9, el simbolo de copyright, un punto, una admiracion y solo las letras <b>A B C D E F G H I K L M N O P R S T U V W Y</b>. La J, la Q, la X y la Z sencillamente no estan: ningun rotulo de este cartucho las necesita.</p>
+<footer><p><em>Twin Bee</em> lo publico Konami para MSX en 1986; su numero de catalogo es RC-740 y son 32 KB. Todos los derechos sobre el juego siguen siendo de sus titulares. Este trabajo es de preservacion, estudio y documentacion, y la imagen del cartucho no se distribuye.</p></footer></div>

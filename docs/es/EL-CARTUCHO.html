@@ -1,0 +1,147 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>El cartucho — Twin Bee (Konami, 1986)</title>
+<style>
+:root{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;--linea:#23262e;
+  --rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
+@media (prefers-color-scheme:light){:root{--tinta:#191a1e;--suave:#5a5d66;--fondo:#e9e7e1;
+  --panel:#f7f6f2;--linea:#d0cdc5;--rojo:#b23f34;--cyan:#1c6b7c;--verde:#2b7734;--oro:#8a7420}}
+:root[data-theme="dark"]{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;
+  --linea:#23262e;--rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
+:root[data-theme="light"]{--tinta:#191a1e;--suave:#5a5d66;--fondo:#e9e7e1;--panel:#f7f6f2;
+  --linea:#d0cdc5;--rojo:#b23f34;--cyan:#1c6b7c;--verde:#2b7734;--oro:#8a7420}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fondo);color:var(--tinta);padding:0 1.25rem 6rem;
+  font:15px/1.7 ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+.w{max-width:1120px;margin:0 auto}
+.n{max-width:68ch}
+h1,h2,h3,h4{font-weight:400;text-wrap:balance}
+a{color:var(--cyan)}
+img{image-rendering:pixelated;max-width:100%;height:auto;display:block}
+header.top{display:flex;flex-direction:column;align-items:center;gap:1.5rem;
+  padding:4rem 0 2rem;text-align:center}
+header.top img{width:min(100%,642px)}
+.claim{max-width:60ch;color:var(--suave);font-size:1.05rem}
+.claim b{color:var(--tinta);font-weight:400}
+.ficha{display:flex;flex-wrap:wrap;justify-content:center;gap:0 1.5rem;width:100%;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--suave);
+  border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);padding:.85rem 0}
+.ficha b{color:var(--rojo);font-weight:400}
+nav{display:flex;flex-wrap:wrap;gap:1.25rem;justify-content:center;padding:1.25rem 0;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+nav a{color:var(--suave);text-decoration:none;border-bottom:1px solid transparent}
+nav a:hover,nav a:focus{color:var(--tinta);border-bottom-color:var(--rojo)}
+nav.docs{border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);
+  margin-bottom:1rem}
+section{margin-top:4.5rem;scroll-margin-top:1rem}
+section>h2{font-size:1rem;letter-spacing:.1em;text-transform:uppercase;
+  border-left:3px solid var(--rojo);padding-left:.9rem;margin:0 0 1.5rem}
+.cifras{display:grid;gap:1px;background:var(--linea);border:1px solid var(--linea);
+  grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+.cifra{background:var(--panel);padding:1.1rem}
+.cifra b{display:block;font-size:1.7rem;color:var(--oro);font-weight:400;
+  font-variant-numeric:tabular-nums;line-height:1.2}
+.cifra span{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--suave)}
+.hall{border-top:1px solid var(--linea);padding-top:1.75rem;margin-top:2.5rem}
+.hall:first-of-type{border-top:0;padding-top:0;margin-top:0}
+.hall h3{margin:0 0 .75rem;font-size:1.15rem;color:var(--rojo)}
+.hall h4{color:var(--oro);margin:1.5rem 0 .5rem;font-size:.95rem}
+.hall p{margin:0 0 1rem}
+pre.asm{background:var(--panel);border-left:2px solid var(--verde);margin:1.25rem 0;
+  padding:1rem 1.1rem;overflow-x:auto;font-size:13px;line-height:1.6;color:var(--tinta)}
+.par{display:grid;gap:1.25rem;grid-template-columns:1fr}
+@media(min-width:820px){.par{grid-template-columns:1fr 1fr}}
+.par figure{margin:0}
+table{border-collapse:collapse;width:100%;margin:1.25rem 0;font-size:13px;display:block;
+  overflow-x:auto}
+th,td{text-align:left;padding:.5rem .75rem;border-bottom:1px solid var(--linea)}
+th{color:var(--suave);font-weight:400;font-size:11px;letter-spacing:.07em;text-transform:uppercase}
+td.num{font-variant-numeric:tabular-nums;color:var(--oro)}
+.nivel{margin-top:2rem}
+.nivel h3{margin:0 0 .9rem;font-size:.95rem;letter-spacing:.06em;text-transform:uppercase}
+.nivel em{color:var(--cyan);font-style:normal}
+.sep{color:var(--suave);margin:0 .6rem}
+.rejilla{display:grid;gap:.9rem;grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+.rejilla figure{margin:0;background:var(--panel);box-shadow:0 0 0 1px var(--linea)}
+.rejilla figcaption{display:flex;justify-content:space-between;padding:.45rem .65rem;
+  font-size:11px;color:var(--suave);border-top:1px solid var(--linea)}
+.dir{font-variant-numeric:tabular-nums;color:var(--verde)}
+footer{margin-top:5rem;padding-top:1.5rem;border-top:1px solid var(--linea);
+  color:var(--suave);font-size:12px}
+
+/* Aviso de trabajo en curso: tiene que verse antes que las cifras, porque un
+   100% mal leido hace mas dano que no ponerlo. */
+.aviso{background:#3a2a10;border-left:3px solid var(--oro);margin:1.5rem auto;
+  padding:1rem 1.2rem;max-width:900px;border-radius:4px}
+.aviso p{margin:0;color:var(--tinta);font-size:15px;line-height:1.65}
+/* Las ocho fases: en fila, a tamano real y con barra horizontal. En rejilla
+   una tira de 1952 px de alto sale como un churrete. */
+.fases{display:flex;gap:1.25rem;overflow-x:auto;padding-bottom:1rem;
+  margin:1.5rem 0;scroll-snap-type:x proximity}
+.fases figure{margin:0;flex:0 0 auto;width:256px;scroll-snap-align:start}
+.fases img{width:256px;height:auto;image-rendering:pixelated;
+  border:1px solid var(--linea);border-radius:3px}
+.fases figcaption{color:var(--suave);font-size:12.5px;margin-top:.5rem;
+  line-height:1.5}
+.galeria{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:1.5rem;margin:1.5rem 0}
+.galeria figure{margin:0}
+.galeria img{width:100%;height:auto;image-rendering:pixelated;
+  border:1px solid var(--linea);border-radius:3px}
+.galeria figcaption{color:var(--suave);font-size:13px;margin-top:.5rem}
+audio{display:block;width:100%;max-width:640px;margin:.75rem 0 1.5rem}
+</style>
+<div class="w"><nav class="top"><a href="index.html">Portada</a><a href="EMPEZAR.html">Empezar</a><a href="EL-JUEGO.html">El juego</a><a href="EL-CARTUCHO.html" style=color:var(--tinta)>El cartucho</a><a href="EL-CODIGO.html">El código</a><a href="HALLAZGOS.html">Hallazgos</a><a href="EN-EL-EMULADOR.html">En el emulador</a><a href="PREGUNTAS-ABIERTAS.html">Preguntas abiertas</a><a href="../THE-CARTRIDGE.html" style="margin-left:auto;color:var(--oro)">English</a></nav>
+<h1 id="el-cartucho">El cartucho</h1>
+<p>32.768 bytes, mapeados en las <b>paginas 1 y 2</b> del MSX, o sea de <code>0x4000</code> a <code>0xBFFF</code>. No es un MegaROM: no hay conmutacion de bancos en ninguna parte.</p>
+<pre><code>sha256  02bdce8ceafe6af05a45b61a689e78807551df663afd152090f7cd9cac827dd4</code></pre>
+<h2 id="dos-cabeceras-no-una">Dos cabeceras, no una</h2>
+<p>En <code>0x4000</code> va la cabecera normal, <code>&quot;AB&quot;</code>, con <b>INIT en <code>0x40B1</code></b> y STATEMENT, DEVICE y TEXT a cero. Esa es la que lee la BIOS.</p>
+<p>En <code>0x4010</code> va una segunda, <code>&quot;CD&quot; 07 40</code>, y este cartucho <b>no la lee nunca</b>: esta puesta para el de al lado. Es la cabecera del <em>Konami Game Master</em>, el cartucho de trucos de la casa, y el reparto de los bytes que siguen no esta supuesto: sale de ejecutar a mano el lector del propio Game Master. Ese lector copia 21 bytes desde <code>0x4012</code>, saca el numero de catalogo y luego recorre un byte de <b>banderas</b> en <code>0x4014</code>: un <code>rra</code> por campo, y el bit a <b>cero</b> quiere decir que el campo viene.</p>
+<p>Con banderas <code>0x08</code> -solo el bit 3 puesto- los campos salen asi, y el ultimo acaba exactamente en <code>0x4025</code>, un byte antes de donde vuelve a haber codigo:</p>
+<table><tr><th>direccion</th><th>campo</th></tr><tr><td><code>0x4015</code></td><td><code>0xE000</code> y <code>0x04</code>: la variable de escena y la escena en la que se aplican los trucos</td></tr><tr><td><code>0x4018</code></td><td><code>0xE076</code> y <code>0x05</code>: la variable de fase y cuantas hay: cinco</td></tr><tr><td><code>0x401B</code></td><td><code>0xE070</code>: las vidas</td></tr><tr><td><code>0x401D</code></td><td><code>0xE06C</code>: el record</td></tr><tr><td><code>0x401F</code></td><td><code>0xE068</code>: la puntuacion</td></tr><tr><td><code>0x4021</code></td><td><code>0xE002</code>: los bits de modo</td></tr><tr><td><code>0x4023</code></td><td><code>0x4103</code>: una <b>rutina de este cartucho</b>, que el Game Master llama entre ranuras para dejar montada una fase</td></tr></table>
+<p>El campo que falta -el del bit 3- es el puntero al bloque de datos que el Game Master sabe guardar y cargar en disco. Twin Bee no declara ninguno.</p>
+<h2 id="la-marca-oculta">La marca oculta</h2>
+<p>Los nueve ultimos bytes utiles del cartucho, en <code>0xBFF7</code>:</p>
+<pre><code>ba b7 9a ac 81 91 06 40 aa</code></pre>
+<p>No los lee nadie de aqui dentro. Es la firma que Konami dejaba al final de sus ROM: el titulo en katakana, el <code>0x06</code> de la longitud, el <code>07 40</code> del RC-740 y el <code>0xAA</code> que cierra. <b>Lo descubrio Manuel Pazos</b>, y sin su trabajo estos bytes serian relleno.</p>
+<p>Y sus <b>seis ultimos bytes</b> son justamente los que Nemesis (RC-742) va buscando por las ranuras 0, <code>0x80</code>, <code>0x84</code>, <code>0x88</code> y <code>0x8C</code>: asi sabe Nemesis si Twin Bee esta enchufado al lado.</p>
+<h2 id="el-video">El video</h2>
+<p>La tabla de registros vive en <code>0x47F1</code> y se escribe <b>del registro 7 al 0</b> -<code>ld c,8</code> y luego <code>dec c</code>-, o sea al reves de como esta guardada:</p>
+<table><tr><th>registro</th><th>valor</th><th>que significa</th></tr><tr><td>R0</td><td><code>0x02</code></td><td>SCREEN 2</td></tr><tr><td>R1</td><td><code>0xE2</code></td><td>16 KB, pantalla e interrupcion activas, sprites de 16x16</td></tr><tr><td>R2</td><td><code>0x0E</code></td><td>tabla de nombres en <code>0x3800</code></td></tr><tr><td>R3</td><td><code>0x7F</code></td><td>color en <code>0x0000</code>, y el resto es mascara</td></tr><tr><td>R4</td><td><code>0x07</code></td><td>patrones en <code>0x2000</code></td></tr><tr><td>R5</td><td><code>0x76</code></td><td>atributos de sprite en <code>0x3B00</code></td></tr><tr><td>R6</td><td><code>0x03</code></td><td>patrones de sprite en <code>0x1800</code></td></tr><tr><td>R7</td><td><code>0xE4</code></td><td>tinta 14 sobre fondo 4, el azul del mar</td></tr></table>
+<p>R3 y R4 son la trampa de SCREEN 2: <b>no son direcciones</b>, son una base y una mascara. Leidos como direcciones ponen las tablas donde no van, las formas salen bien y los colores a franjas. Aqui caen ademas al reves de lo corriente: patrones <b>arriba</b>, color <b>abajo</b>.</p>
+<h2 id="el-mapa-de-memoria">El mapa de memoria</h2>
+<pre><code>0x4000 - 0x4025   las dos cabeceras
+0x4025 - 0x4103   el armazon: gancho, despachadores, INIT
+0x4103 - 0x4172   la rutina del Game Master y el reparto de escenas
+0x4182 - 0x4535   las ocho escenas
+0x4535 - 0x4652   la puntuacion, en BCD
+0x4652 - 0x47F9   el descompresor y las rutinas de VRAM
+0x47F9 - 0x48B4   los mandos
+0x48B4 - 0x4D1E   la presentacion y el titulo, con sus guiones
+0x4D1E - 0x518C   el reproductor de sonido
+0x518C - 0x5D20   las partituras
+0x5D20 - 0x6CD1   el juego: naves, disparos, bombas, campanas y nubes
+0x6CD1 - 0x6F8F   el decorado: scroll, guion del mapa y tramos
+0x6F8F - 0x8E8F   los 248 bloques de fila
+0x8E8F - 0x994A   patrones de sprite
+0x994A - 0xA14B   patrones y color del decorado
+0xA14B - 0xAD25   choques y oleadas
+0xAD25 - 0xBFF7   el motor de enemigos, la trigonometria y el jefe
+0xBFF7 - 0xC000   la marca oculta</code></pre>
+<h2 id="la-ram">La RAM</h2>
+<p>El juego borra de <code>0xE000</code> a <code>0xF0FF</code> al arrancar y pone la pila arriba del todo. Algunas referencias:</p>
+<pre><code>0xE000  la escena, y 0xE001 el paso dentro de ella
+0xE003  el contador de cuadros, que medio cartucho mira
+0xE007  lo que lee el mando, y 0xE009 lo que ACABA de pulsarse
+0xE010  los tres canales de sonido, 0x13 bytes cada uno
+0xE076  la fase, y 0xE07D el numero que se ve, en BCD
+0xE0A0  las dos naves
+0xE100  los disparos
+0xE160  los catorce enemigos, 0x20 bytes cada uno
+0xE320  el jefe
+0xE400  el mapa, descomprimido
+0xEB00  la tabla del abrazo, traida de la VRAM
+0xEC40  el buffer de la pantalla, 768 bytes
+0xEF80  el buffer de sprites, 32 sprites</code></pre>
+<footer><p><em>Twin Bee</em> lo publico Konami para MSX en 1986; su numero de catalogo es RC-740 y son 32 KB. Todos los derechos sobre el juego siguen siendo de sus titulares. Este trabajo es de preservacion, estudio y documentacion, y la imagen del cartucho no se distribuye.</p></footer></div>

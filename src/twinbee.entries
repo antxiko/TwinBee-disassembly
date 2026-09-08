@@ -1,0 +1,21 @@
+# Puntos de entrada que el trazado NO puede deducir solo.
+#
+# Cada uno lleva su justificacion: si no se puede decir POR QUE es codigo, no
+# se declara.
+
+0x40b1   ; INIT, la direccion que declara la cabecera "AB" de 0x4000
+0x402e   ; gancho de interrupcion H.KEYI, instalado por INIT en 0x40D3 (0xFD9A)
+0x4103   ; la rutina que el Game Master llama entre ranuras: es el ultimo campo de su cabecera (0x4023 = 03 41)
+
+# Las tablas de punteros que siguen a cada `call 40ABh` (tools/tablas_despacho.py).
+!tabla 0x4172   8   # tras el `call 40ABh` de 0x416F; sigue en 0x4182
+!tabla 0xad60  40   # tras el `call 40ABh` de 0xAD5D; sigue en 0xAFD0
+!tabla 0xadcc   5   # tras el `call 40ABh` de 0xADC9; sigue en 0xB108
+!tabla 0xae9e   5   # tras el `call 40ABh` de 0xAE9B; sigue en 0xB15D
+
+# La que se apila como direccion de retorno (`ld hl,NNNN / push hl`): el
+# trazado no puede seguir un `ret`, asi que hay que declararla. El otro par
+# `ld hl / push hl` del cartucho -0x460F con 0x6D74- NO es una direccion de
+# retorno sino el puntero del guion del mapa, que 0x4613 recoge con `pop hl`.
+0x4493   ; apilada en 0x4166, antes del `call 40ABh` de 0x416F
+

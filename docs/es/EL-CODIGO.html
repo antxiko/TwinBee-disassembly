@@ -1,0 +1,148 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>El codigo — Twin Bee (Konami, 1986)</title>
+<style>
+:root{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;--linea:#23262e;
+  --rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
+@media (prefers-color-scheme:light){:root{--tinta:#191a1e;--suave:#5a5d66;--fondo:#e9e7e1;
+  --panel:#f7f6f2;--linea:#d0cdc5;--rojo:#b23f34;--cyan:#1c6b7c;--verde:#2b7734;--oro:#8a7420}}
+:root[data-theme="dark"]{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;
+  --linea:#23262e;--rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
+:root[data-theme="light"]{--tinta:#191a1e;--suave:#5a5d66;--fondo:#e9e7e1;--panel:#f7f6f2;
+  --linea:#d0cdc5;--rojo:#b23f34;--cyan:#1c6b7c;--verde:#2b7734;--oro:#8a7420}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fondo);color:var(--tinta);padding:0 1.25rem 6rem;
+  font:15px/1.7 ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+.w{max-width:1120px;margin:0 auto}
+.n{max-width:68ch}
+h1,h2,h3,h4{font-weight:400;text-wrap:balance}
+a{color:var(--cyan)}
+img{image-rendering:pixelated;max-width:100%;height:auto;display:block}
+header.top{display:flex;flex-direction:column;align-items:center;gap:1.5rem;
+  padding:4rem 0 2rem;text-align:center}
+header.top img{width:min(100%,642px)}
+.claim{max-width:60ch;color:var(--suave);font-size:1.05rem}
+.claim b{color:var(--tinta);font-weight:400}
+.ficha{display:flex;flex-wrap:wrap;justify-content:center;gap:0 1.5rem;width:100%;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--suave);
+  border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);padding:.85rem 0}
+.ficha b{color:var(--rojo);font-weight:400}
+nav{display:flex;flex-wrap:wrap;gap:1.25rem;justify-content:center;padding:1.25rem 0;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+nav a{color:var(--suave);text-decoration:none;border-bottom:1px solid transparent}
+nav a:hover,nav a:focus{color:var(--tinta);border-bottom-color:var(--rojo)}
+nav.docs{border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);
+  margin-bottom:1rem}
+section{margin-top:4.5rem;scroll-margin-top:1rem}
+section>h2{font-size:1rem;letter-spacing:.1em;text-transform:uppercase;
+  border-left:3px solid var(--rojo);padding-left:.9rem;margin:0 0 1.5rem}
+.cifras{display:grid;gap:1px;background:var(--linea);border:1px solid var(--linea);
+  grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+.cifra{background:var(--panel);padding:1.1rem}
+.cifra b{display:block;font-size:1.7rem;color:var(--oro);font-weight:400;
+  font-variant-numeric:tabular-nums;line-height:1.2}
+.cifra span{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--suave)}
+.hall{border-top:1px solid var(--linea);padding-top:1.75rem;margin-top:2.5rem}
+.hall:first-of-type{border-top:0;padding-top:0;margin-top:0}
+.hall h3{margin:0 0 .75rem;font-size:1.15rem;color:var(--rojo)}
+.hall h4{color:var(--oro);margin:1.5rem 0 .5rem;font-size:.95rem}
+.hall p{margin:0 0 1rem}
+pre.asm{background:var(--panel);border-left:2px solid var(--verde);margin:1.25rem 0;
+  padding:1rem 1.1rem;overflow-x:auto;font-size:13px;line-height:1.6;color:var(--tinta)}
+.par{display:grid;gap:1.25rem;grid-template-columns:1fr}
+@media(min-width:820px){.par{grid-template-columns:1fr 1fr}}
+.par figure{margin:0}
+table{border-collapse:collapse;width:100%;margin:1.25rem 0;font-size:13px;display:block;
+  overflow-x:auto}
+th,td{text-align:left;padding:.5rem .75rem;border-bottom:1px solid var(--linea)}
+th{color:var(--suave);font-weight:400;font-size:11px;letter-spacing:.07em;text-transform:uppercase}
+td.num{font-variant-numeric:tabular-nums;color:var(--oro)}
+.nivel{margin-top:2rem}
+.nivel h3{margin:0 0 .9rem;font-size:.95rem;letter-spacing:.06em;text-transform:uppercase}
+.nivel em{color:var(--cyan);font-style:normal}
+.sep{color:var(--suave);margin:0 .6rem}
+.rejilla{display:grid;gap:.9rem;grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+.rejilla figure{margin:0;background:var(--panel);box-shadow:0 0 0 1px var(--linea)}
+.rejilla figcaption{display:flex;justify-content:space-between;padding:.45rem .65rem;
+  font-size:11px;color:var(--suave);border-top:1px solid var(--linea)}
+.dir{font-variant-numeric:tabular-nums;color:var(--verde)}
+footer{margin-top:5rem;padding-top:1.5rem;border-top:1px solid var(--linea);
+  color:var(--suave);font-size:12px}
+
+/* Aviso de trabajo en curso: tiene que verse antes que las cifras, porque un
+   100% mal leido hace mas dano que no ponerlo. */
+.aviso{background:#3a2a10;border-left:3px solid var(--oro);margin:1.5rem auto;
+  padding:1rem 1.2rem;max-width:900px;border-radius:4px}
+.aviso p{margin:0;color:var(--tinta);font-size:15px;line-height:1.65}
+/* Las ocho fases: en fila, a tamano real y con barra horizontal. En rejilla
+   una tira de 1952 px de alto sale como un churrete. */
+.fases{display:flex;gap:1.25rem;overflow-x:auto;padding-bottom:1rem;
+  margin:1.5rem 0;scroll-snap-type:x proximity}
+.fases figure{margin:0;flex:0 0 auto;width:256px;scroll-snap-align:start}
+.fases img{width:256px;height:auto;image-rendering:pixelated;
+  border:1px solid var(--linea);border-radius:3px}
+.fases figcaption{color:var(--suave);font-size:12.5px;margin-top:.5rem;
+  line-height:1.5}
+.galeria{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:1.5rem;margin:1.5rem 0}
+.galeria figure{margin:0}
+.galeria img{width:100%;height:auto;image-rendering:pixelated;
+  border:1px solid var(--linea);border-radius:3px}
+.galeria figcaption{color:var(--suave);font-size:13px;margin-top:.5rem}
+audio{display:block;width:100%;max-width:640px;margin:.75rem 0 1.5rem}
+</style>
+<div class="w"><nav class="top"><a href="index.html">Portada</a><a href="EMPEZAR.html">Empezar</a><a href="EL-JUEGO.html">El juego</a><a href="EL-CARTUCHO.html">El cartucho</a><a href="EL-CODIGO.html" style=color:var(--tinta)>El código</a><a href="HALLAZGOS.html">Hallazgos</a><a href="EN-EL-EMULADOR.html">En el emulador</a><a href="PREGUNTAS-ABIERTAS.html">Preguntas abiertas</a><a href="../THE-CODE.html" style="margin-left:auto;color:var(--oro)">English</a></nav>
+<h1 id="el-codigo">El codigo</h1>
+<h2 id="todo-cuelga-de-la-interrupcion">Todo cuelga de la interrupcion</h2>
+<p>INIT (<code>0x40B1</code>) hace cuatro cosas y ninguna mas: averigua en que ranura esta el cartucho y conecta la pagina 2, instala un <code>jp</code> a <code>0x402E</code> en el gancho H.KEYI, limpia la RAM y cae en un <code>jr $</code> en <code>0x40F9</code>.</p>
+<p>A partir de ahi <b>el juego entero corre dentro de la interrupcion</b>. <code>cada_cuadro</code> (<code>0x402E</code>) es la cabecera: el sonido lo primero, luego un cerrojo para que no entre un cuadro dentro de otro, y luego los mandos y la escena.</p>
+<p>Este es el armazon que comparten los cartuchos de Konami de 1986: Knightmare (RC-739) y The Goonies (RC-734) llevan el mismo, hasta en dos <code>ld</code> que escriben sobre la propia ROM del cartucho en las mismas posiciones relativas y no llegan a ninguna parte.</p>
+<h2 id="el-despachador-de-dos-instrucciones">El despachador de dos instrucciones</h2>
+<pre><code>reparte_por_tabla:
+    pop hl              ; la direccion de retorno ES la tabla
+    call palabra_de_tabla
+    ex de,hl
+    jp (hl)</code></pre>
+<p>La tabla va <b>justo detras del <code>call</code></b>, dentro del codigo. Un <code>call reparte_por_tabla</code> seguido de ocho palabras es un <code>switch</code> de ocho casos, y el <code>ret</code> de la rutina a la que caiga vuelve a quien llamo al que llamo. En el cartucho hay cuatro, y entre los cuatro reparten las ocho escenas, los cuarenta comportamientos de enemigo, los cinco jefes y los cinco disparos de jefe.</p>
+<h2 id="las-escenas-y-por-que-la-primera-esta-la-ultima">Las escenas, y por que la primera esta la ultima</h2>
+<p><code>(0xE000)</code> es la escena y <code>(0xE001)</code> el paso dentro de ella. El reparto elige una de ocho rutinas, y dentro de cada una los pasos se encadenan con <code>djnz</code>:</p>
+<pre><code>escena_0_la_presentacion:
+    djnz L_4195          ; paso 0 y paso 2 para abajo, mas adelante
+    ...                  ; paso 1</code></pre>
+<p>Con B a uno el primer <code>djnz</code> no salta y cae en la primera rama; con dos salta una vez; y con <b>cero</b> el <code>djnz</code> deja B en 0xFF y salta <b>tambien</b>. Asi que el paso 0 -el que monta la pantalla- acaba en la <em>ultima</em> rama de la cadena. Por eso en este listado la preparacion de cada escena se lee al final y no al principio.</p>
+<h2 id="el-descompresor">El descompresor</h2>
+<p>Todo lo que este cartucho mete en la VRAM pasa por <code>0x4716</code>. El formato, leido instruccion a instruccion en <code>0x471F</code>:</p>
+<table><tr><th>byte</th><th>que significa</th></tr><tr><td><code>0x00</code></td><td>fin del bloque</td></tr><tr><td><code>&lt; 0x80</code></td><td><b>repeticion</b>: el byte siguiente, tantas veces</td></tr><tr><td><code>0x80</code></td><td>cambio de destino: los dos bytes siguientes son la nueva direccion de VRAM, y de paso se apaga el filtro</td></tr><tr><td><code>&gt; 0x80</code></td><td><b>literales</b>: los <code>n &amp; 0x7F</code> bytes siguientes, tal cual</td></tr></table>
+<p>Y cada byte que sale pasa por el filtro de <code>0x4786</code>, que mira el registro C:</p>
+<ul><li><b>bit 0</b>: el byte se invierte bit a bit -los ocho <code>rr l / rla</code> de <code>0x4793</code>-. Es el espejo horizontal: media nave guardada y la otra media calculada.</li><li><b>bit 7</b>: <b>permuta de color</b> (<code>0x47B5</code>), nibble a nibble: el 12 pasa a 6 siempre; y si ademas esta el bit 0, el 10 se queda, el 6 pasa a 12 y el 5 a 9.</li></ul>
+<p><code>sube_espejado</code> (<code>0x4695</code>) entra con C=1 y <code>sube_tal_cual</code> (<code>0x4699</code>) con C=0; los dos repiten el mismo bloque <b>tres veces</b>, subiendo 0x800 en la VRAM, que son los tres bancos de SCREEN 2.</p>
+<h2 id="los-sprites-estan-a-medias">Los sprites estan a medias</h2>
+<p><code>sube_patrones_de_sprite</code> (<code>0x4743</code>) lee dieciseis bytes -media pareja- y los escribe seguidos de <b>esos mismos dieciseis invertidos</b>. Un patron de sprite de 16x16 son 32 bytes, y los dieciseis primeros son la mitad izquierda: media guardada mas media calculada es un sprite cuyo lado derecho es el espejo del izquierdo. Por eso todos los enemigos, las naves y las campanas de Twin Bee son simetricos.</p>
+<h2 id="la-vram-de-mesa-de-trabajo">La VRAM de mesa de trabajo</h2>
+<p>El descompresor <b>solo sabe escribir en la VRAM</b>. Asi que cuando el juego necesita una tabla comprimida <b>en la RAM</b> -los 81 valores que deciden como se dan la mano las dos naves- la descomprime en <code>0x3B80</code>, un hueco de la tabla de atributos de sprites que nadie usa, y la trae de vuelta a <code>0xEB00</code> con LDIRMV. La memoria de video hace de banco de trabajo.</p>
+<h2 id="el-decorado">El decorado</h2>
+<p>Una fila de la pantalla es un <b>bloque de 32 casillas</b>, y el mapa es la lista de esos bloques:</p>
+<ol><li><code>descomprime_el_mapa</code> (<code>0x460C</code>) recorre el guion de <code>0x6D74</code>. Cada byte indexa la tabla de tramos de <code>0x6E01</code>, y el tramo que saca -una lista de codigos de fila cerrada con 0xFF- se copia tal cual a <code>0xE400</code>.</li><li><code>la_fila_numero</code> (<code>0x6D62</code>) convierte un codigo de fila en direccion con cinco <code>add hl,hl</code>, o sea indice por 32, mas <code>0x6F8F</code>.</li><li><code>monta_las_veinticuatro_filas</code> (<code>0x6D08</code>) copia veinticuatro de ellas al buffer de la pantalla, con treinta y dos <code>ldi</code> seguidos cada una.</li></ol>
+<p>La cuenta cierra sola: entre <code>0x6F8F</code> y <code>0x8E8F</code> hay <code>0x1F00</code> bytes, que son 248 filas exactas, y el codigo mas alto que gastan los tramos es 0xF7 = 247.</p>
+<h2 id="los-sprites-se-turnan">Los sprites se turnan</h2>
+<p>El TMS9918 pinta cuatro sprites por linea y descarta el resto. <code>sube_los_sprites</code> (<code>0x46CE</code>) deja los cuatro primeros fijos -las naves y sus disparos- y sube los otros veintiocho en un orden que <b>rota</b>: <code>(0xE00F)</code> avanza 0x10 por cuadro y da la vuelta en 0x1E, y el paso dentro del bucle es 0x44. Ningun enemigo se queda sin pintar dos cuadros seguidos.</p>
+<h2 id="los-enemigos">Los enemigos</h2>
+<p>Catorce huecos de 0x20 bytes desde <code>0xE160</code>, siempre con el mismo reparto:</p>
+<pre><code>(ix+0)      el dibujo
+(ix+1)      la clase: el indice en la tabla de cuarenta
+(ix+2,3)    la velocidad vertical, con su fraccion
+(ix+4,5)    la horizontal
+(ix+6,7)    la posicion vertical
+(ix+8,9)    la horizontal
+(ix+10,11)  el patron y el color del sprite
+(ix+14)     la espera entre disparos
+(ix+16)     el contador de cuadros
+(ix+19)     el rumbo, en una circunferencia de 256 grados</code></pre>
+<p>Las clases <code>0xFF</code> y <code>0xFE</code> estan reservadas -la primera apaga el hueco y la segunda quiere decir que se esta muriendo- y por eso <code>0xAD42</code> y <code>0xAD51</code> hacen dos <code>inc a</code> antes de repartir.</p>
+<h2 id="la-trigonometria">La trigonometria</h2>
+<p>Un cuadrante de coseno, 65 valores en <code>0xB950</code>, y de ahi salen el seno, el coseno y los cuatro cuadrantes: <code>seno_y_coseno</code> (<code>0xB921</code>) lo indexa con el angulo y arregla el signo segun el cuadrante, y saca el seno de la <b>misma tabla</b> entrando por <code>0x40 - k</code>.</p>
+<p>Al reves -de un par de distancias a un angulo- lo hace <code>angulo_hacia_la_nave</code> (<code>0xB850</code>): divide con ocho bits de fraccion y recorre las ocho tangentes de <code>0xB991</code> de mayor a menor, ocho grados por paso.</p>
+<h2 id="el-sonido">El sonido</h2>
+<p>Tres canales de tono mas ruido, todos movidos desde la interrupcion por <code>el_reproductor</code> (<code>0x4E48</code>). Una peticion lleva la melodia en los seis bits bajos y la <b>prioridad</b> en los dos altos: si lo que ya suena manda mas, la peticion se descarta.</p>
+<p>Cada melodia es un guion que recorre el interprete de <code>0x4F06</code>: <code>0xFE</code> salta, <code>0xFF</code> y arriba acaban, un byte de nibble alto 2 cambia el instrumento y la duracion, uno de nibble alto 1 pone la envolvente del PSG, y cualquier otro es una <b>nota</b> -volumen en el nibble alto, octava en el bajo, con el codigo de nota en el byte siguiente-. Los periodos salen de doce semitonos en <code>0x510E</code>, y las octavas se hacen doblando con <code>add hl,hl</code>.</p>
+<footer><p><em>Twin Bee</em> lo publico Konami para MSX en 1986; su numero de catalogo es RC-740 y son 32 KB. Todos los derechos sobre el juego siguen siendo de sus titulares. Este trabajo es de preservacion, estudio y documentacion, y la imagen del cartucho no se distribuye.</p></footer></div>

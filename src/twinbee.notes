@@ -1,0 +1,2527 @@
+# ======================================================================
+# TWIN BEE (Konami RC-740, 1986)
+# ======================================================================
+# Anotaciones del desensamblado. Formato: ver la cabecera de tools/mkasm.py.
+#
+# Cada directiva D declara un rango de datos con su nombre y con la MEDIDA de
+# la que sale. Ningun limite esta puesto a ojo.
+#
+# El armazon es el de los Konami de 1986 -el mismo de Knightmare (RC-739) y
+# The Goonies (RC-734)-: una cabecera "AB" cuyo INIT no hace mas que instalar
+# un gancho de interrupcion y quedarse en un `jr $`, y a partir de ahi el
+# juego entero cuelga de la interrupcion, con una tabla de escenas y un
+# despachador de dos instrucciones.
+
+# ======================================================================
+# LAS DOS CABECERAS
+# ======================================================================
+D 0x4000 0x4010 cabecera_del_cartucho  "AB" y la direccion de INIT (0x40B1). STATEMENT, DEVICE y TEXT a cero, y los seis bytes reservados tambien
+F 0x4000 w
+
+# LA SEGUNDA CABECERA, la del Konami Game Master: el cartucho de trucos de la
+# casa, que se enchufa en la otra ranura, identifica el juego por aqui y sabe
+# que direcciones tocarle. Este cartucho NO la lee -no hay una sola referencia
+# a 0x4010..0x4025 en su codigo-: esta puesta para el de al lado.
+#
+# El reparto de estos bytes no esta a ojo: sale de EJECUTAR A MANO el lector
+# del propio Game Master, que esta desensamblado en GAMEMASTER_DISAM (0x5E92).
+# Ese lector copia 21 bytes desde 0x4012, saca el numero de catalogo y luego
+# usa el byte de BANDERAS de 0x4014: cada `rra` saca un bit, y el bit A CERO
+# quiere decir que el campo VIENE. Con banderas 0x08 -solo el bit 3 puesto-
+# los campos salen como se dice abajo, y el ultimo acaba exactamente en
+# 0x4025, donde vuelve a haber codigo. Ese cuadre byte a byte es la prueba de
+# que el reparto es este y no otro.
+D 0x4010 0x4014 cabecera_del_game_master  "CD" 07 40: el 0x07 de los RC-7xx y el 0x40 de RC-740. El "CD" es el marcador de los cartuchos de 1986-87, frente al "AB" de los de 1985
+F 0x4010 4
+D 0x4014 0x4015 banderas_del_game_master  0x08: vienen los ocho campos menos el del bit 3, que es el puntero al bloque de datos que el Game Master sabe guardar y cargar en disco (0xD30C alli). Twin Bee no declara ninguno
+F 0x4014 1
+D 0x4015 0x4025 punteros_del_game_master  Los siete campos que declara el cartucho, en el orden en que los lee 0x5E92 del Game Master: 0xE000 y 0x04 (la variable de escena y la escena en la que hay que aplicar los trucos), 0xE076 y 0x05 (la variable de fase y CUANTAS hay: cinco), 0xE070 (las vidas), 0xE06C (el record), 0xE068 (la puntuacion), 0xE002 (los bits de modo) y 0x4103, que es una RUTINA de este cartucho que el Game Master llama entre ranuras para dejar montada la fase que se le pida
+F 0x4015 w2,1,w2,1,w5
+
+# ======================================================================
+# EL ARMAZON
+# ======================================================================
+L 0x4025 arranca_la_pantalla_del_titulo  Parchea 0x4195 -que esta en ROM, asi que el `ld` no llega a ninguna parte- y se va a montar el cartel
+L 0x402E cada_cuadro                El gancho de H.KEYI: el juego ENTERO cuelga de aqui
+L 0x4048 remata_la_interrupcion
+L 0x4052 pon_registro_del_vdp       B el valor, C el numero de registro
+L 0x405B palabra_de_tabla_de_cuatro  Un `add a,a` suelto delante de la rutina de al lado: con el, las entradas de la tabla son de CUATRO bytes en vez de dos
+L 0x405C palabra_de_tabla           Devuelve en DE la palabra numero A de la tabla HL
+L 0x4063 es_el_segundo_jugador      El bit 5 de (0xE002); vuelve con Z si NO lo es
+L 0x4069 indexa_palabras            HL += 2A
+L 0x406A suma_a_a_hl                HL += A, con el acarreo al alto
+L 0x406F suma_a_a_de                DE += A, igual
+L 0x40AB reparte_por_tabla          El `pop hl` recoge la tabla: es la direccion de retorno, o sea los bytes que van justo detras del `call`
+L 0x40B1 INIT                       Lo que ejecuta la BIOS al encontrar la "AB" de 0x4000
+L 0x40F9 el_bucle_vacio             INIT acaba aqui: a partir de este `jr $` todo pasa en la interrupcion
+L 0x4103 monta_la_fase_para_el_game_master  El ultimo campo de la cabecera de 0x4010, y la unica rutina de este cartucho que el Game Master llama entre ranuras
+L 0x415B reparte_la_escena          Cuenta el cuadro y despacha por (0xE000)
+
+D 0x4153 0x415B alturas_de_la_fase  Cuatro palabras, una por fase de la 1 a la 4, que 0x4147 mete en (0xE3A0). Son la primera de las tablas por fase que monta la rutina del Game Master
+F 0x4153 w
+
+D 0x4172 0x4182 tabla_de_escenas  Las ocho escenas del juego, y el `call 40ABh` de 0x416F reparte por (0xE000): 0 presentacion, 1 el titulo, 2 la partida, 3 la fase superada, 4 empieza la fase, 5 el juego, 6 se acabo y 7 el marcador final
+F 0x4172 w
+
+# ======================================================================
+# LAS ESCENAS
+# ======================================================================
+B 0x4182 LAS OCHO ESCENAS. Cada una entra con B = (0xE001), el paso dentro de la escena, y encadena `djnz` para repartir: el paso 0 cae en la primera, el 1 en la segunda y asi. Al final casi todas pasan por 0x41DA, que cuenta un paso mas.
+L 0x4182 escena_0_la_presentacion
+L 0x41B1 escena_1_el_titulo
+L 0x41BB escena_2_empieza_la_partida
+L 0x41D7 pon_la_espera              A cuadros de espera en (0xE004)
+L 0x41DA pasa_al_siguiente_paso
+L 0x41DF escena_3_fase_superada
+L 0x4211 escena_4_monta_la_fase
+L 0x4222 escena_5_el_juego
+L 0x42A2 empieza_la_escena_siguiente
+L 0x42A5 pasa_a_la_escena_siguiente
+L 0x42AE cuenta_atras_de_los_dos     Los dos jugadores, con IX en su bloque de sprites y DE en sus variables
+L 0x42CC borra_el_primer_sprite
+L 0x42F2 escena_6_se_acabo
+L 0x432A escena_7_el_marcador_final
+
+# ======================================================================
+# EL DESCOMPRESOR
+# ======================================================================
+B 0x4695 EL DESCOMPRESOR. Todo lo que este cartucho mete en la VRAM pasa por aqui. El formato, leido en 0x471F: un 0x00 acaba; un byte menor que 0x80 es una REPETICION -el byte siguiente, tantas veces-; el 0x80 exacto cambia el destino, que viene en las dos siguientes, y de paso apaga el filtro; y cualquier otro son (n & 0x7F) bytes LITERALES. Y cada byte que sale pasa por el filtro de 0x4786, que mira el registro C: con el bit 0 el byte se invierte bit a bit -el espejo horizontal, que es como se guarda media nave y se calcula la otra mitad- y con el bit 7 se permutan los colores.
+L 0x4652 limpia_la_pantalla
+L 0x465F prepara_la_escritura        SETWRT y deja en C el puerto de datos del VDP
+L 0x4667 saca_el_destino_del_bloque  Los dos primeros bytes de un bloque son su direccion de VRAM
+L 0x466E sube_la_pantalla            Los 768 bytes del buffer de 0xEC40 a la tabla de nombres, de 0x40 en 0x40
+L 0x4684 rellena_los_tres_bancos     El FILVRM de la BIOS repetido en los tres bancos de SCREEN 2
+L 0x4695 sube_espejado               Tres bancos, con el espejo puesto (C=1)
+L 0x4699 sube_tal_cual               Tres bancos, sin filtro
+L 0x469B sube_tres_bancos            Con el filtro que le den en C
+L 0x46AD guion_de_texto              Una direccion de VRAM, los codigos que van ahi, 0xFE para saltar a otra y 0xFF para acabar
+L 0x46C1 aparta_los_sprites          Y = 0xE0 en los 32 sprites del buffer: fuera de la pantalla
+L 0x46CE sube_los_sprites
+L 0x4711 sube_bloque                 El destino viene DENTRO del bloque
+L 0x4716 sube_bloque_a_hl            Con el destino ya en HL
+L 0x4743 sube_patrones_de_sprite     Media pareja de 16 bytes y la otra media calculada invirtiendo cada byte: por eso los sprites de este juego son simetricos
+L 0x4773 tira_de_dieciseis
+L 0x4786 filtro_del_byte             El espejo y la permuta de color
+L 0x47B5 permuta_un_nibble
+L 0x47CE prepara_la_maquina
+L 0x47E1 escribe_los_registros_del_vdp  Del 7 al 0, o sea al reves de como esta la tabla
+
+D 0x47F1 0x47F9 registros_del_vdp  Los ocho registros, escritos del 7 al 0 por 0x47E1 (`ld c,8`, `dec c`): R7=0xE4 tinta 14 sobre fondo 4, R6=0x03 patrones de sprite en 0x1800, R5=0x76 atributos en 0x3B00, R4=0x07 y R3=0x7F que en SCREEN 2 son base y mascara -patrones en 0x2000 y color en 0x0000, al reves de lo corriente-, R2=0x0E nombres en 0x3800, R1=0xE2 con sprites de 16x16 y R0=0x02
+F 0x47F1 1
+
+L 0x47F9 fondo_negro
+L 0x4800 lo_de_cada_cuadro
+
+# ======================================================================
+# LA PRESENTACION Y EL TITULO
+# ======================================================================
+D 0x48B4 0x48C5 cartel_de_konami  El bloque comprimido del cartel que baja en la presentacion; trae su destino dentro (0x394A)
+D 0x48C5 0x48FC textos_del_titulo  Los dos guiones que 0x4C08 suelta uno detras de otro: (C) KONAMI 1986, PLAY SELECT, 1 PLAYER y 2 PLAYERS
+D 0x48FC 0x49AA guiones_de_la_partida  Los rotulos del marcador y los avisos, cada uno con su direccion dentro: HI SCORE, 1P SCORE, 2P SCORE, REST, STAGE y el CONGRATULATION! de 0x4933. 0x4258, 0x4261 y 0x4272 eligen entre la pareja de cada uno segun el jugador que toque
+L 0x49AA sube_la_fuente
+L 0x49C0 borra_la_casilla_cero
+
+D 0x49D0 0x4AE8 fuente  Los 43 dibujos de la fuente, comprimidos. 0x49B3 los sube a 0x2080 -la casilla 0x10- en los tres bancos, y 0x49B6 les pone color 0xF0, blanco sobre transparente. El alfabeto no esta entero: hay 0 a 9, el simbolo de copyright, un punto, una admiracion y solo las letras A B C D E F G H I K L M N O P R S T U V W Y, que son las que hacen falta para los rotulos de este cartucho
+
+L 0x4AE8 arranca_la_presentacion    Catorce pasos, empezando por la ultima fila
+L 0x4AF6 monta_el_cartel
+L 0x4B0A baja_un_paso               Repinta el rotulo una fila mas arriba y borra la de abajo
+L 0x4B2E escribe_seguidas
+
+D 0x4B3C 0x4BD3 logotipo  Las 27 casillas del rotulo TWIN BEE, comprimidas. 0x4AFC las sube a 0x2200 -la casilla 0x40- en los tres bancos, y 0x4AFF les pone color 0xF0
+L 0x4BD3 monta_el_titulo            Fondo azul, pantalla limpia, la fuente, el dibujo grande y los dos rotulos
+L 0x4C11 parpadea_la_eleccion
+
+D 0x4C35 0x4D1E guion_del_titulo  El dibujo grande de la pantalla del titulo -el rotulo TwinBee dibujado y el (C) KONAMI 1986-, comprimido y con su destino dentro (0x2600)
+
+# ======================================================================
+# EL SONIDO
+# ======================================================================
+L 0x4D1E pide_un_sonido
+L 0x4E38 escribe_el_mezclador
+L 0x4E48 el_reproductor             Lo que suena en cada interrupcion: tres canales de tono y uno de ruido
+
+# ======================================================================
+# LA PARTIDA
+# ======================================================================
+L 0x5D20 empieza_la_partida
+L 0x5FE3 monta_el_decorado          Sube los patrones, el color, los sprites de la fase y la primera pantalla
+L 0x610E prepara_el_marcador
+
+D 0x6132 0x613C tabla_de_fases  Cinco palabras, una por fase, que 0x611D y 0x4113 meten en (0xEBB6): donde empieza cada una
+F 0x6132 w
+D 0x61D5 0x61E9 tabla_de_fases_2  Cinco palabras mas, que 0x4131 mete en (0xEBB0)
+F 0x61D5 w
+D 0x6210 0x621A tabla_de_fases_3  Y otras cinco, que 0x413F mete en (0xEBB3)
+F 0x6210 w
+
+# ======================================================================
+# EL DECORADO
+# ======================================================================
+B 0x6CD1 EL DECORADO, QUE ES UNA TIRA DE FILAS. Cada fila de la pantalla es un bloque de 32 casillas de 0x6F8F, y el mapa es la lista de esos bloques. 0x6D62 traduce el codigo a direccion con cinco `add hl,hl` -indice por 32- y 0x6D17 lo copia con treinta y dos `ldi` al buffer de nombres. La cuenta cierra sola: entre 0x6F8F y 0x8E8F hay 0x1F00 bytes, o sea 248 filas exactas, y el codigo mas alto que gastan los tramos es 0xF7 = 247.
+L 0x6CD1 avanza_el_decorado
+L 0x6D08 monta_las_veinticuatro_filas
+L 0x6D62 la_fila_numero             Guarda el puntero del mapa en (0xEBC0) y devuelve en HL el bloque de 32 casillas
+
+D 0x6D74 0x6E01 guion_del_mapa  La lista de tramos del escenario, cerrada con 0xFF. 0x4613 la recorre: cada byte indexa la tabla de 0x6E01 y el tramo que saque se copia entero a 0xE400
+F 0x6D74 1
+D 0x6E01 0x6E3B tabla_de_tramos  Veintinueve punteros a los tramos de aqui abajo
+F 0x6E01 w
+D 0x6E3B 0x6F8F tramos_del_mapa  Cada tramo es una lista de codigos de fila terminada en 0xFF, y cada codigo indexa los bloques de 0x6F8F. Puestos en fila salen las 1761 filas del escenario, que son 73 pantallas
+F 0x6E3B 1
+D 0x6F8F 0x8E8F filas_del_decorado  Los 248 bloques de 32 casillas con los que se monta el escenario entero. Una fila de la pantalla cada uno
+F 0x6F8F 32
+
+D 0x8E8F 0x9177 sprites_comunes  Los patrones de sprite que no dependen de la fase: las dos naves, los disparos y las campanas. 0x5E1B y 0x5E27 los suben a 0x1800 y 0x1A20 con 0x4743, que calcula la mitad derecha invirtiendo la izquierda, y 0x5E2D remata con un bloque suelto
+D 0x9191 0x91A6 tabla_de_sprites_por_fase  Cinco punteros, uno por fase, que 0x917D usa para subir los enemigos que le tocan
+F 0x9191 w
+D 0x91A6 0x9648 sprites_de_los_enemigos  Los patrones de los enemigos de cada fase. Cada bloque empieza por el numero de parejas que trae y sigue con los datos que se comen 0x4743 y 0x4711
+D 0x9671 0x96F1 sprites_del_jefe  Los que 0x9648 sube a 0x1D80 en todas las fases
+D 0x96F1 0x96FB tabla_de_sprites_del_jefe  Cinco punteros, uno por fase, que 0x965A usa para el bloque de 0x1E80
+F 0x96F1 w
+D 0x96FB 0x994A sprites_del_jefe_por_fase  Y sus datos
+
+D 0x9994 0x999E tabla_de_patrones_por_fase  Cinco punteros: el bloque de casillas que cada fase sube a 0x2600
+F 0x9994 w
+D 0x999E 0x99B2 tabla_de_patrones_espejados  Cinco parejas (guion, destino) que 0x9989 lee con entradas de CUATRO bytes. Estas van espejadas: 0x9991 salta a 0x4695
+F 0x999E w2
+D 0x99B2 0x9F2F patrones_del_decorado  Las casillas del escenario, comprimidas. Las de la 0x3C a la 0xBF son iguales en las cinco fases; de la 0xC0 arriba, cada fase sube las suyas
+D 0x9FAE 0x9FB8 tabla_de_color_por_fase  Cinco punteros, la pareja de la de 0x9994 para el color
+F 0x9FAE w
+D 0x9FB8 0x9FCC tabla_de_color_extra  Cinco parejas mas. OJO: estas NO van espejadas -0x9FAB salta a 0x4699, no a 0x4695-, al reves que las de patron
+F 0x9FB8 w2
+D 0x9FCC 0xA14B color_del_decorado  El color de las mismas casillas. La fase 3 no tiene el suyo: 0x9F67 sube el de las demas con el bit 7 de C puesto, que enciende la PERMUTA de 0x47B5 y le cambia la paleta
+
+L 0xBB7A pon_el_dibujo_y_el_paso
+L 0xBB81 coloca_los_enemigos
+L 0xBB9E coloca_uno
+L 0xBBC9 coloca_al_jefe
+L 0xBC2F saca_la_oleada_del_jefe
+L 0xBC4F recorre_los_catorce_3
+L 0xBC84 el_siguiente_paso_del_jefe
+C 0xBB69 la clase 7 no lleva el tercer sumando
+C 0xBB6E y de la fase 2 en adelante, uno mas: van mas deprisa
+C 0xBB76 y se le devuelve el signo
+C 0xBB7A el dibujo y, de paso, el paso en B
+C 0xBB81 los catorce
+C 0xBB87 al bloque de sprites que les toca
+C 0xBB9F la vertical
+C 0xBBA0 fuera de la pantalla por abajo
+C 0xBBA4 y el enemigo se apaga
+C 0xBBAA la clase 0x0A
+C 0xBBB4 y por la derecha, igual
+C 0xBBBF los cuatro bytes del sprite
+C 0xBBC9 el guion de casillas del jefe
+C 0xBBD2 con 0xFE, el jefe se esta muriendo
+C 0xBBE5 la posicion, mas el desvio de cada casilla
+C 0xBBF3 y su patron
+C 0xBBF8 el color, que depende de la fase
+C 0xBC06 y muriendose, blanco
+C 0xBC0F hasta el 0xFF que cierra el guion
+C 0xBC32 sin jefe, nada
+C 0xBC3E la espera hasta la oleada siguiente
+C 0xBC43 y la espera entre uno y otro
+C 0xBC55 el enemigo arranca
+C 0xBC5B la clase 0x17
+C 0xBC5F se apunta por que lado esta la nave
+C 0xBC70 la clase 0x21 no gasta espera
+C 0xBC84 el guion del jefe de esta fase
+C 0xBC8D por donde va
+C 0xBC94 y al llegar al 0xFF, vuelta a empezar
+C 0xBCA6 los seis bits bajos: la clase
+C 0xBCAC y los dos altos, rotados: cuantos vienen
+L 0xBD03 elige_cuantos_huecos
+L 0xBD12 saca_la_tanda
+L 0xBD2B la_tanda_del_final
+L 0xBD5B pon_la_espera_de_disparo
+L 0xBD6F nace_el_enemigo
+C 0xBCB5 los cuatro bits bajos, por ocho: lo que se espera hasta la oleada siguiente
+C 0xBCBF y los bits 4 y 5: lo que se espera entre uno y otro
+C 0xBCCA el bit 7
+C 0xBCCD y el 6
+C 0xBCD0 solo en la fase 3
+C 0xBCDC deciden si estos disparan
+C 0xBCE2 un paso mas del guion
+C 0xBCE8 los siete primeros huecos
+C 0xBCF2 se cuentan los libres
+C 0xBCFA y con menos de tres no se saca la tanda
+C 0xBD03 con el final puesto, los catorce
+C 0xBD0B y si no, solo los siete primeros
+C 0xBD16 se busca un hueco libre
+C 0xBD1E hasta colocarlos todos
+C 0xBD31 la clase 0x21, uno cada vez
+C 0xBD46 dieciseis tandas
+C 0xBD4B y se acaba
+C 0xBD5B la fase manda la espera entre disparos
+C 0xBD72 uno menos por colocar
+C 0xBD7B con la marca puesta, se le da espera de disparo
+C 0xBD85 su clase
+C 0xBD88 y cuantos pasos da
+C 0xBD91 apunta a la nave
+C 0xBD97 el dado barato
+C 0xBD9A dos bits: cuatro rumbos
+C 0xBDAC la clase 0x1E
+C 0xBDB3 la 8
+C 0xBDB8 y las 0x1F a 0x21
+C 0xBDC9 salen a un lado o al otro
+L 0xBDDF nace_por_arriba_o_por_abajo
+L 0xBE0A nace_con_rumbo_al_azar
+L 0xBE22 apunta_y_arranca
+L 0xBE45 nace_por_un_lado
+L 0xBE52 baja_despacio
+L 0xBE57 nace_por_el_lado_contrario
+L 0xBE86 pon_la_posicion
+C 0xBDDF el dado barato
+C 0xBDE2 y sale por arriba
+C 0xBDE7 o por abajo
+C 0xBDEE la clase 0x22
+C 0xBDF7 alterna dos sitios
+C 0xBE0C el refresco del Z80, de dado
+C 0xBE0F se busca un valor entre 0x30 y 0x70
+C 0xBE13 y si no cae ahi, otra vuelta
+C 0xBE1E la clase 0x25 solo baja
+C 0xBE22 apunta a la nave y arranca
+C 0xBE2A el dado barato
+C 0xBE36 el refresco, otra vez de dado
+C 0xBE38 hasta que salga por debajo de 0xB0
+C 0xBE45 arriba
+C 0xBE4D o abajo
+C 0xBE52 tres pixeles por cuadro
+C 0xBE57 segun por que lado tenga la nave
+C 0xBE68 cinco por cuadro
+C 0xBE7B y va hacia una esquina
+C 0xBE8F sube deprisa
+C 0xBE98 y alterna los dos lados
+C 0xBEA8 arriba del todo
+C 0xBEAF la clase 5
+C 0xBEB6 la 0x16
+C 0xBEBA la 0x12
+C 0xBEBE la 0x13
+C 0xBEC2 y la 0x17
+
+C 0xB309 y al llegar al borde derecho
+C 0xB30F da la vuelta
+C 0xB320 el dibujo, sin alternar
+C 0xB32F pasado el borde
+C 0xB337 la velocidad horizontal cambia de signo: rebota
+C 0xB34A por debajo de la fila 0x10
+C 0xB352 se para y baja despacio
+C 0xB362 y luego dispara
+C 0xB372 apunta a la nave
+C 0xB375 hasta la altura que le toca
+C 0xB385 y sale a un lado o a otro
+C 0xB39B por debajo de la fila 0x60
+C 0xB3A3 dispara
+C 0xB3A9 y en la mitad derecha da la vuelta
+C 0xB3C8 el dibujo del disparo
+C 0xB3CE por debajo de la fila 0x40
+C 0xB3D6 dispara
+C 0xB3E0 y luego persigue
+C 0xB3F2 el jefe de la fase 3 coge velocidad
+C 0xB405 se acerca en horizontal
+C 0xB40B y al llegar abajo del todo
+C 0xB411 da la vuelta
+C 0xB427 a la altura 0xA0
+C 0xB430 dispara
+C 0xB435 el bit 2 del contador
+C 0xB43A y con el, va a un lado o al otro
+C 0xB454 hace lo mismo que el 37
+C 0xB457 con otro dibujo
+C 0xB460 llegado al borde de abajo
+C 0xB469 o al de la derecha
+C 0xB475 dispara
+C 0xB47F el dibujo, alternando
+C 0xB488 en el cuadro 0x14
+C 0xB48E dispara
+C 0xB499 el dibujo del disparo
+C 0xB4A2 dispara al nacer
+C 0xB4A9 y luego se pone donde el jefe
+C 0xB4AC cada 0x20 cuadros
+C 0xB4B2 avanza su contador propio
+C 0xB4B8 que da la vuelta cada cuatro
+C 0xB4CA el jefe de la fase 4 arranca despacio
+C 0xB4D9 el bit 7 del contador
+C 0xB4DF y con el va a un lado o a otro
+C 0xB4F8 sale hacia el lado por el que este
+C 0xB511 la cuenta del salto
+C 0xB518 mientras dure, sube
+C 0xB521 y luego baja
+C 0xB52D los tres bits bajos del contador
+C 0xB532 y la tabla del zigzag
+C 0xB539 se le suma a la horizontal
+C 0xB552 si toca nube, no dispara
+C 0xB55B y cada 0x10 cuadros
+C 0xB560 suelta uno
+C 0xB563 y persigue en los dos ejes
+L 0xB645 saca_dos_velocidades
+L 0xB653 dispara_y_frena
+L 0xB690 recorrido_por_tabla
+C 0xB57F se para en seco
+C 0xB587 en el cuadro 0x20
+C 0xB58E y si no, va por la tabla de recorrido
+C 0xB594 vuelve al paso anterior
+C 0xB5BC hasta la altura que le toca
+C 0xB5C8 y entonces dispara
+C 0xB5D8 en el cuadro 0x78
+C 0xB5E0 y cada 0x20
+C 0xB5E4 cambia de sentido
+C 0xB5F3 con la tabla de velocidades
+C 0xB603 y al final se va hacia arriba
+C 0xB610 cada 0x20 cuadros
+C 0xB617 dispara y frena
+C 0xB61D la otra tabla, y al reves
+C 0xB633 con el signo que le toque
+C 0xB63D hasta la mitad de la pantalla
+C 0xB645 los bits 3 y 4 del contador: cuatro tramos
+C 0xB67C en el cuadro 8
+C 0xB686 en el 0x18
+C 0xB690 la entrada que toque de la tabla
+C 0xB6A1 y luego se va
+C 0xB6B8 en el cuadro 0x20
+C 0xB6C4 dispara
+L 0xB840 da_la_vuelta_deprisa
+L 0xB847 velocidad_al_reves
+C 0xB6E6 el dibujo
+C 0xB6EF en el cuadro 8
+C 0xB6F6 y en el 0x10
+C 0xB6F9 apunta a la nave
+C 0xB700 y se apunta por que lado la tiene
+C 0xB715 en el cuadro 0x20
+C 0xB71C y si no, baja
+C 0xB722 los bits 3 y 4: cuatro tramos
+C 0xB727 la tabla de pasos
+C 0xB730 con el signo del lado
+C 0xB73A y al final se va hacia abajo
+C 0xB757 el refresco del Z80, de dado
+C 0xB75B dos bits: cuatro rumbos
+C 0xB765 y sale con el
+C 0xB789 el jefe de la fase 5 se queda quieto
+C 0xB78F con el contador a 0x40
+C 0xB798 y suelta disparos de dos en dos
+C 0xB7AD cada ocho cuadros
+C 0xB7B4 cambia de dibujo
+C 0xB7C4 y da la vuelta cada tres
+C 0xB7D2 el dibujo sale del contador de cuadros
+C 0xB7FC el dibujo que lleve
+C 0xB809 llegado al borde de abajo
+C 0xB812 o al de la derecha
+C 0xB81A dispara
+C 0xB827 llegado abajo
+C 0xB82F da la vuelta
+C 0xB843 y al doble de velocidad
+abo lo de dos jugadores
+C 0x4314 y la marca de partida empezada
+C 0x431A los sprites fuera
+C 0x431D el buffer de la pantalla
+C 0x4320 se limpia entero
+C 0x4327 y sin espera
+C 0x432A el marcador se sube en cada cuadro
+C 0x432F paso 2 para abajo
+C 0x4331 lo que dura la animacion
+C 0x4335 al acabarse, otra vuelta
+C 0x433B los sprites fuera
+C 0x433E y el estado inicial del guion
+B 0x4493 EL REMATE DEL CUADRO EN LAS TRES PRIMERAS ESCENAS. Aqui vuelve el `ret` de la escena, porque 0x4166 apilo esta direccion antes de repartir. Lee los dos mandos, y con el gatillo arranca la partida: uno o dos jugadores segun donde este la eleccion.
+C 0x4493 el mando del primer jugador
+C 0x4497 y el del segundo
+C 0x449B juntos
+C 0x449C y las teclas
+C 0x44A2 sin gatillo ni START no hay nada que hacer
+C 0x44A5 la espera, a cero
+C 0x44AA y ese cero es tambien el paso: L pasa a valer 0
+C 0x44AF con el paso a 1 -o sea en el titulo-, se empieza
+C 0x44B1 los bits 4 y 5: el gatillo de verdad
+C 0x44B5 donde este la eleccion
+C 0x44B7 arriba, un jugador
+C 0x44BB abajo, dos
+C 0x44BD y eso son los bits de modo
+C 0x44C0 escena 3
+C 0x44C3 con el paso a cero
+C 0x44C7 y se calla el sonido
+C 0x44CA los bits de servicio
+C 0x44D1 solo para el primer jugador
+C 0x44D6 lo que se haya pulsado
+C 0x44EC va a 0xF0FF, que es donde se apunta el truco
+C 0x44F0 en la presentacion, el gatillo salta al titulo
+C 0x44F2 se calla el sonido
+C 0x44F7 y se monta el titulo de golpe
+C 0x44FA fuera del titulo, el gatillo solo mueve la eleccion
+C 0x44FF toda la RAM de partida, de 0xE068 a 0xF000
+C 0x4508 a cero
+C 0x450C cada jugador tiene su tanda de arranque
+C 0x451C los ocho bytes a sus variables
+C 0x451E y la fase, tambien aparte
+B 0x4535 LA PUNTUACION, QUE VA EN BCD. Tres bytes por jugador -seis cifras- sumados con `daa`, con tope en 999999 y una vida extra cada vez que se cruza el escalon que guarda 0xE075. Cada jugador entra por su puerta: 0x4535 el primero y 0x453F el segundo.
+L 0x4535 suma_al_primero
+L 0x453F suma_al_segundo
+L 0x45AD escribe_los_marcadores
+L 0x45CA escribe_la_fase
+L 0x45D2 escribe_las_vidas
+L 0x45E3 escribe_una_cifra
+L 0x45E5 escribe_cifras
+C 0x4535 lo que se suma, que viene en BC
+C 0x4537 la puntuacion del primero
+C 0x453A y su escalon de vida extra
+C 0x4541 la del segundo
+C 0x4547 el bit 6 de los bits de modo
+C 0x454B con el a cero no se puntua: es la demostracion
+C 0x454C las dos cifras bajas
+C 0x454E en decimal
+C 0x4551 las de en medio
+C 0x4557 y las altas
+C 0x455D si se pasa de 999999
+C 0x455F se clava ahi
+C 0x4569 el escalon de la vida extra
+C 0x4570 hasta llegar a el no hay nada
+C 0x4574 y al pasarlo, el escalon sube 0x1000
+C 0x4583 y al desbordar se pone en 0xA0
+C 0x4588 las vidas
+C 0x4589 con 99 ya no caben mas
+C 0x458D una mas
+C 0x4591 y suena el aviso
+C 0x4595 cuatro cifras del record
+C 0x459B se compara con la puntuacion
+C 0x459F si el record gana, nada
+C 0x45A4 y si no, la puntuacion pasa a ser el record
+C 0x45AD el marcador del primer jugador
+C 0x45B0 en su sitio del buffer
+C 0x45B6 y si juegan dos
+C 0x45B9 tambien el del segundo
+C 0x45C1 y el record, que siempre se pinta
+C 0x45CA la fase
+C 0x45D2 las vidas del segundo
+C 0x45DE y las del primero
+C 0x45E5 sin ceros a la izquierda todavia
+C 0x45E7 el byte en BCD
+C 0x45E8 la cifra alta
+C 0x45EC en binario
+C 0x45EE mientras sea cero y no haya salido ninguna cifra
+C 0x45F0 en cuanto sale una, se dejan de comer ceros
+C 0x45F2 el codigo de la casilla del digito
+C 0x45F4 y con C a cero, la casilla se queda en blanco
+C 0x45FC la cifra baja
+C 0x4607 y al byte anterior, que las cifras van al reves
+L 0x460C descomprime_el_mapa
+L 0x4613 el_siguiente_tramo
+L 0x4624 copia_el_tramo
+L 0x462C guion_a_la_pantalla
+L 0x463B borra_el_marco
+L 0x4640 borra_un_cuadro
+C 0x460C el mapa se descomprime a la RAM
+C 0x460F el guion, que es una lista de tramos
+C 0x4614 el tramo que toca
+C 0x4615 0xFF y se acabo el mapa
+C 0x461A la tabla de tramos
+C 0x4620 y su direccion
+C 0x4624 cada tramo es una lista de codigos de fila
+C 0x4625 hasta su propio 0xFF
+C 0x4628 y se copian tal cual
+C 0x462C el destino sale del propio guion
+C 0x4632 0xFF acaba
+C 0x4634 0xFE cambia de sitio
+C 0x4637 y lo demas son codigos de casilla
+C 0x463B el marco del cuadro de juego
+C 0x4640 D filas de B casillas
+C 0x464B y la fila de abajo
+C 0x4652 los sprites fuera
+C 0x4655 y la tabla de nombres a cero
+C 0x465F el puerto de datos del VDP, que la BIOS deja en 0x0007
+C 0x4667 se cambian, se lee la palabra
+C 0x466C y el puntero queda pasado los dos bytes
+C 0x466E la tabla de nombres
+C 0x4674 desde el buffer de RAM
+C 0x4677 24 filas
+C 0x4679 de 0x40 bytes... que son dos de 0x20
+C 0x467C y salen por el puerto sin pasar por la BIOS
+C 0x4684 los tres bancos de SCREEN 2
+C 0x468B 0x800 mas arriba cada vez
+C 0x46AD C a 0xFF: los codigos pasan enteros
+C 0x46AF y el destino, del propio guion
+C 0x46B5 0xFF acaba
+C 0x46B7 0xFE salta a otra direccion
+C 0x46BA `and c`: con C a cero el codigo se convierte en la casilla vacia, y asi el mismo guion sirve para BORRAR el rotulo
+C 0x46C1 los 32 sprites del buffer
+C 0x46C6 Y = 0xE0, que en el TMS9918 es "fuera de la pantalla"
+C 0x46C8 de cuatro en cuatro
+B 0x46CE LA RUEDA DE SPRITES. El TMS9918 solo pinta cuatro sprites por linea y descarta los de indice mas alto, asi que un juego con muchos enemigos parpadea siempre en los mismos. Aqui los cuatro primeros -las naves y sus disparos- van fijos a 0x3B00, y los VEINTIOCHO restantes se suben en un ORDEN QUE ROTA: (0xE00F) avanza 0x10 en cada cuadro y da la vuelta al llegar a 0x1E, y dentro del bucle el paso es 0x44. Asi ningun enemigo se queda sin pintar dos cuadros seguidos, y lo que se ve no es una desaparicion sino un parpadeo repartido.
+C 0x46CE los cuatro primeros sprites, siempre en cabeza
+C 0x46D7 16 bytes = 4 sprites
+C 0x46D9 el `outi` no admite interrupcion por medio
+C 0x46DF y a partir del quinto
+C 0x46E5 por donde va la rueda
+C 0x46E9 0x10 mas en cada cuadro
+C 0x46EC y al pasarse de 0x1E, vuelta a empezar
+C 0x46F2 por cuatro: cada sprite ocupa cuatro bytes
+C 0x46F4 veintiocho sprites
+C 0x46F6 el buffer, desde el quinto
+C 0x46FC dos sprites por vuelta
+C 0x4705 0x44 adelante, que es 17 sprites
+C 0x4708 dando la vuelta a los 0x78
+C 0x4711 sin filtro
+C 0x4713 y el destino, del bloque
+C 0x4716 SETWRT deja el puerto listo
+C 0x4719 el juego de registros de repuesto guarda el puerto
+C 0x471F el byte de mando
+C 0x4720 0x00 acaba
+C 0x4724 se le quita el bit 7
+C 0x4726 si no cambia, es que el bit 7 estaba a cero: REPETICION
+C 0x4729 y si lo que queda es cero, o sea 0x80 exacto
+C 0x472A se cambia de destino
+C 0x472C y si no, son B bytes literales
+C 0x472D cada uno pasa por el filtro
+C 0x4731 y sale por el puerto
+C 0x4738 en la repeticion, un solo byte
+C 0x473B repetido B veces
+C 0x4743 el destino, en BC al reves
+C 0x4746 H el filtro y L las vueltas
+C 0x474C se guarda el origen
+C 0x474E dieciseis bytes tal cual: la mitad izquierda
+C 0x4751 con el bit 0 de H, dos parejas por vuelta
+C 0x4760 y otra vez desde el mismo sitio
+C 0x4763 pero invertidos: la mitad derecha es el espejo de la izquierda
+C 0x476A con dos parejas, el origen avanza 0x10
+C 0x476F una fila menos
+C 0x4773 A dice si hay que invertir
+C 0x4774 dieciseis bytes
+C 0x4779 el bit 0 de H
+C 0x477B y si esta puesto, se le da la vuelta
+C 0x477F al puerto del VDP
+C 0x4786 el byte crudo
+C 0x4788 el bit 7 de C: permuta de color
+C 0x478C el bit 0: espejo
+C 0x478E y sin ninguno de los dos, el byte sale tal cual
+C 0x478F B se guarda en H, que hace falta el contador
+C 0x4791 ocho vueltas
+C 0x4793 sale por abajo de L
+C 0x4795 y entra por arriba de A: el byte del reves
+C 0x479A el byte entero
+C 0x479B se permuta el nibble bajo
+C 0x479F y se pega al alto
+C 0x47A3 ahora el alto
+C 0x47A7 se permuta tambien
+C 0x47AB y vuelve a su sitio
+C 0x47B7 el 12 siempre pasa a 6
+C 0x47BC y con el bit 0 tambien puesto
+C 0x47C0 el 10 se queda
+C 0x47C3 el 6 pasa a 12
+C 0x47C7 y el 5 a 9
+C 0x47CC lo demas, igual
+C 0x47CE el PSG callado
+C 0x47D3 y la pantalla apagada... o eso pretende: 0x40FB escribe sobre la ROM
+C 0x47DC los 0x4000 bytes de la VRAM
+C 0x47E1 la tabla de registros
+C 0x47E4 ocho, y se escriben del 7 al 0
+C 0x47F9 registro 7 a 0xE0: fondo negro
+C 0x4800 el mando
+C 0x4803 y lo que ACABA de pulsarse
+C 0x4809 de la escena 4 en adelante
+C 0x4810 solo si juegan dos
+C 0x4814 se lee tambien el segundo mando
+C 0x481A el estado anterior
+C 0x481C lo que ha cambiado
+L 0x481A guarda_lo_que_acaba_de_pulsarse
+L 0x4821 lee_el_mando_del_uno
+L 0x485B lee_el_mando_del_dos
+L 0x48A1 pega_el_ultimo_bit
+L 0x48A9 lee_el_joystick
+C 0x481E el estado de antes
+C 0x481F y lo pulsado nuevo, en la de al lado
+B 0x4821 LOS DOS MANDOS. Cada jugador se lee dos veces: el joystick por el registro 14 del PSG y el teclado por SNSMAT, y las dos lecturas se juntan con un `or`. El resultado es un byte de banderas -arriba, abajo, izquierda, derecha, gatillo, segundo gatillo, START- que el resto del juego mira sin saber de donde vino.
+C 0x4821 el puerto A del PSG a entrada, el B a salida: el mando 1
+C 0x4828 y el joystick
+C 0x482C linea 8 del teclado
+C 0x4831 las teclas van a cero cuando se pulsan
+C 0x4835 el bit de una direccion
+C 0x4846 linea 6: los cursores
+C 0x4852 linea 4
+C 0x485B el mando 2
+C 0x4866 linea 5
+C 0x486C se guarda entera: de aqui salen los bits de servicio
+C 0x4874 linea 3
+C 0x488E linea 6
+C 0x489B linea 7: el espacio
+C 0x48A1 el ultimo bit, el del gatillo
+C 0x48A6 y se le pega lo que dijo el joystick
+C 0x48A9 el registro 14: el puerto de mando
+C 0x48AB RDPSG no admite interrupcion por medio
+C 0x48B0 tambien al reves
+C 0x48B1 seis bits: cuatro direcciones y dos gatillos
+B 0x5D20 EMPIEZA LA PARTIDA. Deja la RAM del juego en su estado de salida: por donde va el decorado, donde estan las dos naves, los enemigos apagados y los sprites fuera de la pantalla. Y al final descomprime el mapa y sube los patrones de sprite, que son los mismos en las cinco fases.
+C 0x5D20 la altura a la que aparece el jefe
+C 0x5D27 por donde empieza el decorado: la fila 23
+C 0x5D34 donde arranca la nave
+C 0x5D65 con dos jugadores
+C 0x5D6A cada nave tiene su sitio
+C 0x5D73 el truco que se apunto en 0xF0FF
+C 0x5D7A da potencia de salida
+C 0x5D84 y campanas ya cargadas
+C 0x5D93 y con uno solo, la nave va en medio
+C 0x5DAC Y = 0xE0
+C 0x5DAE los sprites de los premios
+C 0x5DBA y los de las naves
+C 0x5DE5 los catorce enemigos, apagados
+C 0x5DE9 y sus sprites, fuera
+C 0x5DF5 las dos nubes
+C 0x5DFD el mapa, a la RAM
+C 0x5E00 los sprites del marcador
+C 0x5E06 y se releen de la VRAM, que es donde estan colocados
+C 0x5E12 los patrones de sprite comunes: las naves y los disparos
+C 0x5E1E y las campanas
+C 0x5E2A y un bloque suelto mas
+C 0x5E30 los ultimos, sin filtro
+C 0x5E3B el bit 6 de los bits de modo
+C 0x5E3F sin el no hay musica: es la demostracion
+C 0x5E40 y con el, arranca la de la fase
+C 0x5E4A veinte casillas de dos en dos
+L 0x5E4A pon_veinte_alternas
+L 0x5E52 el_cuadro_de_juego
+B 0x5E52 EL CUADRO DE JUEGO. Lo que corre entero en cada interrupcion mientras se juega: primero se sube a la VRAM lo que se calculo en el cuadro anterior -sprites y pantalla-, y luego se calcula el siguiente. Ese orden es lo que hace que el dibujo no parpadee.
+C 0x5E52 los sprites, a la VRAM
+C 0x5E55 y la pantalla
+C 0x5E58 el decorado avanza una fila
+C 0x5E5B el marcador
+C 0x5E67 si se acabo la partida, no se calcula nada mas
+C 0x5E6C las oleadas
+C 0x5E6F y los enemigos
+C 0x5E72 el segundo jugador
+C 0x5E77 mientras le quede partida
+L 0x5EB0 el_cuadro_de_los_dos
+L 0x5EFE mueve_la_nave_del_uno
+L 0x5F26 mueve_la_nave_del_dos
+L 0x5F61 lo_que_va_suelto
+L 0x5F70 lo_que_corre_siempre
+B 0x5EB0 CUANDO JUEGAN LOS DOS. Twin Bee tiene un truco que casi ningun juego de dos jugadores de la epoca: si las dos naves se dan la mano, se pegan y vuelan juntas. Aqui se mira si los dos mandos empujan en direcciones compatibles, y (0xE094) queda a cero en cuanto uno de los dos tira para otro lado, que es lo que las separa.
+C 0x5E84 la nave en llamas
+C 0x5E89 con potencia puesta
+C 0x5E8F va por el guion de potencia
+C 0x5E94 y si no, se lee el mando
+C 0x5E97 se mueve
+C 0x5E9A se dispara
+C 0x5E9D las bombas
+C 0x5EA0 y los choques
+C 0x5EA3 y se colocan sus sprites
+C 0x5EB0 los bits de estado de la pareja
+C 0x5EB4 el bit 4: van agarradas
+C 0x5EBA el mando del uno
+C 0x5EBD y el del dos
+C 0x5EC7 lo que empujan los dos juntos
+C 0x5ECA arriba uno y abajo el otro: se sueltan
+C 0x5ED2 y cada direccion contraria
+C 0x5EEC deja la marca a cero
+C 0x5EF2 y al soltarse, los dos vuelven a su estado suelto
+C 0x5EFE el bit 0: le queda partida al primero
+C 0x5F04 el bit 0 del estado: se esta muriendo
+C 0x5F0A la nave en llamas
+C 0x5F0F con potencia
+C 0x5F26 y lo mismo para el segundo, con el bit 1
+C 0x5F56 los dos apagados
+C 0x5F5E y entonces se acaba
+C 0x5F61 los disparos
+C 0x5F64 las bombas
+C 0x5F67 los choques
+C 0x5F70 el decorado y las campanas van siempre, se juegue o no
+L 0x5FBF arranca_la_demostracion
+L 0x5FF5 gasta_el_guion_de_la_demostracion
+B 0x5FBF LA DEMOSTRACION ES UNA PARTIDA GRABADA. La escena 2 monta una partida de verdad -misma RAM, misma fase, mismo codigo- y le mete el mando por la misma puerta por la que entra el del jugador: 0x600E salta a 0x481A con HL en 0xE007, que es donde 0x4821 deja lo que ha leido del mando. Lo que se juega son los 28 valores del guion de 0x6016, uno cada 32 cuadros, hasta el 0xFF que corta la partida. Y para que la misma tira de pulsaciones de siempre la misma partida hace falta que el azar tambien sea el mismo: por eso 0x5FCF pone A CERO EL REGISTRO R del Z80, que es de donde el juego saca sus numeros al azar en 0xAF75, 0xB2CE, 0xB757, 0xBE0C y 0xBE36. Sin ese `ld r,a` la demostracion se descarrilaria sola.
+C 0x5FBF por donde va el decorado
+C 0x5FC5 la RAM de partida entera
+C 0x5FCF el refresco a cero: asi el azar es el mismo en cada vuelta
+C 0x5FD5 fase 1
+C 0x5FD8 y una nave
+C 0x5FDB con el contador de cuadros puesto
+C 0x5FE0 y a jugar como si hubiera alguien
+C 0x5FE3 los patrones del decorado
+C 0x5FE6 y su color
+C 0x5FE9 los sprites de los enemigos de esta fase
+C 0x5FEF las 24 filas
+C 0x5FF5 el reloj del guion
+C 0x5FFB cada 32 cuadros
+C 0x5FFE se avanza una pulsacion
+C 0x6002 y se saca del guion
+C 0x6009 con 0xFF se acabo la demostracion
+C 0x600E y si no, entra como si fuera el mando
+L 0x6033 niega_hl
+L 0x603B niega_de
+L 0x6041 niega_bc
+L 0x6049 apaga_cuatro_sprites
+L 0x6055 apaga_siete_sprites
+L 0x6063 apaga_y_borra
+L 0x606F borra_dieciseis
+L 0x6071 borra_b_bytes
+L 0x6077 cambia_la_musica
+L 0x60E2 musica_de_vida_extra
+C 0x6033 0 - HL, con el prestamo
+C 0x6049 cuatro bytes a cero
+C 0x604F y la Y del sprite fuera
+C 0x6071 A vale cero
+C 0x6077 que melodia esta sonando
+C 0x607A la de la campana
+C 0x6085 segun por donde vaya la fase
+C 0x6089 cambia a la de mas ritmo
+C 0x609F y suena el aviso
+C 0x60A3 lo que esta sonando en el otro canal
+C 0x60DB la melodia de la campana, fuera
+C 0x60E2 la que suene ahora
+C 0x60F5 y encima el aviso de vida extra
+L 0x60F9 suma_a_la_posicion
+L 0x613C pasa_de_fase
+L 0x6195 suena_el_cambio
+L 0x619D mira_si_toca_nube
+B 0x613C EL BUCLE DE LAS FASES. Hay cinco escenarios y noventa y nueve fases: (0xE07D) es el numero que se ve, en BCD, y sube de uno en uno hasta 99, mientras que (0xE076) es el escenario, y cuando su nibble bajo llega a SEIS vuelve a 0x11, o sea a la primera con el nibble alto a uno. De ahi en adelante el juego da vueltas a los mismos cinco escenarios contando vueltas en el nibble alto. Al llegar a la fase 99 se acaba la partida, y esa es la unica manera de terminar Twin Bee.
+C 0x613C la cuenta atras del final de fase
+C 0x6140 mientras no llegue a cero, nada
+C 0x6147 el numero de fase, en BCD
+C 0x614A con 99 se acabo el juego
+C 0x614E una mas
+C 0x6154 y el escenario
+C 0x6159 su nibble bajo
+C 0x615B al llegar a seis
+C 0x6169 vuelve al 0x11: primer escenario, segunda vuelta
+C 0x616B y el decorado, a la fila 26
+C 0x6174 en la fase 6
+C 0x6178 y en la 17
+C 0x617F sube la dificultad
+C 0x6185 los patrones del escenario nuevo
+C 0x6188 su color
+C 0x618B y sus enemigos
+C 0x618E la marca de partida acabada
+C 0x6193 con la melodia del final
+C 0x619D por donde va el decorado
+C 0x61A1 comparado con el siguiente hito
+C 0x61A5 si no ha llegado, nada
+C 0x61AE el hito siguiente
+C 0x61B5 sin el bit 15, que es una bandera
+C 0x61BC y ese bit dice si toca nube
+L 0x61E9 mira_si_toca_musica
+L 0x621A avanza_hasta_cinco
+L 0x621C avanza_hasta_c
+L 0x6223 mueve_el_marcador_de_potencia
+L 0x622E mueve_la_nave_dos
+L 0x6249 mueve_la_nave_uno
+C 0x61E9 el hito de la musica
+C 0x61FE el escenario
+C 0x6202 uno de cada dos, una melodia
+C 0x620C y se pide
+C 0x621C uno mas
+C 0x621E y al llegar a C, vuelta a cero
+C 0x6223 la barra de potencia, de dos en dos
+C 0x6229 y da la vuelta en 0x28
+C 0x622E el estado de la nave 2
+C 0x6231 el bit 4: agarradas
+C 0x6234 sus sprites
+C 0x6238 su mando
+C 0x623C y su potencia
+C 0x6249 y lo mismo para la 1
+C 0x6265 la velocidad que le toca a esa potencia
+C 0x626E si hay recuerdo de mando
+C 0x6273 se usa el del cuadro
+C 0x6275 y si no, el que se guardo
+C 0x627A los bits de arriba y abajo
+C 0x627C ninguno o los dos: no se mueve
+C 0x6288 hacia arriba, la velocidad cambia de signo
+C 0x628B la posicion vertical
+C 0x6291 mas la velocidad
+C 0x6299 con el tope de abajo
+C 0x62A8 y el de arriba
+C 0x62B5 la nave 1
+C 0x62BC deja rastro: donde estuvo, para que la 2 la siga
+C 0x62C8 y ahora los bits de izquierda y derecha
+L 0x6326 mueve_las_dos_agarradas
+C 0x62CC ninguno o los dos: quieta
+C 0x62D7 a la izquierda, la velocidad cambia de signo
+C 0x62DA la posicion horizontal
+C 0x62E8 el tope de la derecha
+C 0x62F7 y el de la izquierda
+C 0x6304 la nave 1 deja tambien aqui su rastro
+B 0x6326 LAS DOS NAVES AGARRADAS SE MUEVEN COMO UNA. Cuando los dos jugadores se dan la mano, el mando que manda es (0xE094) -la suma de los dos, que 0x5EC7 deja a cero en cuanto uno tira para el otro lado- y las dos naves comparten posicion. El bucle de 0x6388 comprueba los topes de LAS DOS antes de mover: si a cualquiera de ellas se le acaba la pantalla, no se mueve ninguna.
+C 0x6326 la potencia del primero manda
+C 0x6331 el mando de la pareja
+C 0x635A la posicion vertical, compartida
+C 0x6365 el tope de abajo
+C 0x6374 y el de arriba
+C 0x6381 la horizontal de la primera
+C 0x6386 y se miran las dos
+C 0x6389 el tope de la derecha
+C 0x638D y el de la izquierda
+C 0x6391 si cabe el paso
+C 0x6399 se mira la otra nave
+C 0x639E y solo si caben las dos, se mueven
+C 0x63AD contra el tope, se deja pasar si el paso va hacia dentro
+L 0x63B7 la_nave_dos_sigue_a_la_uno
+L 0x63E8 coloca_los_sprites_de_las_naves
+L 0x6412 coloca_una_nave
+L 0x6437 coloca_la_pareja
+L 0x644F dibuja_la_nave_uno
+L 0x6496 dibuja_la_nave_dos
+L 0x64CF escribe_dos_sprites
+B 0x63B7 EL SEGUNDO JUGADOR PUEDE IR A RASTRA. Con el bit 1 del estado puesto, la nave 2 no se mueve sola: copia la posicion que la 1 tenia hace unos cuadros, sacandola del rastro circular de 40 casillas que 0x62BC y 0x6309 van dejando. De ahi la sensacion de que va enganchada por detras.
+C 0x63BA el bit 1: va a rastra
+C 0x63C4 por donde va el rastro
+C 0x63C7 ocho cuadros por detras
+C 0x63CA dando la vuelta a las 40 posiciones
+C 0x63D2 la vertical
+C 0x63DC y la horizontal
+C 0x63E2 y ocho mas atras para el segundo sprite
+C 0x63EB el bit 0: le queda partida
+C 0x63EE los sprites de la nave 1
+C 0x6412 la Y, a los dos sprites de la nave
+C 0x641B el bit 2: se esta muriendo
+C 0x641F y si no, la X normal
+C 0x6429 muriendose, los dos sprites se separan
+C 0x6437 agarradas, la 2 hereda los sprites de la 1
+C 0x644F el estado de la nave 1
+C 0x6452 el bit 2: en llamas
+C 0x6456 y el dibujo alterna cada dos cuadros
+C 0x6468 el bit 0 de sus banderas: mirando arriba o abajo
+C 0x6474 con bomba cargada, el dibujo cambia
+C 0x648B y con dos jugadores
+C 0x648F la nave 1 lleva el color del uno
+C 0x64CF el patron y el color de los dos sprites
+L 0x64D9 se_estrella_la_uno
+L 0x653C se_estrella_la_dos
+L 0x658B pon_la_nave_nueva
+L 0x65B7 dibuja_la_explosion
+B 0x64D9 CUANDO SE ESTRELLA UNA NAVE. Se pierde todo: la potencia, las campanas y las armas. Si quedan vidas, la nave vuelve entrando por abajo; y si no, se apaga su bit en (0xE077), y cuando los dos estan apagados se acaba la partida.
+C 0x64DA la potencia, a cero
+C 0x64DD y el estado
+C 0x64E9 y el nivel de oleada
+C 0x64F2 la cuenta de la explosion
+C 0x64F8 fuera la marca de "muriendose"
+C 0x64FA las vidas
+C 0x64FF sin vidas, se acabo
+C 0x6501 una menos, en BCD
+C 0x6507 y a esperar a que vuelva
+C 0x650B con dos jugadores
+C 0x6512 los sprites de en medio se apartan
+C 0x651E la nave nueva entra por abajo
+C 0x6538 y se apaga el bit 0 de (0xE077)
+C 0x653C lo mismo para la nave 2
+C 0x6555 con su propia cuenta
+C 0x658B los cuatro bytes de cada sprite de la nave
+C 0x65A9 se apaga el bit del jugador
+C 0x65AB y solo cuando se apagan los dos
+C 0x65B4 suena el final
+C 0x65B7 el fotograma de la explosion
+C 0x65BA los bits 2 a 5 del contador
+C 0x65C7 la pareja de patrones
+C 0x65CB el primer sprite
+C 0x65D1 y el segundo
+L 0x65F1 nace_el_disparo_uno
+L 0x6601 nace_el_disparo_dos
+L 0x660F reparte_el_estado_del_brazo
+L 0x661C saca_el_brazo
+L 0x664E recoge_el_brazo
+L 0x665B sube_el_brazo
+L 0x667C mira_si_se_dan_la_mano
+B 0x667C EL ABRAZO. Twin Bee tiene un truco que casi ningun juego de dos jugadores de la epoca: las dos naves pueden darse la mano y volar juntas. Aqui se mide la distancia entre las dos en las dos coordenadas y, si las dos caben en 0x22 pixeles, se enciende el bit 4 de los dos estados y a partir de ahi las mueve 0x6326 como si fueran una sola.
+C 0x65F1 las banderas del brazo del primero
+C 0x65F4 y su tanda de dibujos
+C 0x6610 el bit 0: sale el brazo
+C 0x6615 el bit 1: se recoge
+C 0x6618 y el bit 2: sube
+C 0x661C el brazo arranca arriba del todo
+C 0x6627 con el dibujo de su tanda
+C 0x663F y a esperar 2 cuadros
+C 0x6643 luego 0x10
+C 0x664E la cuenta
+C 0x6650 y al llegar a cero se pasa a subir
+C 0x6656 con su ruido
+C 0x665B tres pixeles por cuadro hacia arriba
+C 0x6665 hasta que se acaba la cuenta
+C 0x667F los dos jugadores tienen que estar vivos
+C 0x6684 la marca del abrazo, a cero
+C 0x668A si ya estan agarradas, nada
+C 0x668D la vertical de la 1
+C 0x6691 y la de la 2
+C 0x6698 tienen que caber en 0x22 pixeles
+C 0x669D lo mismo con la horizontal
+C 0x66A8 y si ademas estan casi pegadas
+C 0x66AD se agarran directamente
+B 0x66AF POR DONDE SE DAN LA MANO. La distancia entre las dos naves se parte en ocho pasos verticales y ocho horizontales, y con esos dos numeros se entra en la tabla de 0xEB00 -que es la de 0x6750, traida de la VRAM- para sacar el dibujo del brazo que corresponde. Los dos `rra` de 0x66C8 y 0x66D5 dividen entre dos, y el `add a,a` triple de 0x66DA es el por ocho de la fila.
+C 0x66AF por donde se estira el brazo
+C 0x66B7 y los dos brazos se ponen en marcha
+C 0x66C0 la distancia vertical
+C 0x66C4 en valor absoluto
+C 0x66C6 y el signo, apuntado
+C 0x66C8 entre dos, y ocho pasos
+C 0x66CD ahora la horizontal
+C 0x66DA fila por ocho
+C 0x66DD mas la columna
+C 0x66DE la tabla, que vino de la VRAM
+C 0x66E6 los dos signos
+C 0x66EF y cada uno da la vuelta a su eje
+C 0x66FA por donde se estira
+C 0x66FF y el dibujo que le toca
+C 0x6708 con el brazo recto
+C 0x6714 los dos tienen que llevar la misma potencia
+C 0x671C y las mismas armas
+C 0x6728 y entonces si: agarradas
+C 0x672D la que este a la izquierda manda
+C 0x6741 y las dos comparten posicion
+C 0x6748 con el bit 7 del estado
+C 0x674B y suena el enganche
+L 0x6788 saca_la_bomba_del_uno
+L 0x67AA saca_la_bomba_del_dos
+L 0x67C3 pon_la_bomba
+C 0x6788 la bomba del primero
+C 0x678E si ya hay una en el aire, no
+C 0x6794 el truco de bombas
+C 0x67A1 la bomba sale de donde este la nave
+C 0x67C3 viva, cayendo, con su dibujo
+L 0x67CE apaga_la_bomba
+L 0x67E1 mueve_las_bombas
+L 0x6821 coloca_las_bombas
+L 0x683D dispara_el_uno
+L 0x695E saca_los_disparos
+C 0x67CE los ocho bytes de la bomba, a cero
+C 0x67E1 una bomba por jugador
+C 0x67E8 si esa bomba no esta viva, nada
+C 0x67ED una fila mas abajo
+C 0x67F0 pasado el suelo
+C 0x67F4 o antes de llegar
+C 0x67F8 se apaga
+C 0x67FD y en la banda del suelo, parpadea
+C 0x680C con su ruido
+C 0x6813 la bomba del otro jugador, ocho bytes mas atras
+C 0x6821 y las bombas vivas, a sus sprites
+C 0x683D el gatillo
+C 0x6843 el estado de la nave
+C 0x6846 el bit 0: mira hacia arriba
+C 0x684A el bit 2: en llamas
+C 0x684F el bit 1: doble disparo
+C 0x6852 y si no hay hueco de disparo, nada
+C 0x6856 uno solo
+C 0x6863 o tres a la vez
+C 0x6869 con el guion normal
+C 0x6870 mirando arriba, el otro guion
+C 0x6891 y en llamas, el disparo grande
+C 0x68A5 tres tandas seguidas
+C 0x68BA la nave 2
+C 0x68CA agarradas, disparan las dos a la vez
+L 0x6900 dispara_la_pareja
+L 0x6926 dispara_el_arma_grande
+L 0x6961 saca_una_tanda
+C 0x68DB el estado de la nave 2
+C 0x68DE agarradas: disparan juntas
+C 0x6900 los cuatro huecos de disparo
+C 0x6905 se busca uno libre
+C 0x690F y sin hueco, no se dispara
+C 0x6910 el bit 7 dice cual de las dos manda
+C 0x6926 el arma grande sale de la que mande
+C 0x6935 los cuatro huecos tienen que estar libres
+C 0x6943 y ocupa los cuatro de golpe
+C 0x6950 cuatro tandas, una por hueco
+C 0x695E el sonido que hay que pedir
+C 0x6961 sin sonido
+C 0x6964 el disparo, vivo
+C 0x6968 su clase
+C 0x696A y su cuenta de vida
+C 0x696E la posicion se corrige con lo que diga el guion
+C 0x6978 la vertical, la de la nave
+C 0x697D y la horizontal, con su desvio
+C 0x6984 el patron
+C 0x6986 y el color
+C 0x6989 el hueco siguiente
+C 0x698D y el ruido que le toca
+C 0x6991 cuatro bytes mas de la nave: el otro punto de salida
+L 0x69BE mueve_los_disparos
+L 0x69F9 coloca_los_disparos
+L 0x6A19 hay_hueco_arriba
+L 0x6A26 hay_hueco_abajo
+L 0x6A33 hay_dos_huecos_del_uno
+L 0x6A3F hay_dos_huecos_del_dos
+L 0x6A4B saca_el_arma_del_uno
+L 0x6A63 saca_el_arma_del_dos
+L 0x6A79 pon_el_arma
+L 0x6AB9 mueve_las_armas
+C 0x69BE con dos jugadores hay seis disparos, y con uno solo, cuatro
+C 0x69CA si el hueco esta libre, se salta
+C 0x69D2 la velocidad
+C 0x69D6 y se le suma a la vertical
+C 0x69D9 pasado el borde de abajo, fuera
+C 0x69DE la horizontal
+C 0x69E0 con sus dos bordes
+C 0x69EF el disparo se apaga
+C 0x69F9 los disparos vivos, a sus sprites
+C 0x6A19 los tres huecos de arriba
+C 0x6A33 uno de cada
+C 0x6A4B el segundo gatillo
+C 0x6A51 y hace falta llevar el arma
+C 0x6A79 si ya hay una en el aire, no
+C 0x6A7E dieciseis cuadros de vida
+C 0x6A84 y sale alternando a un lado y a otro
+C 0x6A93 desde donde este la nave
+C 0x6AA8 cayendo deprisa
+C 0x6AB4 con su ruido
+C 0x6ABC el juego de registros de repuesto lleva la cuenta
+C 0x6AC8 se le acaba la vida
+C 0x6AD0 y si no, se mueve
+L 0x6AE2 coloca_las_armas
+L 0x6B0B saca_las_nubes
+L 0x6B6C apaga_la_nube
+L 0x6B8E mueve_las_nubes
+B 0x6B0B LAS NUBES, QUE SON LAS CAMPANAS. Twin Bee saca su premio de las nubes: al dispararles cae una campana que va cambiando de color y da potencia, velocidad o escudo segun de que color se coja. Aqui nacen: hasta dos a la vez, entrando por un lado o por el otro segun el bit 0 del byte que toque de 0x6B5C, y como mucho tres nubes por tramo, que es lo que cuenta (0xE360).
+C 0x6B0B la bandera de "toca nube", que puso 0x61BC
+C 0x6B10 los dos huecos de nube
+C 0x6B15 ocupado, se salta
+C 0x6B1E cuantas nubes van en este tramo
+C 0x6B21 con tres ya no cuentan
+C 0x6B2F la rueda de sentidos
+C 0x6B3C el bit 0
+C 0x6B3D por la derecha
+C 0x6B42 o por la izquierda
+C 0x6B4C arriba del todo
+C 0x6B4F el dibujo, doblado
+C 0x6B6C si contaba, se descuenta
+C 0x6B7B y el hueco queda libre
+C 0x6B93 hueco vacio, nada
+C 0x6B9F la posicion mas la velocidad
+C 0x6BA5 pasada la banda de abajo
+C 0x6BAF y el dibujo alterna cada 16 cuadros
+L 0x6BCF coloca_una_nube
+L 0x6BEA mira_si_le_dan_a_la_nube
+L 0x6C1E se_apaga_la_campana
+L 0x6C2A la_campana_recogida
+L 0x6C44 mueve_las_campanas
+L 0x6CB5 reparte_el_premio
+C 0x6BC0 los dos sprites de la primera nube
+C 0x6BCF la posicion
+C 0x6BDD y el segundo sprite, medio ancho a la derecha
+C 0x6BEA las dos nubes
+C 0x6BF6 sin nube, nada
+C 0x6C08 se mira si algun disparo le da
+C 0x6C15 y la nube se rompe: sale la campana
+C 0x6C1E la cuenta de la campana
+C 0x6C22 mientras dure, nada
+C 0x6C2A el nivel de la oleada, a cero
+C 0x6C3C una nube menos
+B 0x6C44 LA CAMPANA CAMBIA DE COLOR. Cada dieciseis cuadros, el color del sprite pasa al siguiente de una rueda de cuatro -0x2C, 0x64, 0x2C y 0x68-, y de que color este cuando se recoge sale el premio. Es la mecanica de la casa: la campana no se recoge, se PELOTEA a disparos hasta que se pone del color que interesa.
+C 0x6C44 las tres campanas
+C 0x6C4B apagada, nada
+C 0x6C52 con 3 se esta apagando
+C 0x6C59 la velocidad
+C 0x6C5D mas 0x20: caen acelerando
+C 0x6C68 y se mueve
+C 0x6C6C pasado el borde de abajo
+C 0x6C75 cada dieciseis cuadros
+C 0x6C7E cambia de color
+C 0x6C83 el primero
+C 0x6C88 el segundo
+C 0x6C8D otra vez el primero
+C 0x6C91 y el cuarto
+C 0x6C9A y las tres, a sus sprites
+L 0xA14B mira_los_disparos_contra_la_nube
+L 0xA160 recorre_los_disparos
+L 0xA178 rompe_la_nube
+L 0xA1BF mira_los_disparos_contra_la_campana
+L 0xA1D7 recorre_los_disparos_2
+L 0xA1F7 recoge_la_campana
+L 0xA44E cabe_en_horizontal
+L 0xA46A cabe_en_vertical
+C 0x6CC4 y con 1 o 2, se mira si alguien la recoge
+C 0xA14B cuatro disparos con un jugador, seis con dos
+C 0xA151 los del primero
+C 0xA156 y si juegan dos
+C 0xA160 hueco vacio, se salta
+C 0xA166 el marco horizontal
+C 0xA16B y el vertical
+C 0xA178 el disparo se gasta
+C 0xA180 se busca un hueco de campana
+C 0xA192 y nace ahi
+C 0xA1A1 mas abajo de la mitad, cae mas despacio
+C 0xA1B2 con el primer color
+C 0xA1B7 y su ruido
+C 0xA1BF donde esta la campana
+C 0xA1F7 el disparo se gasta
+C 0xA1FF y el premio depende del color que llevara
+B 0xA1F7 QUE DA CADA CAMPANA. El premio no sale del color que se ve: sale de un contador de 32 pasos, (0xE364), que avanza una posicion cada vez que se recoge una campana y entra en una tabla de 32 casillas que empieza en 0xEB88. Esa tabla NO esta en la ROM: la escribe a mano `empieza_la_partida` con cinco `ld` y cuatro `rlca` (0x5D41 a 0x5D51), o sea que solo cinco de las treinta y dos posiciones traen premio -1 potencia, 2 doble disparo, 4 el brazo, 8 el arma y 0x10 el escudo- y las otras veintisiete solo dan puntos. Verificado en el emulador: en 0xEB88 hay 00 00 00 00 01 00 00 00 02 ... 04 ... 08, exactamente eso.
+C 0xA202 la campana de 0x10 no da premio
+C 0xA209 el contador de campanas recogidas
+C 0xA20E vuelve a cero a las 32
+C 0xA214 y la tabla que escribio 0x5D41
+C 0xA21B con dos jugadores, cada uno tiene lo suyo
+C 0xA235 el bit 0: potencia
+C 0xA23C que no pase de siete
+C 0xA240 el bit 1: doble disparo
+C 0xA249 el bit 2: el brazo, y solo para el primero
+C 0xA257 el bit 3: el arma
+C 0xA263 agarradas, los dos tienen que poder
+C 0xA292 el bit 4: el escudo
+C 0xA29C el premio, apuntado
+C 0xA2A0 y cada uno tiene su color de aviso
+C 0xA2BA el dibujo del cartel
+C 0xA2C9 mas abajo de la mitad, sube en vez de bajar
+C 0xA2D5 y suena
+C 0x5D41 la tabla de premios, escrita a mano: potencia en la casilla 4
+C 0x5D44 doblando cada vez
+C 0x5D45 doble disparo en la 8
+C 0x5D49 el brazo en la 16
+C 0x5D4D el arma en la 20
+C 0x5D51 y el escudo en la 32
+L 0xA2DA mira_las_campanas_contra_la_nave
+L 0xA302 recorre_las_campanas
+C 0xA2DA el primer jugador
+C 0xA2E0 vivo y sin morirse
+C 0xA2E5 donde esta su nave
+C 0xA306 campana apagada, nada
+C 0xA30D o apagandose
+C 0xA31C el marco: 0x1F pixeles
+C 0xA32D la primera nave la recoge
+C 0xA332 y la segunda tambien
+L 0xA33D recoge_una_campana
+L 0xA3CE campana_de_doble_disparo
+L 0xA3DB campana_del_brazo
+L 0xA3EA campana_del_arma
+C 0xA33D la campana recogida
+C 0xA344 el bit 0: la de velocidad
+C 0xA347 el bit 1: doble disparo
+C 0xA34B el bit 2: el brazo
+C 0xA34F el bit 3: el arma
+C 0xA355 y si no, es la de puntos
+C 0xA35D con tope en tres
+C 0xA363 los puntos que da cada nivel
+C 0xA372 al primer jugador
+C 0xA377 o al segundo
+C 0xA37B con su ruido
+C 0xA383 y la campana se apaga
+C 0xA38A el contador de campanas, a cero
+B 0xAD25 LOS CATORCE ENEMIGOS. Cada uno ocupa 0x20 bytes desde 0xE160, y el byte 1 de su bloque dice QUE ES: ese numero entra en la tabla de cuarenta punteros de 0xAD60 y de ahi sale la rutina que lo mueve. Los valores 0xFF y 0xFE estan reservados -el primero apaga el hueco y el segundo lo deja quieto-, y por eso 0xAD42 y 0xAD51 hacen dos `inc a` antes de repartir.
+C 0xAD25 con la marca del jefe puesta, se atiende al jefe
+C 0xAD2C los catorce huecos
+C 0xAD30 de 0x20 bytes cada uno
+C 0xAD35 su clase
+C 0xAD39 hueco vacio, nada
+C 0xAD3C y su comportamiento
+C 0xAD42 0xFF quiere decir quieto
+C 0xAD51 y 0xFE, que se esta muriendo
+C 0xAD55 un cuadro mas de vida
+C 0xAD58 se coloca
+C 0xAD5D y se le da su vuelta
+C 0xADB0 el jefe tiene su propio bloque
+C 0xADBF de la fase 2 en adelante se mueve
+C 0xADC9 y su comportamiento, de cinco
+L 0xADD6 acaba_la_fase
+L 0xAE37 saca_los_disparos_del_jefe
+L 0xAE72 mueve_los_disparos_del_jefe
+L 0xAE8E mueve_un_disparo_del_jefe
+C 0xADD6 los catorce enemigos
+C 0xADDE se borran de golpe: 0x1C0 bytes
+C 0xADE6 el bit 2 del estado del jefe
+C 0xADF0 la cuenta del jefe
+C 0xADF5 y al acabarse, la marca del jefe se apaga
+C 0xAE0E se limpian sus disparos
+C 0xAE11 y su sprite se aparta
+C 0xAE16 la cuenta del final de fase
+C 0xAE19 de la fase 0x10 en adelante
+C 0xAE1E la espera baja a la mitad
+C 0xAE29 y 0x28 cuadros de aviso
+C 0xAE3A el bit 1 del estado del jefe
+C 0xAE3D cuantos disparos lleva
+C 0xAE43 con siete ya no caben mas
+C 0xAE4D la cuenta del destello
+C 0xAE52 y lo que dura cada uno
+C 0xAE60 el hueco que toca, por 0x20
+C 0xAE6A y ahi nace
+C 0xAE72 los siete disparos
+C 0xAE7C hueco vacio, se salta
+C 0xAE8E un cuadro mas
+C 0xAE96 0xFE quiere decir que se esta apagando
+L 0xAEA8 cuenta_para_disparar
+L 0xAEBA la_fase_de_uno_a_cinco
+L 0xAEC1 revienta_el_enemigo
+L 0xAEDB apaga_ese_enemigo
+L 0xAEDE apaga_el_enemigo
+L 0xAEFC recarga_la_espera
+L 0xAF08 dispara_el_enemigo
+L 0xAF1C busca_hueco_de_disparo
+L 0xAF56 apunta_a_la_nave
+L 0xAF81 esta_cerca
+L 0xAF8F pon_el_dibujo
+C 0xAEA8 la cuenta hasta el proximo disparo
+C 0xAEAD una menos
+C 0xAEB3 y al llegar a cero, dispara
+C 0xAEBA la fase, de 1 a 5, sin la vuelta
+C 0xAEC1 el dibujo de la explosion
+C 0xAECA alternando dos
+C 0xAED5 mientras dure
+C 0xAEDE los 0x20 bytes del hueco
+C 0xAEE4 a cero
+C 0xAEE9 las clases 7 a 0x0B se quedan quietas
+C 0xAEEF y las demas se apagan del todo
+C 0xAEF3 sprite fuera
+C 0xAEFC la clase 0x21 no recarga
+C 0xAF02 y las demas vuelven a su espera
+C 0xAF0B en la fase 1
+C 0xAF0E no se dispara hasta pasada la fila 0x60
+C 0xAF16 donde esta el enemigo
+C 0xAF1C los siete disparos del enemigo
+C 0xAF25 se busca uno libre
+C 0xAF31 y se apunta
+C 0xAF39 con su dibujo
+C 0xAF4B en las fases 1 y 2
+C 0xAF4E los enemigos con el bit 7 se apagan al disparar
+C 0xAF56 donde esta la nave 1
+C 0xAF59 si esta cerca, se le dispara
+C 0xAF62 y si no, se prueba con la 2
+C 0xAF6F el rumbo hacia la nave
+B 0xAF75 EL AZAR SALE DEL REGISTRO R. El Z80 lleva un contador de refresco que avanza con cada instruccion, y este cartucho lo usa de dado en cinco sitios -aqui, en 0xB2CE, 0xB757, 0xBE0C y 0xBE36-. Aqui desvia el disparo del enemigo unos grados a un lado o a otro: el `add a,a` y el `sra a` dejan el valor entre -64 y +63.
+C 0xAF75 el refresco del Z80, que es lo mas parecido a un dado que hay aqui
+C 0xAF77 doblado y con signo
+C 0xAF7A se le suma al rumbo
+C 0xAF81 0x20 arriba y 0x20 abajo: 0x40 de margen
+B 0xAF96 EL BLOQUE DE UN ENEMIGO. Son 0x20 bytes desde 0xE160, y siempre los mismos: (ix+0) el dibujo, (ix+1) la clase -que es el indice en la tabla de cuarenta-, (ix+2,3) la velocidad vertical y (ix+4,5) la horizontal, (ix+6,7) la posicion vertical con su parte fraccionaria y (ix+8,9) la horizontal, (ix+10,11) el patron y el color del sprite, (ix+14) la espera entre disparos, (ix+16) el contador de cuadros y (ix+19) el rumbo en la circunferencia de 256 grados.
+L 0xAF96 mueve_los_enemigos
+L 0xAFAE mueve_uno
+L 0xAFBD suma_la_velocidad
+C 0xAF96 los catorce
+C 0xAF9F hueco vacio, nada
+C 0xAFA2 y 0xFF quiere decir quieto
+C 0xAFB0 la vertical
+C 0xAFB7 y la horizontal, dos bytes mas alla
+C 0xAFBD la velocidad se suma con su fraccion
+C 0xAFD0 rebota en el borde de abajo
+C 0xAFE4 cambiando el signo de la velocidad
+C 0xAFE9 y fuera de la pantalla, se apaga
+C 0xB022 el contador, a cero
+C 0xB026 y al paso siguiente
+B 0xAFD0 LOS CUARENTA COMPORTAMIENTOS. La tabla de 0xAD60 reparte por (ix+1), y cada rutina es un enemigo distinto: por donde entra, como se mueve y cuando dispara. Cinco de ellas hacen doble papel -son tambien los disparos del jefe, que la tabla de 0xAE9E vuelve a nombrar-, y las cinco de 0xADCC son los jefes de fase. Aqui van bautizadas por su numero en la tabla, que es lo unico que se puede afirmar sin jugarse cada una: el comportamiento concreto se lee en su codigo.
+L 0xAFD0 comportamiento_32
+L 0xAFF4 comportamiento_39
+L 0xB02A comportamiento_11
+L 0xB074 comportamiento_13
+L 0xB09D comportamiento_14
+L 0xB0DC comportamiento_29
+L 0xB108 jefe_de_la_fase_1
+L 0xB155 comportamiento_12
+L 0xB15D comportamiento_8   Tambien es disparo del jefe de la fase 1
+L 0xB1A3 comportamiento_16
+L 0xB1E6 comportamiento_25
+L 0xB211 comportamiento_18
+L 0xB244 comportamiento_3
+L 0xB292 comportamiento_6   Tambien es disparo del jefe de la fase 2
+L 0xB2EC jefe_de_la_fase_2
+L 0xB320 comportamiento_15
+L 0xB329 comportamiento_17
+L 0xB340 comportamiento_19
+L 0xB368 comportamiento_21
+L 0xB391 comportamiento_4
+L 0xB3C0 comportamiento_7   Tambien es disparo del jefe de la fase 3
+L 0xB3E9 jefe_de_la_fase_3
+L 0xB41F comportamiento_20
+L 0xB443 comportamiento_36
+L 0xB44B comportamiento_26
+L 0xB454 comportamiento_0
+L 0xB47A comportamiento_1
+L 0xB493 comportamiento_9   Tambien es disparo del jefe de la fase 4
+L 0xB4C1 jefe_de_la_fase_4
+L 0xB4EA comportamiento_27
+L 0xB509 comportamiento_33
+L 0xB527 comportamiento_35
+L 0xB548 comportamiento_38
+L 0xB56E comportamiento_34
+L 0xB5B2 comportamiento_28
+L 0xB5CE comportamiento_22
+L 0xB672 comportamiento_5
+L 0xB6E6 comportamiento_10   Tambien es disparo del jefe de la fase 5
+L 0xB780 jefe_de_la_fase_5
+L 0xB7A4 comportamiento_23
+L 0xB7AD comportamiento_31
+L 0xB7D2 comportamiento_37
+L 0xB7EA comportamiento_30
+L 0xB7F4 comportamiento_2
+L 0xB81D comportamiento_24
+B 0x4D1E PEDIR UN SONIDO. Por aqui entra todo lo que suena. Hay dos puertas: 0x4D1E solo suena si el bit 6 de los bits de modo esta puesto -o sea, no en la demostracion- y 0x4D29 suena siempre. El numero que se pide lleva la melodia en los seis bits bajos y la PRIORIDAD en los dos altos: si lo que ya esta sonando manda mas, la peticion se descarta.
+L 0x4D1E pide_un_sonido_si_se_juega
+L 0x4D29 pide_un_sonido
+L 0x4D37 elige_la_melodia
+L 0x4DA4 monta_los_canales
+L 0x4DC7 guarda_el_canal
+L 0x4DD2 el_paso_de_la_nota
+C 0x4D1E el bit 6 de los bits de modo
+C 0x4D25 en la demostracion no suena nada
+C 0x4D2E y se pide
+C 0x4D37 la melodia 0xD5 es la de la pausa
+C 0x4D3B que se guarda el canal entero para devolverlo luego
+C 0x4D45 el numero pedido
+C 0x4D4B las de 0xC5 y 0xD5
+C 0x4D53 y las de prioridad 0 o 3
+C 0x4D5B van al canal de arriba
+C 0x4D5D dos canales
+C 0x4D60 la melodia sola
+C 0x4D62 las de menos de 0x16 gastan uno
+C 0x4D66 las de 0x22 arriba, tres
+C 0x4D6E lo que esta sonando
+C 0x4D6F 0x8F es "no hay nada"
+C 0x4D78 la de la pausa entra siempre
+C 0x4D7C y si es la misma, no se repite
+C 0x4D81 tres melodias se cuelan una posicion mas arriba
+C 0x4D90 y si la que suena manda mas, no se cambia
+C 0x4D9C la tabla de partituras
+C 0x4DA4 el canal, en marcha
+C 0x4DA8 con su numero
+C 0x4DAA y el puntero a la partitura
+C 0x4DB4 sin nota puesta
+C 0x4DBA el siguiente canal
+C 0x4DC7 los 0x13 bytes del canal
+C 0x4DD2 el byte de la partitura
+C 0x4DD4 un cero es un salto
+C 0x4DD9 tres bytes atras: el bucle
+C 0x4DE6 el desliz hacia la nota nueva
+C 0x4DEA al llegar
+C 0x4E02 se para el desliz
+C 0x4E09 y un paso mas de la partitura
+L 0x4E0F pon_el_mezclador
+L 0x4E41 apaga_el_bit
+L 0x4E45 enciende_el_bit
+L 0x4E8B canal_de_la_pausa
+L 0x4E98 el_avance_de_la_melodia
+L 0x4EED baja_el_tono
+L 0x4EF8 sigue_la_partitura
+L 0x4F06 lee_el_paso
+C 0x4E0F el mezclador que hay puesto
+C 0x4E16 los dos bits de este canal: tono y ruido
+C 0x4E2B tres huecos a la izquierda: los bits de ruido
+C 0x4E38 se guarda
+C 0x4E3C y al registro 7 del PSG
+C 0x4E48 el mezclador, otra vez
+C 0x4E50 el primer canal
+C 0x4E55 tres canales
+C 0x4E57 de 0x13 bytes
+C 0x4E5C el canal 5, que es el del ruido
+C 0x4E60 con la pausa puesta
+C 0x4E6C se devuelve lo que se habia guardado
+C 0x4E78 sin melodia, se calla
+C 0x4E83 dos numeros de registro por canal
+C 0x4E8B en pausa no avanza nada
+C 0x4E98 la melodia de fondo
+C 0x4E9E su reloj
+C 0x4EA3 un paso mas
+C 0x4EAE tres pasos
+C 0x4EBA el cuarto baja el tono
+C 0x4EC6 y al quinto, se acaba
+C 0x4EF8 los dos bits altos del numero
+C 0x4EFD con los dos puestos, es efecto y no melodia
+C 0x4F02 la cuenta de la nota
+C 0x4F06 por donde va la partitura
+C 0x4F0D 0xFE es "salta"
+C 0x4F12 y de 0xFF arriba, se acabo
+B 0x4F06 EL LENGUAJE DE LAS PARTITURAS. Cada paso es un byte de mando y sus argumentos: 0xFE salta a otro sitio, 0xFF y arriba acaban la melodia, un byte de nibble alto 2 cambia la forma de la onda y de paso la duracion, uno de nibble alto 1 pone la envolvente del PSG, y cualquier otro es una NOTA -el nibble alto es el volumen y el bajo la octava, con el byte siguiente de codigo de nota-.
+C 0x4F20 el nibble alto del mando
+C 0x4F22 el 2 cambia el instrumento
+C 0x4F2C y la duracion
+C 0x4F33 con 0x20 exacto, solo silencio
+C 0x4F3C el bit 3 trae envolvente
+C 0x4F44 registro 12 del PSG: el periodo
+C 0x4F4C y el 11
+C 0x4F55 el 1 pone el ruido
+C 0x4F5E registro 6 del PSG
+C 0x4F65 el volumen, en el nibble alto
+C 0x4F68 y la octava en el bajo
+C 0x4F6B con el codigo de nota detras
+C 0x4F6C se traduce a periodo
+C 0x4F70 y se escribe
+C 0x4F7C con la duracion que toque
+C 0x4F82 el sitio al que volver de un salto
+C 0x4F88 se recupera
+C 0x4F92 y el desliz se para
+C 0x4F9F el canal de ruido
+C 0x4FA6 con la melodia 0x94
+C 0x4FAE el canal 3
+C 0x4FB7 y las melodias de 0x22 arriba
+C 0x4FD0 lo que suena en el canal de arriba
+C 0x4FD7 y si es la misma, no se pide otra vez
+C 0x4FDF la cuenta de la nota
+C 0x4FE3 con la nota acabada, nada
+C 0x4FED las melodias largas
+C 0x4FF1 y el fondo puesto
+L 0x5005 escribe_el_volumen
+L 0x5021 el_paso_de_un_efecto
+L 0x503B lee_una_nota
+L 0x504A lee_la_duracion
+L 0x5088 lee_el_ataque
+L 0x509D pon_la_nota
+C 0x4FFA el desvanecido
+C 0x4FFE y por debajo de cero, se calla
+C 0x5005 el mezclador
+C 0x5009 el registro de volumen del canal
+C 0x500D con envolvente
+C 0x5014 registro 13 del PSG: la forma
+C 0x5019 y el volumen pasa a ser "envolvente"
+C 0x501E registro 8, 9 o 10
+C 0x5021 la cuenta de la nota
+C 0x5024 acabada, al paso siguiente
+C 0x5027 y la del efecto
+C 0x503B el nibble alto
+C 0x503E el 0xD cambia el paso de la escala
+C 0x504A de 0xF0 arriba viene la duracion
+C 0x5051 sus cuatro bits bajos, mas uno
+C 0x5058 y el byte siguiente trae dos numeros
+C 0x5064 dos melodias concretas
+C 0x506C con el fondo puesto
+C 0x5077 cambian de duracion
+C 0x5088 de 0xE0 arriba viene el ataque
+C 0x508E el bit 3 lo separa del desvanecido
+C 0x509D la octava
+C 0x50A5 sumando el paso de escala tantas veces
+C 0x50AE el codigo de nota
+C 0x50B8 la nota 12 no se alarga
+C 0x50C3 la duracion
+L 0xA3B3 campana_de_velocidad
+L 0xA407 remata_la_campana
+L 0xA418 choca_con_la_campana
+C 0xA3B3 el jugador que la cogio
+C 0xA3BB con siete ya no sube mas
+C 0xA3BF una mas
+C 0xA3C4 y se apagan las armas de los dos
+C 0xA3CE el doble disparo
+C 0xA3D5 quita el arma
+C 0xA3D7 y pone el disparo doble
+C 0xA3DB con el brazo o el arma puestos, no
+C 0xA3E6 y si no, el brazo
+C 0xA3EA el arma
+C 0xA3F5 con su marca
+C 0xA3F7 el truco de armas
+C 0xA3FC dieciseis usos
+C 0xA400 o treinta y dos con el truco
+C 0xA407 se cambia la musica
+C 0xA40C y la campana se apaga
+C 0xA413 una nube menos
+B 0xA418 EL ESCUDO AGUANTA EL GOLPE. Si la nave lleva el arma -bit 2 del estado-, un choque no la mata: se le descuentan dos usos del contador de 0xE095, y solo cuando se acaban se apaga la marca. Sin arma, el choque va directo a 0xA95D, que es la muerte.
+C 0xA421 el bit 2: lleva arma
+C 0xA42F dos usos menos
+C 0xA436 y al acabarse, se apaga
+C 0xA43C sin arma, la nave se estrella
+C 0xA44E el marco de choque de esa clase de enemigo
+L 0xA473 mira_el_arma_contra_los_grandes
+L 0xA486 recorre_los_grandes
+L 0xA4C4 rompe_el_grande
+L 0xA4DB mira_las_naves_contra_los_grandes
+L 0xA501 recorre_los_grandes_2
+C 0xA473 el arma del primer jugador
+C 0xA47C y si juegan dos
+C 0xA486 sin arma en el aire, nada
+C 0xA48B solo cuenta cuando esta abajo del todo
+C 0xA492 0x30 pixeles mas arriba
+C 0xA498 los cinco enemigos grandes
+C 0xA49B hueco vacio, se salta
+C 0xA4A2 y las clases 5 arriba no valen
+C 0xA4AE el marco horizontal: 0x17
+C 0xA4B5 y el vertical: 0x1F
+C 0xA4C9 el grande, reventado
+C 0xA4D3 con su cuenta
+C 0xA4DB el primer jugador
+C 0xA4EE y si juegan dos
+C 0xA50F las clases 6 a 9 son las que chocan
+C 0xA524 el marco: 0x1F en las dos
+L 0xA543 reparte_el_choque
+L 0xA579 recoge_el_arma_del_suelo
+L 0xA593 revienta_al_jefe
+L 0xA5A3 recoge_una_vida
+L 0xA5BF recupera_la_bomba
+L 0xA628 suena_la_bomba
+C 0xA543 la clase 7 es el arma
+C 0xA547 la 8, el jefe
+C 0xA54A y la 9, la vida extra
+C 0xA553 y las demas revientan, alternando dibujo
+C 0xA569 y dan puntos al que le dio
+C 0xA574 con su ruido
+C 0xA57E el enemigo se borra
+C 0xA585 con doble disparo o brazo, no
+C 0xA589 y si no, se pone el arma
+C 0xA598 el jefe se borra
+C 0xA5A8 y la vida extra
+C 0xA5B3 con 99 no caben mas
+C 0xA5BB con su musica
+B 0xA5BF LA BOMBA SE PUEDE RECOGER. Si la nave pasa por encima de su propia bomba antes de que llegue al suelo, se la vuelve a guardar: (0xE08D) queda a uno y ya puede volver a tirarla. Es lo que permite encadenar bombas sin esperar.
+C 0xA5C5 el primer jugador, vivo
+C 0xA5CD y su bomba, en el aire
+C 0xA5D8 el marco: 0x1F en las dos
+C 0xA5EA la bomba se recoge
+C 0xA5EF y vuelve a estar cargada
+C 0xA5F5 y lo mismo para el segundo
+L 0xA62D mira_las_naves_contra_los_disparos
+L 0xA65E recorre_los_disparos_del_enemigo
+L 0xA69A le_dan_a_la_nave
+L 0xA6C8 gasta_el_escudo
+L 0xA6E2 mira_los_disparos_contra_los_enemigos
+C 0xA654 con la nave recien nacida no cuenta
+C 0xA65E los siete disparos del enemigo
+C 0xA666 hueco vacio, se salta
+C 0xA66C y solo la clase 1 hace dano
+C 0xA678 el marco: 0x13 en horizontal
+C 0xA681 y 0x0D en vertical, que es mas estrecho
+C 0xA69A el disparo se gasta
+C 0xA6AF el bit 2: lleva arma
+C 0xA6B3 con el brazo puesto
+C 0xA6B8 solo se pierde el brazo
+C 0xA6C1 con su ruido
+C 0xA6D1 y con arma, se gastan usos
+C 0xA6D7 hasta que se acaba
+C 0xA6DC y sin nada, la nave se estrella
+C 0xA6E5 los disparos del primer jugador
+C 0xA6F4 y los del segundo
+C 0xA70C el marco de esa clase de enemigo
+L 0xA726 recorre_los_catorce
+L 0xA754 le_dan_al_enemigo
+L 0xA79A mira_las_naves_contra_los_enemigos
+L 0xA7CB recorre_los_catorce_2
+C 0xA721 los catorce enemigos
+C 0xA728 hueco vacio, se salta
+C 0xA732 el marco horizontal
+C 0xA737 y el vertical
+C 0xA73C que jugador disparo
+C 0xA755 con las dos agarradas
+C 0xA761 los puntos van a los dos
+C 0xA76B o al que fuera
+C 0xA773 la clase del enemigo
+C 0xA776 las de 7 a 0x0B suenan distinto
+C 0xA787 y el enemigo se apaga
+C 0xA7A5 con la nave recien nacida no cuenta
+C 0xA7CB los catorce enemigos
+C 0xA7D3 hueco vacio, se salta
+C 0xA7DB y los que no chocan tampoco
+C 0xA7E8 el marco: 0x1F horizontal
+C 0xA7F0 y mas estrecho en vertical
+L 0xA817 choca_con_el_enemigo
+L 0xA855 mira_los_disparos_contra_el_jefe
+L 0xA88D recorre_los_disparos_del_jugador
+L 0xA8C9 le_dan_al_jefe
+C 0xA7F7 y si esa nave ya se estaba muriendo, tampoco
+C 0xA81F el bit 2: lleva arma
+C 0xA821 sin ella, la nave se estrella
+C 0xA82D dos usos menos
+C 0xA836 y al acabarse, se apaga
+C 0xA840 el enemigo tambien revienta
+C 0xA847 las clases de 7 a 0x0B suenan distinto
+C 0xA855 si no hay jefe, nada
+C 0xA85D donde esta, menos 0x10
+C 0xA86F los disparos del primero
+C 0xA87E y los del segundo
+C 0xA89C el marco del jefe
+C 0xA8AA el horizontal
+C 0xA8AF y el vertical
+C 0xA8CC el disparo se gasta
+C 0xA8CF la vida del jefe
+C 0xA8D3 y al llegar a cero, se acabo
+L 0xA912 mira_las_naves_contra_el_jefe
+L 0xA943 choca_con_el_jefe
+L 0xA95D se_muere_la_nave
+L 0xA9CC mueve_los_grandes
+C 0xA8DD el jefe revienta
+C 0xA8E5 y da 100 puntos
+C 0xA8FA la musica de fondo, fuera
+C 0xA8FE con la del jefe muerto
+C 0xA943 si no hay jefe, nada
+C 0xA950 el marco: 0x1F horizontal
+C 0xA957 y 0x19 vertical
+B 0xA95D SE MUERE LA NAVE. Aqui llega todo lo que la mata: el choque con un enemigo, con el jefe o con un disparo. Se enciende su bit en (0xE078) -que es lo que hace que 0x5F04 la mande a la rutina de la explosion-, se le quitan las armas, se le tira la bomba y, si era el ultimo con vidas, se calla la musica y suena el final.
+C 0xA971 0x3C cuadros de explosion
+C 0xA974 la bomba se pierde
+C 0xA97B y se apunta que se esta muriendo
+C 0xA987 el contador de campanas, a cero
+C 0xA98E se le quitan las armas
+C 0xA999 si queda algun jugador vivo
+C 0xA99F o vidas
+C 0xA9B8 solo cambia la musica
+C 0xA9C4 y si no, se calla
+C 0xA9C7 y suena el final
+C 0xA9CC los cinco enemigos grandes
+C 0xA9D4 hueco vacio, se salta
+C 0xA9D8 y cada clase tiene su tamano
+L 0xAA1F coloca_los_grandes
+L 0xAA68 saca_las_oleadas
+L 0xAA72 saca_una_oleada
+L 0xAABC monta_el_grande
+B 0xAA1F LOS GRANDES SE DIBUJAN CON CASILLAS, NO CON SPRITES. Un enemigo grande no cabe en un sprite de 16x16, asi que se pinta escribiendo casillas en el buffer de la pantalla: 0xAA27 saca su guion de la tabla de 0xACCB, 0xAA41 convierte su fila en un desplazamiento -cinco `add hl,hl`, o sea por 32- y los cuatro `ldi` escriben dos casillas arriba y dos 0x1E mas alla, o sea justo debajo. Cuatro casillas por cuadro.
+C 0xAA20 solo la clase 1 se dibuja asi
+C 0xAA27 la tabla de guiones
+C 0xAA37 el paso dentro del guion
+C 0xAA41 la fila, por 32
+C 0xAA47 y el buffer de la pantalla
+C 0xAA53 dos casillas arriba
+C 0xAA57 y una fila mas abajo
+C 0xAA5E las otras dos
+C 0xAA68 mientras no toque esperar
+C 0xAA72 la oleada siguiente
+C 0xAA78 lo que hay que esperar hasta la de despues
+C 0xAA82 y la formacion que toca
+C 0xAA8A con cero, no hay oleada
+C 0xAA8C el nibble alto: la clase
+C 0xAA94 el bit 3 pide segunda vuelta
+C 0xAA98 y en la primera no sale
+C 0xAA9F los tres bits bajos: el recorrido
+C 0xAAA6 por tres, que es lo que ocupa cada uno
+C 0xAAAF los cinco huecos de enemigo grande
+C 0xAAB3 se busca uno libre
+C 0xAAC1 y ahi nace
+L 0xAADC el_grande_que_serpentea
+L 0xAB07 el_grande_que_baja
+L 0xAB1D avanza_el_grande
+L 0xAB24 se_para_el_grande
+L 0xAB28 el_grande_de_paso_uno
+L 0xAB32 el_grande_que_dispara
+L 0xAB40 el_grande_que_late
+C 0xAADC la posicion
+C 0xAAE1 nueve pixeles a la derecha
+C 0xAAE6 y seis mas abajo
+C 0xAAEC la cuenta del recorrido
+C 0xAAEE en 0x30, 0x20 y 0x10 dispara
+C 0xAAF2 y en 0x28 y 0x18 cambia de paso
+C 0xAB03 acabada la cuenta, se para
+C 0xAB0C su velocidad
+C 0xAB15 y su cuenta
+C 0xAB19 en 0x20 dispara
+C 0xAB24 la clase vuelve a su valor de reposo
+C 0xAB2C paso uno
+C 0xAB36 paso dos
+C 0xAB3D y suelta un disparo
+C 0xAB43 la clase
+C 0xAB4A su cuenta
+C 0xAB4C con su ruido
+C 0xAB51 y 0x11 cuadros de latido
+C 0xAB57 el bit 2: alterna los dos dibujos
+C 0xAB66 el contador del recorrido largo
+C 0xAB6D en el octavo paso
+C 0xAB71 en el 0x10 pasa a la clase 8
+C 0xAB77 y en el 0x18 vuelve a empezar con la 9
+L 0xAB9A elige_el_grande_final
+L 0xABAC el_grande_quieto
+L 0xABAD pon_el_dibujo_del_grande
+L 0xABBF el_grande_que_se_apaga
+C 0xAB9A con dos jugadores
+C 0xABA1 o con armas puestas
+C 0xABA8 sale el de la clase 7
+C 0xABAD las clases 0 y 1 no se ven
+C 0xABB4 y las demas, por ocho: cuatro casillas por dibujo
+C 0xABC3 su cuenta
+C 0xABD0 y al acabarse se borra
+
+# ======================================================================
+# LA ERRATA DE LA TABLA DE COSENO, Y LO QUE KONAMI ARREGLO
+# ======================================================================
+# Las tablas de 0xB950 de Twin Bee y de 0x844E de Knightmare son la misma:
+# 65 bytes, y solo TRES distintos. Comparadas contra 255*cos(k*90/64), las de
+# Knightmare tienen tres desviaciones de mas de dos unidades y una de ellas
+# rompe la unica regla que un coseno de un cuadrante no puede romper -SUBIR-:
+# en k=58 pone 47 cuando la anterior vale 43.
+#
+#     k    Knightmare   Twin Bee   255*cos(k*90/64)
+#     46      105          105          109
+#     56       46           48           50
+#     58       47           37           37
+#     64        1            0            0
+#
+# O sea que Twin Bee, que es el cartucho SIGUIENTE por numero de catalogo
+# (RC-740 frente a RC-739), llega con dos de las tres arregladas y con el
+# cos(90) puesto a cero. La que sobrevive es la de k=46, que no rompe la
+# monotonia y por eso nadie la vio: son cuatro unidades de menos en un angulo
+# de 64,7 grados. No es un fallo del desensamblado -los bytes son los que
+# son-, y ninguna de las dos se nota jugando; la de Knightmare, que hace que
+# un enemigo apunte 1,4 grados hacia atras en un solo angulo de 256, tampoco.
+
+# ======================================================================
+# LOS GUIONES DE LA NAVE QUE CRUZA
+# ======================================================================
+# Dos guiones iguales para la misma animacion: una nave que cruza la pantalla
+# escribiendo casillas del decorado. El estado son los seis bytes que 0x446A
+# copia a 0xEBF7, y los dos ultimos SON EL PUNTERO al guion: por eso el guion
+# esta justo delante de su estado inicial y no hace falta que nadie lo cargue.
+# 0x436F lo va gastando -cada byte trae en los cinco bits bajos lo que dura y
+# en los tres altos por donde va- y 0x437C avanza el puntero.
+D 0x4344 0x4353 guion_de_la_nave_del_marcador  El que gasta la escena 7, el marcador final
+F 0x4344 1
+D 0x4353 0x4359 estado_inicial_del_marcador  Los seis bytes que 0x433E copia a 0xEBF7. Los dos ultimos son 44 43, o sea el puntero a 0x4344 de aqui arriba
+F 0x4353 4,w
+D 0x4475 0x448D guion_de_la_nave_de_la_fase  El de la escena 3, cuando se pasa de fase
+F 0x4475 1
+D 0x448D 0x4493 estado_inicial_de_la_fase  Y su estado, con el puntero a 0x4475
+F 0x448D 4,w
+
+D 0x4525 0x452D partida_nueva_del_uno  Los ocho bytes que 0x451C copia a 0xE070 al empezar: las vidas, la fase y los contadores
+F 0x4525 1
+D 0x452D 0x4535 partida_nueva_del_dos  Lo mismo para el segundo jugador; 0x450C elige entre los dos
+F 0x452D 1
+
+# ======================================================================
+# LAS PARTITURAS
+# ======================================================================
+D 0x510E 0x511A periodos_de_las_notas  Los DOCE semitonos, de 0x6B a 0x39. 0x50D1 indexa aqui con el codigo de nota y luego baja de octava doblando el periodo con `add hl,hl` (0x50E1): con doce numeros se hacen las ocho octavas
+F 0x510E 1
+D 0x511A 0x518C tabla_de_melodias  Los 57 punteros a las partituras. 0x4D9C entra con `ld de,0x5118` y el numero de melodia DOBLADO, asi que la melodia 1 es el primer puntero de aqui y la 0 no existe
+F 0x511A w
+D 0x518C 0x5D20 partituras  Las melodias y los efectos del cartucho, en el lenguaje que interpreta 0x4F06: 0xFE salta, 0xFF acaba, el nibble alto 2 cambia de instrumento, el 1 pone el ruido y lo demas son notas con su volumen y su octava
+
+# ======================================================================
+# TABLAS SUELTAS
+# ======================================================================
+D 0x6016 0x6033 guion_del_zumbido  Los valores que 0x6002 va soltando, uno cada 32 cuadros, hasta el 0xFF que apaga el aviso
+F 0x6016 1
+D 0x60CD 0x60D2 codigo_al_que_no_llega_nadie  `ld a,0D6h` y `ld (0E05Eh),a`: cinco bytes que ningun salto alcanza. El `jr z` de 0x60C9 cae en 0x60D2 y el `jr` de 0x60CB en 0x60D6, o sea justo por debajo y por encima. Hace lo mismo que 0x60DB, que si se usa
+F 0x60CD 5
+D 0x6316 0x6326 velocidades_del_disparo  Ocho palabras que 0x6265 indexa con (0xE081), el nivel de potencia: cuanto avanza el disparo por cuadro
+F 0x6316 w
+D 0x65D6 0x65E6 fotogramas_de_la_explosion  Dieciseis valores que 0x65BE indexa con los bits 2 a 5 del contador de la explosion: cual de las parejas de dibujos toca en cada momento
+F 0x65D6 1
+D 0x65E6 0x65F1 dibujos_de_la_explosion  Las parejas (patron, color) que 0x65C8 indexa: los dos sprites de la nave estrellandose
+F 0x65E6 1
+D 0x6672 0x667C dos_guiones_de_disparo  Dos tandas de cinco bytes, la del primer jugador (0x65F4) y la del segundo (0x6604)
+F 0x6672 5
+D 0x699B 0x69BE guion_de_los_disparos  Siete bytes por tanda: el desvio, el patron, el color, el hueco siguiente y el ruido. 0x6869, 0x688A, 0x689A, 0x6921 y 0x694B eligen por donde entrar segun el arma que lleve la nave
+F 0x699B 7
+D 0x6B5C 0x6B6C sentidos_de_la_nube  Dieciseis bytes que 0x6B2C indexa con (0xE361): el bit 0 elige entre 0x0140 y 0x00C0
+F 0x6B5C 1
+D 0x6750 0x677D tabla_de_acercamiento  Los 0x51 valores que 0x66E1 indexa para decidir COMO se acercan las dos naves cuando van a darse la mano: nueve pasos de distancia vertical por nueve de horizontal. Y como estan comprimidos, hay que ver por donde llegan a la RAM: el descompresor de este cartucho solo sabe escribir en la VRAM, asi que 0x5E03 los suelta en 0x3B80 -un hueco de la tabla de atributos de sprites que nadie usa- y 0x5E0F los trae de vuelta a 0xEB00 con LDIRMV. La VRAM hace de mesa de trabajo
+D 0x677D 0x6788 dibujos_del_brazo  Los once codigos que 0x66FF indexa con lo que salio de la tabla de arriba: el dibujo del brazo estirado en cada direccion
+F 0x677D 1
+D 0xA3AB 0xA3B3 velocidades_del_enemigo  Cuatro palabras que 0xA363 indexa con (0xE362), el nivel de la oleada
+F 0xA3AB w
+D 0xA442 0xA44E marco_del_enemigo  Seis parejas (minimo, maximo) que 0xA456 indexa: hasta donde puede moverse cada clase
+F 0xA442 1
+D 0xA78E 0xA79A marco_del_enemigo_grande  Lo mismo para los de 0xA70C, con el minimo a 0x0F
+F 0xA78E 1
+D 0xA906 0xA912 marco_del_enemigo_del_jefe  Y la tercera pareja de la misma tabla, la de 0xA89C
+F 0xA906 1
+
+# ======================================================================
+# LAS OLEADAS
+# ======================================================================
+D 0xABD3 0xAC47 niveles_de_la_oleada  0xAA78 indexa aqui con (0xE3A0), que cuenta oleadas, y lo que saca va a (0xE3A1)
+F 0xABD3 1
+D 0xAC47 0xACBC formaciones  0xAA82 indexa aqui con el mismo contador: el nibble alto elige la clase y el bajo, el recorrido
+F 0xAC47 1
+D 0xACBC 0xACCB recorridos  Ocho grupos de tres bytes que 0xAAA8 reparte entre los cinco enemigos grandes
+F 0xACBC 3
+D 0xACCB 0xACE3 tabla_de_dibujos_de_los_grandes  Doce punteros a los guiones de aqui abajo, que 0xAA27 indexa con la clase del enemigo grande
+F 0xACCB w
+D 0xACE3 0xAD25 dibujos_de_los_grandes  Los guiones de casillas de cada enemigo grande: cuatro codigos por dibujo -dos arriba y dos abajo- que 0xAA53 escribe en el buffer de la pantalla. Un enemigo grande no cabe en un sprite de 16x16, asi que se pinta con la tabla de nombres
+F 0xACE3 4
+D 0xAD60 0xADB0 tabla_de_los_cuarenta_enemigos  Los cuarenta comportamientos que reparte el `call 40ABh` de 0xAD5D, con (ix+1) de indice
+F 0xAD60 w
+D 0xADCC 0xADD6 tabla_de_los_cinco_jefes  Los cinco del `call 40ABh` de 0xADC9
+F 0xADCC w
+D 0xAE89 0xAE8E duracion_del_destello  Cinco valores que 0xAE53 indexa con 0x406A
+F 0xAE89 1
+D 0xAE9E 0xAEA8 tabla_de_los_cinco_disparos  Los cinco del `call 40ABh` de 0xAE9B
+F 0xAE9E w
+
+# ======================================================================
+# EL MOVIMIENTO
+# ======================================================================
+D 0xB2E4 0xB2EC ocho_rumbos  0xB2D5 indexa con los tres bits bajos de A: el angulo con el que sale el enemigo
+F 0xB2E4 1
+D 0xB540 0xB548 giro_de_ocho_pasos  Lo que 0xB532 suma al angulo (ix+9): cuatro pasos a un lado y cuatro al otro
+F 0xB540 1
+D 0xB5A2 0xB5B2 ocho_velocidades  Ocho palabras con signo que 0xB58E gasta como recorrido de entrada
+F 0xB5A2 w
+D 0xB662 0xB672 ocho_velocidades_del_jefe  La misma forma para 0xB5F3 y 0xB62A
+F 0xB662 w
+D 0xB6CA 0xB6E6 dos_recorridos  Dos tandas de siete palabras, la de 0xB68D y la de 0xB6BF
+F 0xB6CA w
+D 0xB778 0xB780 rumbos_y_pasos  Cuatro angulos y cuatro pasos que gastan 0xB727 y 0xB75D
+F 0xB778 1
+D 0xB950 0xB991 tabla_del_coseno  Los 65 valores de un cuadrante: 255 * cos(k * 90/64). 0xB925 la indexa con el angulo y 0xB92E arregla el signo segun el cuadrante, asi que con esta sola tabla se hacen los cuatro y tambien el seno, entrando por 0x40 - k. ES LA MISMA TABLA QUE LA DE KNIGHTMARE (RC-739), que la tiene en 0x844E: de los 65 bytes solo se diferencian TRES. Y esos tres son justo los que Konami arreglo -ver abajo-
+F 0xB950 1
+D 0xB991 0xB9A1 tangentes_del_arcotangente  Ocho palabras que 0xB8AF recorre de mayor a menor comparando contra el cociente: es la busqueda que convierte una pareja (dx, dy) en un angulo. El `ld b,040h` y el `sub 008h` de 0xB8BF dicen que cada acierto vale ocho grados de los 256 de la circunferencia
+F 0xB991 w
+D 0xBB18 0xBB1D codigo_al_que_no_llega_nadie_2  `ld de,0010h` y un `jr` a 0xBB1D, o sea la variante de 0x10 de lo que hay justo debajo. Ningun salto entra aqui
+F 0xBB18 5
+D 0xBB25 0xBB2B codigo_al_que_no_llega_nadie_3  `ld a,(ix+011h)`, `rra` y un `jr nc`: seis bytes que tampoco alcanza nadie
+F 0xBB25 6
+D 0xBB38 0xBB43 codigo_al_que_no_llega_nadie_4  Y once mas, con la misma forma. Los cuatro trozos huerfanos del cartucho suman 27 bytes
+F 0xBB38 11
+D 0xBC13 0xBC2F tres_juegos_de_casillas  Tres tandas cerradas por 0xFF que 0xBBC9 elige segun (0xE321) y (0xE32A): las casillas con las que se dibuja el jefe
+F 0xBC13 1
+D 0xBD6C 0xBD6F tres_esperas  0xBD5E indexa con (0xE07E), la vuelta: cuanto tarda un enemigo en disparar
+F 0xBD6C 1
+D 0xBDD9 0xBDDD cuatro_rumbos  0xBD9C indexa con los dos bits bajos del contador de 0xBB01
+F 0xBDD9 1
+D 0xBEE8 0xBF11 pasos_de_entrada  41 valores, uno por clase de enemigo: cuantos pasos da al nacer antes de ponerse a lo suyo. 0xBD88 indexa aqui con la clase y lo que saca es la cuenta del `djnz` de 0xBD8F
+F 0xBEE8 1
+D 0xBF11 0xBF1B tabla_de_guiones_del_jefe  Cinco punteros, uno por fase
+F 0xBF11 w
+D 0xBF1B 0xBFB1 guiones_del_jefe  La lista de clases que va soltando el jefe de cada fase, cerrada con 0xFF: 0xBC8D la recorre con (0xE156) y vuelve a empezar al llegar al final
+F 0xBF1B 1
+D 0xBFB1 0xBFF7 velocidades_del_jefe  0xBC9F indexa con el paso del guion: los seis bits bajos van a (0xE15A) y los dos altos, rotados, a (0xE159)
+F 0xBFB1 1
+
+# ======================================================================
+# LA MARCA OCULTA DE KONAMI
+# ======================================================================
+# Los nueve ultimos bytes utiles del cartucho, y no los lee nadie: es la firma
+# que Konami dejaba al final de sus ROM. La descubrio Manuel Pazos, y sin su
+# trabajo estos bytes serian relleno.
+D 0xBFF7 0xC000 marca_oculta_de_konami  BA B7 9A AC 81 91 06 40 AA: el titulo en katakana -tsu-i-n-bii-, el 0x06 de la longitud, el 07 40 del RC-740 y el 0xAA que cierra. Los seis ultimos son justamente los que Nemesis (RC-742) va buscando por las ranuras 0, 0x80, 0x84, 0x88 y 0x8C en su rutina de 0x505A: asi sabe que Twin Bee esta enchufado al lado
+F 0xBFF7 9
+
+C 0x6CD1 el contador de cuadros
+C 0x6CD4 una fila cada dieciseis: eso es el scroll
+C 0x6CD8 con el jefe puesto, el decorado se para
+C 0x6CDE una fila mas
+C 0x6CE8 y una menos para la siguiente oleada
+C 0x6CE9 los cinco enemigos grandes
+C 0x6CF6 se les cuenta el paso
+C 0x6CF8 y al llegar a 0x1A se borran
+C 0x6D08 por donde va el decorado
+C 0x6D0B el mapa, en la RAM
+C 0x6D0F y la fila que toca
+C 0x6D12 al buffer de la pantalla
+C 0x6D15 veinticuatro filas
+C 0x6D17 32 casillas, una por `ldi`: sale mas barato que un bucle
+C 0x6D57 y la fila de ABAJO en pantalla es la ANTERIOR del mapa
+C 0x6D5B por eso el mapa esta guardado del reves
+C 0x6D62 el puntero, a salvo
+C 0x6D65 el codigo de fila
+C 0x6D68 por 32
+C 0x6D6E y la tabla de bloques
+
+C 0x5F73 las bombas
+C 0x5F76 y las nubes van siempre, se juegue o no
+C 0x5F7F quien recoge la campana
+C 0x5F85 la oleada del jefe
+C 0x5F8B los enemigos se mueven
+C 0x5F8E y se colocan
+C 0x5F9A con el jefe puesto no hay nubes
+C 0x5FA9 las dos cuentas de nave recien nacida
+C 0x5FB2 una menos
+
+C 0xA382 la campana pasa a "apagandose"
+C 0xA38F ocho pixeles a la izquierda
+C 0xA397 y a la misma altura
+C 0xA399 con dieciseis cuadros de cartel
+C 0xA39C el premio, por cuatro
+C 0xA39F mas 0x88: el dibujo que le toca
+C 0xA3A3 en blanco
+C 0xA507 hueco vacio, se salta
+C 0xA51C la clase, a salvo
+C 0xA51E cuatro bytes mas alla: la posicion
+C 0xA536 y se reparte el choque
+C 0xA53B diez bytes hasta el siguiente
+C 0xA700 hueco de disparo vacio
+C 0xA707 la clase del disparo
+C 0xA716 y su posicion
+C 0xA72C quince bytes atras: la posicion del enemigo
+C 0xA745 0x2D adelante: el siguiente enemigo
+C 0xA606 la bomba del segundo
+C 0xA610 el mismo marco de 0x1F
+C 0xA620 se recoge
+C 0xA625 y vuelve a estar cargada
+C 0xA630 el bit 0: le queda partida al primero
+C 0xA638 y no puede estar recien nacido
+C 0xA9DA la clase 1 mide 7 de alto
+C 0xA9E0 la 2, 9 por 5
+C 0xA9E6 la 3, 10 por 10
+C 0xA9EB la 4
+C 0xA9EE la 5
+C 0xA9F1 las 5 y 6
+C 0xA9F5 y las de 7 arriba
+C 0xAA14 dieciseis bytes hasta el siguiente
+C 0xAABC la clase, en B
+C 0xAAC3 con su recorrido
+C 0xAAC9 y su clase
+C 0xAAD1 por ocho: el dibujo
+C 0xAAD7 y donde nace
+C 0xAB82 seis bytes atras: la clase
+C 0xAB86 se le cambia
+C 0xAB8A y se le da un paso
+C 0xAB90 con las dos velocidades a cero
+
+L 0x996E sube_los_patrones_de_la_fase
+L 0x9F88 sube_el_color_de_la_fase
+L 0xB921 seno_y_coseno
+C 0x996E la fase, sin la vuelta
+C 0x9974 la tabla de patrones
+C 0x997A a la casilla 0xC0
+C 0x9986 y la pareja, que va ESPEJADA
+C 0x998C el segundo puntero del par: el destino
+C 0x9F8E la tabla de color
+C 0x9F94 a la casilla 0xC0
+C 0x9FA0 y la pareja, que aqui NO va espejada
+C 0x9648 los sprites del jefe, iguales en las cinco fases
+C 0x9654 y los de esta fase
+C 0x9669 con un bloque suelto detras
+C 0x50BF la duracion de la nota
+C 0x50C9 mas el ataque
+C 0x50D1 la tabla de periodos
+C 0x50DA la octava
+C 0x50E1 se dobla el periodo por cada una
+C 0x50E4 y el desafinado, si lo hay
+C 0xB86C el signo de la diferencia
+C 0xB86F ocho pixeles de margen
+C 0xB877 lo que le falta en vertical
+C 0xB886 y lo que le falta en horizontal
+C 0xB925 la tabla del coseno
+C 0xB92E los cuadrantes 1 y 2
+C 0xB937 llevan el coseno cambiado de signo
+C 0xB93A y el seno sale de la MISMA tabla
+C 0xB93D entrando por 0x40 - k
+C 0x5DC0 los sprites de las dos naves
+C 0x5DC4 y los de las bombas, las campanas y las nubes
+C 0x5DD9 el marcador
+C 0x5DDC los catorce enemigos
+C 0x5DED con su espera de disparo
+C 0x64AF el bit 0 de sus banderas
+C 0x64BB con bomba cargada, el dibujo cambia
+
+L 0x441F pinta_el_cartel_del_final
+L 0xB166 apunta_al_jefe
+C 0x4420 la fila siguiente
+C 0x4423 el paso del cartel
+C 0x4428 y con trece se acabo
+C 0x442E la tabla de los doce rotulos
+C 0x4435 en su sitio del buffer
+C 0xB25D dispara
+C 0xB264 y al paso siguiente
+C 0xB267 el dado barato
+C 0xB26C la velocidad horizontal
+C 0xB04D el bit 0 de sus banderas
+C 0xB051 y va a un lado o al otro
+C 0xB059 sin velocidad vertical: se queda a esa altura
+C 0xB05F y en el cuadro 0x0C
+C 0xB069 se lanza
+C 0xB166 donde esta el jefe
+C 0xB169 ocho pixeles arriba
+C 0xB176 el disparo, en blanco
+C 0xB17E con velocidad 0x0A03
+C 0x9F41 la fase 3
+C 0x9F4A las demas suben su color tal cual
+C 0x9F6D y la 3 lo sube con el bit 7 de C: la permuta de paleta
+C 0x9F97 y encima, el suyo
+B 0x9F41 LA FASE 3 NO TIENE COLOR PROPIO. Sube el mismo bloque que las demas, pero con el bit 7 del registro C puesto, que enciende la permuta de nibbles de 0x47B5: el 12 pasa a 6, el 6 a 12 y el 5 a 9. Con eso, la misma hoja de casillas sale con otra paleta y el cartucho se ahorra un juego entero de color.
+
+C 0x6AE2 el arma del primer jugador
+C 0x6AE5 a su sprite
+C 0x6AE8 la vertical
+C 0x6AEB y la horizontal
+C 0x6AED con su dibujo
+C 0x6AF1 en blanco
+C 0x6AF4 y si juegan dos
+C 0x6AF8 tambien la del segundo
+C 0x60F9 la velocidad horizontal
+C 0x60FD la vertical, sumada con su fraccion
+C 0x6106 y luego la horizontal
+C 0x410D la fase, tambien aparte
+C 0x4110 con la fase 0 no hay nada que montar
+C 0x4113 la tabla de donde empieza cada fase
+C 0x4116 la fase, para el resto del juego
+C 0x411A la palabra numero fase-1
+C 0x411D por donde va el decorado
+C 0x4121 y la de al lado: el tope
+C 0x4129 la segunda tabla por fase
+C 0x412D doblada, que es como la quiere 0xEBB2
+C 0x4131 y su palabra
+C 0x4138 y la tercera
+C 0x610E el hito que espera el marcador
+C 0x6112 por donde va el decorado
+C 0x6115 y si no ha llegado, nada
+C 0x611A el contador de fase, uno mas
+C 0x611D el hito siguiente
+C 0x6127 con la marca del jefe
+C 0x612F y sus sprites
+
+L 0x4384 dibuja_la_nave_que_cruza
+L 0x439C escribe_las_cuatro_casillas
+C 0x4384 sin paso, no se dibuja
+C 0x438B las casillas de la estela
+C 0x438E el bit 0 del estado: dos parejas de dibujos
+C 0x439C donde va
+C 0x439F las dos casillas de arriba
+C 0x43A2 y 0x1F mas alla, o sea la fila de abajo
+C 0x43AA los tres bits altos: por donde tira
+C 0x43AD a la derecha
+C 0x43B4 hacia abajo, dos filas
+C 0x43B9 a la izquierda
+C 0x43BE y hacia arriba
+C 0xBAB9 0xFF: hueco vacio
+C 0xBABE si ademas la clase es cero
+C 0xBAC2 se borra del todo
+C 0xBAC7 y si no, se marca para apagar
+C 0xBACC 0x20 bytes hasta el siguiente
+C 0xA7B3 con dos jugadores
+C 0xA7C1 y la nave sin estrenar no choca
+C 0xA7C6 donde esta
+C 0x6B7C los ocho bytes de la nube
+C 0x6B85 y su sprite, fuera
+C 0x60A6 la de la fase
+C 0x60AC o la de mas ritmo
+C 0x60B2 y lo que suena en el de abajo
+C 0x67D1 con el sprite fuera
+C 0x6BD1 y la horizontal
+C 0x6BD3 con su dibujo
+C 0x6BD6 al primer sprite
+C 0x6BE0 dieciseis pixeles
+C 0x6BE5 y con el dibujo de al lado
+C 0x653D la potencia del segundo, a cero
+C 0x6559 fuera la marca de "muriendose"
+C 0x655E sus vidas
+C 0x6563 sin vidas, se acabo
+C 0x6565 una menos, en BCD
+C 0x656B y a esperar
+C 0x656F la nave nueva entra por la derecha
+C 0x4B0D 0x20 casillas atras: una fila mas arriba
+C 0x4B14 el rotulo, tres casillas
+C 0x4B1B once del relleno
+C 0x4B21 y otras once
+C 0x4B25 y la fila de abajo, a cero
+C 0x4B29 un paso menos
+C 0x4BD5 fondo azul
+C 0x4BD8 pantalla limpia
+C 0x4BDB la fuente
+C 0x4BDE el dibujo grande
+C 0x4BE4 y su color, en un solo banco
+C 0x4BEF tres filas de once casillas
+C 0x4C08 y los dos rotulos
+C 0x4222 el aviso que este corriendo
+C 0x4227 si hay uno, se atiende y se sale
+C 0x422A el bit 7 del mando: la pausa
+C 0x422D con el
+C 0x4231 se apunta que hay pausa
+C 0x4238 y se conmuta
+C 0x423C sin ella no suena nada
+C 0x4241 y con ella, el pitido
+C 0xB0DF el dibujo
+C 0xB0E7 se acerca en horizontal
+C 0xB0EA por debajo del borde
+C 0xB0F0 o por encima de la fila 0x38
+C 0xB0F3 sale hacia abajo
+C 0xB0F9 por el lado que le toque
+C 0xB105 y en el segundo paso, solo persigue
+C 0xB02D el dibujo
+C 0xB035 el bit 0 de sus banderas
+C 0xB03E lo que le falta para la nave
+C 0xB045 con cuatro pixeles de margen
+C 0xB4EF el dibujo, alternando
+C 0xA1D8 hueco vacio, se salta
+C 0xA1DE el marco horizontal
+C 0xA1E3 y el vertical
+C 0xA1EA y entonces la recoge
+C 0xA1F1 tres bytes hasta el siguiente
+C 0xA44F la clase del enemigo
+C 0xA453 por dos: la entrada de la tabla
+C 0xA461 la posicion, mas el minimo
+C 0xA466 contra el maximo
+C 0x4E1F el numero de canal
+C 0x4E20 el bit 1: hay tono
+C 0x4E22 se enciende
+C 0x4E27 o se apaga
+C 0x6D19 32 `ldi` seguidos, uno por casilla
+
+L 0x9177 sube_los_sprites_de_la_fase
+L 0xBA72 elige_a_quien_apuntar
+C 0x440A veinte casillas por fila
+C 0x4412 doce mas: hasta el borde
+C 0x4415 y la fila siguiente
+C 0x441C veinte casillas
+C 0x469D tres bancos
+C 0x46A0 el bloque
+C 0x46A4 0x800 mas arriba cada vez
+C 0xBA72 donde esta la nave 1
+C 0xBA76 con los dos vivos
+C 0xBA83 se turna: un cuadro a uno y otro al otro
+C 0xBA88 y si no, a la que quede
+B 0xBA72 A QUIEN APUNTAN LOS ENEMIGOS CON DOS JUGADORES. No eligen la mas cerca ni la que mas moleste: van turnandose. (0xE150) se conmuta con un `xor 1` en cada llamada, asi que un enemigo apunta a la primera nave y el siguiente a la segunda. Con un solo jugador vivo, todos van a por el.
+C 0xBB8A los catorce
+C 0xBB8E siete bytes: la posicion
+C 0xBB95 0x20 hasta el siguiente
+C 0x436F el reloj del paso
+C 0x4375 los cinco bits bajos: lo que dura
+C 0x4379 y al acabarse, el paso siguiente del guion
+C 0x6CA4 la vertical
+C 0x6CA7 la horizontal
+C 0x6CAA el patron
+C 0x6CAC y el color
+C 0x6CAE 0x0A hasta la siguiente campana
+C 0x428C los sprites del primero
+C 0x4290 y sus variables
+C 0x4293 los dos jugadores
+C 0x4298 mientras a alguno le quede algo
+C 0x429D o quede partida
+C 0x9177 la fase, sin la vuelta
+C 0x917D la tabla de sprites de enemigo
+C 0x9183 el primer byte dice cuantas parejas trae
+C 0x9188 a 0x1D80
+C 0x918E y detras, un bloque suelto
+C 0x994A los patrones de la nave y del decorado comun
+C 0x9953 con su tramo espejado
+C 0x9962 el resto
+C 0x996B y su espejo
+C 0x67AA con dos jugadores
+C 0x67AE la bomba del segundo
+C 0x67B3 si ya hay una en el aire, no
+C 0x67BD sale de donde este la nave
+C 0x6496 el estado de la nave 2
+C 0x6499 el bit 2: en llamas
+C 0x649D y el dibujo alterna cada dos cuadros
+C 0x630A deja rastro tambien de la horizontal
+C 0x693A los cuatro huecos
+C 0x693D y hacen falta los cuatro libres
+C 0x9F67 la fase 3, con la permuta puesta
+C 0xB56E el dibujo
+C 0xB579 en el cuadro 8
+C 0xB1C8 tercer paso: baja 0x68
+C 0xB1D0 y se va de lado
+C 0x689A el disparo grande
+C 0xA79A el primer jugador
+C 0x42AE el contador de la nave
+C 0x42B3 uno menos
+C 0x42C2 las variables del segundo
+C 0x42C5 y sus sprites
+
+B 0x4025 EL PARCHE QUE NO PARCHEA. Las escrituras de 0x4028, 0x4055 y 0x40FE apuntan a 0x4195, 0x41A1 y 0x47F7, que estan en la propia ROM del cartucho: el `ld` sale al bus y se pierde. De tener efecto, la primera dejaria un `pop hl / ret` donde hay un `djnz`, la segunda un `jp 00000h` -o sea un reinicio- y la tercera apagaria la pantalla tocando el byte de R1 de la tabla de registros. Las dos primeras estan IGUAL en Knightmare (RC-739) y en The Goonies (RC-734), en las mismas posiciones relativas, asi que vienen del armazon y no de este juego.
+C 0x4025 0xC9E1 seria `pop hl / ret`
+C 0x4028 pero 0x4195 es ROM: no llega
+C 0x402B y a montar el cartel de la presentacion
+C 0x402E limpia la peticion de interrupcion del VDP
+C 0x4032 el sonido, lo primero de todo
+C 0x4035 el cerrojo: si ya hay un cuadro dentro, no se entra otra vez
+C 0x403C se echa
+C 0x403D y a partir de aqui se admiten interrupciones anidadas
+C 0x403E el mando, el marcador y lo que va suelto
+C 0x4041 y la escena que toque
+C 0x4045 cerrojo abierto
+C 0x4048 si mientras tanto ha entrado otro cuadro
+C 0x404D se le da otra pasada al sonido
+C 0x4052 0x41A1 es ROM: este `ld` tampoco llega
+C 0x4058 lo que si hace es escribir el registro: B el valor, C el numero
+C 0x405B se dobla A antes de que la de abajo lo vuelva a doblar
+C 0x405C HL += 2A
+C 0x405F la palabra que sale, en DE
+C 0x4063 el bit 5 de los bits de modo
+C 0x4069 dobla A: entradas de dos bytes
+C 0x406A el acarreo, al alto
+C 0x40AB la direccion de retorno ES la tabla
+C 0x40AC la entrada numero A
+C 0x40AF y se salta ahi, con lo cual el `ret` de esa rutina vuelve a quien llamo
+C 0x40B1 lo primero, saber en que ranura esta este cartucho
+C 0x40B5 los dos bits de la pagina 1
+C 0x40BA la tabla de subranuras de la BIOS
+C 0x40C0 el bit de "hay subranuras"
+C 0x40C4 cuatro adelante: la pagina 2 de la misma tabla
+C 0x40CC la pagina 2, que es donde va la mitad de arriba del cartucho
+C 0x40CE y se conecta de verdad
+C 0x40D1 el `jp` del gancho de interrupcion
+C 0x40D6 que apunta aqui dentro
+C 0x40DC la RAM del juego, de 0xE000 a 0xF100
+C 0x40E5 a cero
+C 0x40E9 y la pila, arriba del todo de ella
+C 0x40EB el cerrojo, echado
+C 0x40EE se prepara la maquina
+C 0x40F5 se limpia la peticion del VDP
+C 0x40F8 y se abre la puerta
+C 0x40F9 el bucle vacio: a partir de aqui todo pasa en la interrupcion
+C 0x40FB 0x47F7 es el byte de R1 de la tabla de registros... y tambien es ROM
+C 0x40FE asi que la pantalla no se apaga
+C 0x4103 la fase que le hayan escrito, 1 a 5
+C 0x4109 con la fase a cero se entiende que es la 1
+C 0x4147 y la cuarta tabla, que es la unica de cuatro entradas
+C 0x414E la altura a la que aparece el jefe
+C 0x415B el contador de cuadros, que muchas cosas miran
+C 0x415F la escena
+C 0x4162 en las tres primeras -presentacion, titulo y arranque-
+C 0x4166 se apila 0x4493, que remata el cuadro
+C 0x4169 y hara de direccion de retorno cuando la escena acabe
+C 0x416A C la escena y B el paso dentro de ella
+C 0x416F y a la que toque de las ocho de aqui abajo
+C 0x4182 paso 0 y paso 2 para abajo, mas adelante
+C 0x4184 el contador de cuadros
+C 0x4187 uno de cada dos: el cartel baja a medio ritmo
+C 0x4189 una fila mas arriba
+C 0x418C hasta que se acaben los catorce pasos
+C 0x418D y entonces el cartel de KONAMI
+C 0x4193 y 0x22 cuadros de espera
+C 0x4195 paso 2: espera y a la pantalla del titulo
+C 0x419A mientras quede espera, nada
+C 0x419C la pantalla del titulo entera
+C 0x41A0 y a la escena 1 con el paso a cero
+C 0x41A3 EL PASO 0: los registros del VDP
+C 0x41A6 pantalla limpia
+C 0x41A9 la fuente
+C 0x41AC y el rotulo, arriba del todo, listo para bajar
+C 0x41B1 la escena del titulo es solo esperar
+C 0x41B5 mientras tanto, parpadea la eleccion
+C 0x41B8 y al acabarse la espera, a jugar
+C 0x41BB paso 0 al final, como siempre
+C 0x41BD el aviso de que empieza
+C 0x41C0 y el marcador
+C 0x41C3 si queda partida
+C 0x41C8 vuelta a la escena 0: la presentacion otra vez
+C 0x41CE fondo negro
+C 0x41D4 el rotulo de la fase
+C 0x41D7 A cuadros de espera
+C 0x41DA un paso mas
+C 0x41DF paso 0 al final
+C 0x41E5 acabada la espera, al paso siguiente
+C 0x41E7 cada jugador tiene su rotulo
+C 0x41EA el del primero
+C 0x41EF y el del segundo
+C 0x41F2 el bit 2 de la espera: asi el rotulo parpadea
+C 0x41F4 medio cuadro se escribe
+C 0x41F7 y el otro medio se borra, pasando los codigos por `and 0`
+C 0x41FC paso 2 para abajo
+C 0x41FE partida nueva
+C 0x4207 y a montarla
+C 0x420D EL PASO 0: 0x50 cuadros de rotulo
+C 0x4211 el segundo jugador
+C 0x4216 hereda las vidas del primero
+C 0x421C los patrones, el color, los sprites y la primera pantalla
+C 0x4244 y se borra el primer sprite
+C 0x4247 con la pausa puesta
+C 0x424D cada jugador tiene su rotulo de vidas
+C 0x4250 REST del primero
+C 0x4255 y del segundo
+C 0x4258 el guion al buffer de la pantalla
+C 0x425B y las vidas que queden
+C 0x425E STAGE
+C 0x4264 y el numero de fase
+C 0x4267 el marcador
+C 0x426A HI SCORE y 1P SCORE
+C 0x426F o los tres, si juegan dos
+C 0x4275 y las cifras
+C 0x4278 y todo eso a la VRAM de una vez
+C 0x427B el cuadro de juego entero
+C 0x427E si se acabo la partida
+C 0x4284 se saltan dos escenas de golpe
+C 0x4289 la cuenta atras de las dos naves
+C 0x42A2 la espera a cero
+C 0x42A5 una escena mas
+C 0x42A9 y su paso, a cero
+C 0x42B6 y al llegar a cero, los sprites de la nave se apartan
+C 0x42CC 0xD0 en la Y del primer sprite corta la lista entera
+C 0x42D4 y se borran veinte casillas
+C 0x42D9 el bit 0 del aviso
+C 0x42DC espera a cero
+C 0x42E1 y el aviso pasa a 2
+C 0x42E9 mientras dure la espera
+C 0x42EA se sigue pintando el marcador
+C 0x42EE y al acabarse, el aviso fuera
+C 0x42F2 paso 0 al final
+C 0x42F4 los dos mandos
+C 0x42FB el gatillo: se puede saltar la espera
+C 0x4303 o esperar a que se acabe
+C 0x4307 mientras tanto, el marcador
+C 0x430A paso 2 para abajo
+C 0x430C los bits de modo
+C 0x4310 fuera los bits 5 y 6: se acabo lo de dos jugadores
+C 0x4359 paso 0 al final
+C 0x435B la cuenta del cartel
+C 0x4361 el CONGRATULATION!
+C 0x4367 y los puntos
+C 0x49AA la casilla 0 en blanco
+C 0x49AD la fuente
+C 0x49B6 con color blanco sobre transparente
+C 0x49C0 los patrones
+C 0x49C6 y el color
+
+L 0xB8EE divide_con_fraccion
+L 0xB904 seno_y_coseno_del_contador
+L 0xB9E7 velocidad_por_el_angulo
+L 0xBA1D angulo_a_posicion
+C 0xB8EE con divisor cero
+C 0xB8F2 la parte entera
+C 0xB8FB y con el resto, otra vuelta: la fraccion
+C 0xB900 0xFFFF: lo mas grande que hay
+C 0xB904 el angulo
+C 0xB907 primer cuadrante
+C 0xB90C segundo: 0x80 - a
+C 0xB916 tercero
+C 0xB9E7 el contador hace de angulo
+C 0xB9ED cada cuadrante entra en la tabla por su lado
+C 0xBA1D la horizontal
+C 0xBA23 la tabla del coseno
+C 0xBA26 y el cuadrante decide por donde
+C 0xA277 el estado de las dos naves
+C 0xA27E lo que tienen las dos
+C 0xA280 el bit 1: doble disparo
+C 0xA289 y el bit 3: el arma
+C 0xA2EE con dos jugadores
+C 0xA2F8 el segundo, vivo
+C 0xA2FC donde esta su nave
+C 0x6830 el sprite anterior
+C 0x6836 y la bomba anterior
+C 0x63FC con dos jugadores
+C 0x63FF y agarradas, la 2 hereda los sprites de la 1
+C 0x6401 el bit 1: le queda partida al segundo
+C 0x6A0A los cuatro bytes del sprite
+C 0x6A12 cuatro mas hasta el siguiente disparo
+C 0x6A63 el segundo gatillo del segundo jugador
+C 0x6A69 y hace falta llevar el arma
+C 0x6A3F los dos huecos del segundo
+C 0xA912 el primer jugador, vivo
+C 0xA95D el jugador que se muere
+C 0xA95F su bomba
+C 0xA962 y su cuenta de explosion
+C 0xB09D el dibujo
+C 0xB0A8 por debajo de la fila 0x30
+C 0xB0AE y con la nave a menos de ocho pixeles
+C 0xB0BB el bit 0 de sus banderas
+C 0xB211 el dibujo, alternando cada cuatro
+C 0xB244 el dibujo, alternando cada cuatro
+C 0xB1FB donde quiere estar
+C 0xB1FE donde esta
+C 0xB202 con ocho pixeles de margen
+C 0xB292 el dibujo del disparo
+C 0xB2EC el paso del jefe
+C 0xB2CE el refresco del Z80, de dado
+C 0xB2D0 y con el sale a una altura al azar
+C 0xB1A3 el dibujo, alternando cada cuatro
+C 0xAFF4 el dibujo, alternando cada cuatro
+C 0xB653 sin velocidad vertical
+C 0xB65B y dispara
+C 0xBAA9 los cuatro bytes que quedan
+C 0xBAF4 DE la vertical y BC la horizontal
+C 0xB850 donde quiere estar
+C 0xB8B4 la tangente que toca
+C 0xB8B9 se compara con el cociente
+C 0xB8BF y ocho grados menos por cada una que no pasa
+C 0xB8A6 los dos signos, juntos
+C 0xB08D segundo paso
+C 0xB08F baja 0x30
+C 0xB0B9 segundo paso
+C 0xB4C1 el paso del jefe
+C 0x4409 veinte casillas de la fila
+C 0x43D8 el paso siguiente
+
+C 0xA92B con dos jugadores
+C 0xA92F el segundo, vivo
+C 0xA939 y sin estrenar no choca
+C 0x43C8 por donde va la nave
+C 0x43CB una casilla mas
+C 0x43CF paso 2 para abajo
+C 0x43D1 y al llegar a 0x400, se acabo
+C 0x43E7 las casillas de la estela
+C 0x43E8 de la 0x70 a la 0x73
+C 0x43F0 se les da la vuelta con el bit 1
+C 0x43F2 y se escriben
+C 0x43FC cada dieciseis casillas
+C 0x4401 se sube una fila entera del buffer
+C 0x443F paso 3
+C 0x4441 al llegar a 0x9C0
+C 0x4447 se calla la musica
+C 0x444F y con el canal libre
+C 0x4455 se pasa a la escena 2 paso 6
+C 0x4ECF la melodia de fondo pasa a primer plano
+C 0x4ED8 y si era la del final, se calla
+C 0x61CC el color de las cuatro cifras
+C 0x61CE cuatro bytes por sprite
+C 0xAB5E el paso, tres bytes atras
+C 0xB89B los dos signos dicen el cuadrante
+C 0xB89F con uno solo
+C 0xB8A4 es el tercero
+C 0xB9D2 el rumbo
+C 0xB9D5 mirando a la derecha, sale por la izquierda
+C 0xB9DD y al reves
+C 0xBA3C tercer cuadrante
+C 0xBA43 0xC0 - a
+C 0x4C1B las dos filas de la eleccion
+C 0x4C21 y la que este marcada
+C 0x507E los dos numeros, a su sitio
+C 0x605D los dos ultimos bytes
+C 0x6063 siete bytes a cero
+C 0x6AD5 el arma siguiente
+C 0xAD46 0x20 bytes hasta el enemigo siguiente
+C 0xB019 en el cuadro 0x18
+C 0xB01F apunta y arranca
+C 0xB0CE baja 0x30
+C 0xB0D4 y en el cuadro 0x28
+C 0xB129 a donde va el jefe
+C 0xB12F y la marca de que dispara
+C 0xB8C4 el cuadrante
+C 0xBED9 baja deprisa
+C 0xB18E la cuenta del disparo
+C 0xB194 y cada 0x1F -o 0x0F- cuadros, uno
+C 0xB2B5 paso 2
+C 0xB2B7 con su dibujo
+C 0xB2A8 la vuelta
+C 0xB07C el paso
+C 0xB081 y a la altura que le toca
+C 0xB9A1 sin dividir: se acerca a saco
+C 0x6041 0 - BC
+C 0x6A26 los tres huecos de abajo
+C 0x4AF6 las 27 casillas del rotulo
+C 0x4AFF y su color, blanco sobre transparente
+C 0x9F2F el color de la nave y del decorado comun
+C 0xA418 el jugador que choco
+C 0xA6C8 sus usos de arma
+C 0xB7D7 dos bits: tres dibujos
+C 0xBB43 el rumbo, en seno y coseno
+C 0xBB4C se escala
+C 0xBB4F y se le pone a los dos ejes
+C 0xB88A ocho pixeles de margen
+C 0xA646 con dos jugadores
+C 0xA88D el hueco de disparo
+C 0xA890 vacio, se salta
+C 0xA897 su clase
+C 0xB856 las clases de 9 arriba apuntan a la nave
+C 0xBB59 el signo aparte
+
+C 0xA6A2 el jugador al que le dieron
+C 0xA6AE su estado
+C 0xBAF7 dos bytes: la velocidad vertical
+C 0xBAFD y otros dos: la horizontal
+C 0xA915 el bit 0: le queda partida
+C 0xA918 y no puede estar muriendose
+C 0x4DF5 el byte de la nota
+C 0x4DF9 y el siguiente
+
+L 0x4074 el_uno_tiene_bomba         El bit 0 de (0xE078) o la bomba de (0xE087): vuelve con Z si el primer jugador puede hacer algo
+L 0x407E el_dos_tiene_bomba         Lo mismo con el bit 1 y (0xE088)
+L 0x4088 donde_esta_la_nave_uno     Devuelve en HL la vertical y la horizontal enteras de la nave 1
+L 0x4091 donde_esta_la_nave_dos     Y las de la nave 2
+L 0x409A cuantas_bombas             Dos con dos jugadores, una con uno
+L 0x40A2 cuantos_disparos           Seis con dos jugadores, dos con uno
+L 0x40FB apaga_la_pantalla          O eso pretende: 0x47F7 es ROM, asi que el `res 6` no llega. Lo unico que hace de verdad es callar el sonido
+L 0x4267 escribe_el_marcador
+L 0x44FF empieza_una_partida_nueva
+L 0x45C6 escribe_cuatro_cifras
+L 0x478F da_la_vuelta_al_byte       Los ocho `rr l / rla`: el espejo horizontal de una fila de pixeles
+L 0x47FB pon_el_registro_siete
+L 0x49C9 borra_ocho_bytes
+L 0x4C1B marca_la_eleccion
+L 0x4C2F escribe_la_flecha
+L 0x4F82 acaba_la_melodia
+L 0x4FD0 pide_si_no_suena_ya
+L 0x50E4 pon_el_periodo
+L 0x5106 avanza_la_partitura
+L 0x61C7 pon_el_color_del_marcador
+L 0x68BA dispara_el_dos
+L 0x68D5 dispara_el_dos_de_verdad
+L 0x994A sube_los_patrones_del_decorado
+L 0x9F2F sube_el_color_del_decorado
+L 0x9F41 sube_el_color_comun
+
+L 0xA461 cabe_en_el_marco           La posicion mas el minimo del marco, comparada con el maximo
+L 0xA6FD recorre_los_disparos_3
+L 0xAD25 mueve_los_catorce
+L 0xAD51 le_toca_a_este_enemigo
+L 0xB022 al_paso_siguiente          Pone el contador a cero y sube (ix+1)
+L 0xB129 pon_el_destino_del_jefe
+L 0xB1BA cambia_el_sentido_vertical
+L 0xB2A8 cuanto_tarda_en_saltar
+L 0xB850 angulo_hacia_la_nave
+L 0xB8D9 divide_hl_entre_b          Ocho vueltas de restar y desplazar: el cociente sale en L y el resto en H
+L 0xB9A1 acerca_en_horizontal
+L 0xB9B1 acerca_en_vertical_lento
+L 0xB9B3 acerca_en_vertical
+L 0xB9BF divide_con_signo
+L 0xB9D2 sale_por_el_lado_contrario
+L 0xBA66 pon_el_angulo_y_la_posicion
+L 0xBAA5 marca_para_apagar
+L 0xBAA9 borra_cuatro
+L 0xBAB2 apaga_todos_los_enemigos
+L 0xBAD3 marca_al_jefe_para_apagar
+L 0xBAD8 suma_a_la_vertical
+L 0xBADF pon_la_vertical
+L 0xBAE6 suma_a_la_horizontal
+L 0xBAED pon_la_horizontal
+L 0xBAF4 pon_las_dos_velocidades    DE la vertical y BC la horizontal
+L 0xBB01 cuenta_de_enemigo          Un contador que no vuelve nunca a cero: el dado barato del cartucho
+L 0xBB07 alterna_cada_ocho
+L 0xBB0B alterna_cada_cuatro
+L 0xBB1D baja_veinte
+L 0xBB20 baja_lo_que_diga_de
+L 0xBB2B va_a_la_izquierda
+L 0xBB30 va_a_la_derecha
+L 0xBB33 va_a_la_derecha_deprisa
+L 0xBB43 apunta_y_avanza
+L 0xBB59 escala_la_velocidad
+L 0xBC4C reparte_los_que_nacen
+L 0xBD97 rumbo_al_azar
