@@ -97,13 +97,13 @@ class ElListadoNoSeDegrada(unittest.TestCase):
                 out.append((int(m.group(2), 16), m.group(3).strip()))
         return out
 
-    def test_la_densidad_no_baja_del_22_por_ciento(self):
+    def test_la_densidad_no_baja_del_40_por_ciento(self):
         ins = self.instrucciones()
         con = [a for a, c in ins if c.startswith("; ")]
         self.assertGreater(len(ins), 7000, "faltan instrucciones en el listado")
         pct = 100.0 * len(con) / len(ins)
         self.assertGreaterEqual(
-            pct, 22.0,
+            pct, 40.0,
             "la densidad ha bajado a %.1f %% (%d de %d)" % (pct, len(con), len(ins)))
 
     def test_ningun_destino_de_call_se_queda_sin_nombre(self):

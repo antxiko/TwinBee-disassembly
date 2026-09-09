@@ -8,7 +8,7 @@ A complete, commented disassembly of Konami's **Twin Bee** for the MSX
 listing reassembles into the ROM **byte for byte**.
 
     explained          32,768 of 32,768   100 %
-    comment density    1,820 of 7,405     24.6 %
+    comment density    3,062 of 7,405     41.4 %
     blocks below 10 %        0 of 1,000
     call targets unnamed     0
     tests                   21, green

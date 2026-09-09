@@ -2525,3 +2525,1288 @@ L 0xBB43 apunta_y_avanza
 L 0xBB59 escala_la_velocidad
 L 0xBC4C reparte_los_que_nacen
 L 0xBD97 rumbo_al_azar
+
+C 0xB7F4 los dos dibujos, alternando cada ocho cuadros
+C 0xB7FF con el primero de los dos
+C 0xB801 la marca de "este dispara" se enciende
+C 0xB806 y con el otro se apaga
+C 0xB80C 0x10 pixeles de margen contra el borde
+C 0xB815 y ocho contra el de la derecha
+C 0xB81D los dos dibujos, alternando cada ocho
+C 0xB822 y el paso, en B
+C 0xB825 paso 2 para abajo
+C 0xB82A 0x10 pixeles de margen
+C 0xB832 la horizontal, cambiada de signo
+C 0xB835 y tambien la vertical: rebota en la esquina
+C 0xB838 paso 2
+C 0xB83A su contador
+C 0xB83D y en el cuadro 0x18
+C 0xB847 la velocidad horizontal
+C 0xB84D del reves
+C 0xB853 la clase del enemigo
+C 0xB85A la clase 0 apunta al sitio fijo
+C 0xB85F y las clases 1 a 4
+C 0xB864 solo si estan en su primer paso
+C 0xB86A las demas apuntan a donde este la nave
+C 0xB872 la altura de destino, con su margen
+C 0xB876 menos donde esta
+C 0xB879 la diferencia, sin signo
+C 0xB87D si es cero, no hay que girar
+C 0xB880 con acarreo, la diferencia es negativa
+C 0xB882 se apunta el signo
+C 0xB883 y se pasa a valor absoluto
+C 0xB889 igual con la horizontal
+C 0xB894 el valor
+C 0xB897 y su signo
+C 0xB89D con los dos signos a uno
+C 0xB8A1 o los dos a cero
+C 0xB8AC el cociente dy/dx, con ocho bits de fraccion
+C 0xB8AF la tabla de ocho tangentes
+C 0xB8B2 se arranca en el grado 0x40
+C 0xB8B5 la palabra siguiente
+C 0xB8BB en cuanto una es menor, ese es el angulo
+C 0xB8BD la siguiente tangente
+C 0xB8C5 el primer cuadrante se devuelve tal cual
+C 0xB8C8 y el segundo, restado de 0x80
+
+C 0xB8CC el tercero, sumado a 0x80
+C 0xB8D3 y el cuarto, cambiado de signo
+C 0xB8D9 ocho bits de cociente
+C 0xB8DC el dividendo se dobla
+C 0xB8DE la mitad alta
+C 0xB8E1 y si cabe el divisor
+C 0xB8E4 se resta
+C 0xB8E7 el bit del cociente, invertido por el `ccf`
+C 0xB8E8 una vuelta menos
+C 0xB8EB y el ultimo bit entra a empujones
+C 0xB8F8 el cociente, a la parte entera
+C 0xB8F9 y el resto se dobla ocho veces mas
+C 0xB8FE para sacar los ocho bits de fraccion
+C 0xB901 0xFF en las dos mitades
+C 0xB905 y el cuadrante, en C
+C 0xB90B cuadrante 1
+C 0xB915 cuadrante 2
+C 0xB91A el angulo, menos 0x80
+C 0xB91E cuadrante 3
+C 0xB91F y 0x100 - a
+C 0xB922 el angulo, a salvo en el juego de repuesto
+C 0xB928 HL apunta a su entrada
+C 0xB92D el coseno de ese angulo
+C 0xB92F o sea C igual a 1 o a 2
+C 0xB936 con D a 0xFF, que es el signo
+C 0xB93F 0x40 - k es el complemento del angulo
+C 0xB946 los cuadrantes 2 y 3
+C 0xB94B llevan el seno cambiado de signo
+C 0xB94E y sale en BC
+
+C 0xB9A3 donde esta en horizontal
+C 0xB9A6 menos donde quiere estar
+C 0xB9A9 partido entre lo que diga C
+C 0xB9AC y eso es lo que se le suma
+C 0xB9B1 sin dividir tampoco
+C 0xB9B3 donde esta en vertical
+C 0xB9B6 menos su destino
+C 0xB9BF la diferencia, en la mitad baja
+C 0xB9C0 y la alta a cero
+C 0xB9C2 el bit 7 dice si es negativa
+C 0xB9C5 y entonces la alta va a 0xFF
+C 0xB9C6 C es cuantas veces se parte
+C 0xB9C8 con cero, se deja como esta
+C 0xB9CA `sra` conserva el signo al dividir
+C 0xB9CF y sale con el signo puesto
+C 0xB9D9 con el rumbo por debajo de 0x80
+C 0xB9E0 la posicion horizontal
+C 0xB9E3 y la bandera del lado
+C 0xB9EA la tabla del coseno
+C 0xB9EF el signo, positivo
+C 0xB9F7 el segundo cuadrante entra por 0x80 - a
+C 0xB9FB y con el signo cambiado
+C 0xBA05 el tercero, restando 0x80
+C 0xBA09 y el cuarto, negado
+C 0xBA0E el valor de la tabla, escalado
+C 0xBA11 y se suma o se resta al centro
+C 0xBA20 ahora el otro eje
+C 0xBA2D el primer cuadrante entra por 0x40 - a
+C 0xBA38 el segundo, restando 0x40
+C 0xBA48 y el cuarto, restando 0xC0
+C 0xBA5B la vertical
+C 0xBA5E y el angulo avanza
+C 0xBA66 la entrada de la tabla
+C 0xBA6B el radio: dividir el coseno entre 2^E
+C 0xBA6F y el signo sale por el acarreo
+
+C 0xBA75 la posicion, a DE
+C 0xBA79 con uno solo vivo
+C 0xBA7F la marca del turno
+C 0xBA85 y se guarda para el siguiente
+C 0xBA8B su posicion
+C 0xBA8C y si ese esta muriendose
+C 0xBA98 se apunta a un sitio fijo fuera de la pantalla
+C 0xBA9C 0x10 pixeles mas arriba
+C 0xBA9E el destino vertical
+C 0xBAA1 y el horizontal
+C 0xBAA6 la clase pasa a 0xFE
+C 0xBAA8 y el resto, a cero
+C 0xBAB5 los catorce huecos
+C 0xBAD3 el hueco del jefe
+C 0xBAD8 la velocidad vertical que lleva
+C 0xBADE mas lo que se le suma
+C 0xBAE6 y lo mismo con la horizontal
+C 0xBAF6 el bloque, en HL
+C 0xBB04 uno mas, y da la vuelta sola en 256
+C 0xBB07 el bit 3 del contador de cuadros
+C 0xBB0B o el bit 2, que alterna el doble de deprisa
+C 0xBB0D el contador
+C 0xBB11 con el bit puesto se queda B
+C 0xBB13 y sin el, C
+C 0xBB14 el color va en E
+
+C 0xBB46 el seno y el coseno de ese rumbo
+C 0xBB49 el seno, a salvo
+C 0xBB4A y el coseno primero
+C 0xBB5B el signo, a la pila
+C 0xBB5C y el valor, en positivo
+C 0xBB5F la velocidad base
+C 0xBB61 por dos
+C 0xBB62 la clase del enemigo
+C 0xBB66 mas uno: van tres veces la base
+C 0xBB6D las demas llevan cuatro
+C 0xBB71 en la primera vuelta, no
+C 0xBB74 y en las siguientes, cinco
+C 0xBB7D y el paso, en B
+C 0xBBA2 0x20 pixeles de margen por abajo
+C 0xBBB7 ocho pixeles de margen por la derecha
+C 0xBBC1 saltando el byte de en medio
+C 0xBBC2 la horizontal, el patron y el color
+C 0xBBCC los codigos de casilla
+C 0xBBCF y el bloque de sprites del jefe
+C 0xBBD9 con el juego de casillas de "muriendose"
+C 0xBBDC y si ademas lleva la marca
+C 0xBBE2 el tercero
+C 0xBBE9 al bloque de sprites
+
+C 0xB02A los dos codigos del dibujo
+C 0xB030 el paso
+C 0xB033 paso 2 para abajo
+C 0xB039 ocho pixeles a un lado
+C 0xB03B o al otro
+C 0xB041 con ese desvio
+C 0xB047 fuera del margen, todavia no
+C 0xB048 y dentro, dispara
+C 0xB04B paso 3 para abajo
+C 0xB056 esa es su velocidad horizontal
+C 0xB067 paso 3
+C 0xB074 los dos dibujos, alternando cada ocho
+C 0xB07F paso 2 para abajo
+C 0xB084 0x28 pixeles de adelanto
+C 0xB086 contra la altura de destino
+C 0xB089 antes de llegar, nada
+C 0xB08A y al llegar, dispara
+C 0xB095 su contador
+C 0xB098 y en el cuadro 0x30, al paso siguiente
+C 0xB0A3 el paso
+C 0xB0A6 paso 2 para abajo
+C 0xB0AB antes de la fila 0x30 no hace nada
+C 0xB0B1 menos donde esta
+C 0xB0B6 fuera de esos ocho, tampoco
+C 0xB0BE el bit 0 de su segunda bandera
+C 0xB0BF 0x30 de paso
+C 0xB0C4 a la derecha, deprisa
+C 0xB0CB o a la izquierda
+C 0xB0E2 el paso
+C 0xB0E5 paso 2 para abajo
+C 0xB0ED por debajo de 0xE0 no cuenta
+C 0xB0F6 con velocidad 0x0140 y 0x0400
+C 0xB0FC el bit 7 dice de que lado esta
+C 0xB10B paso 2 para abajo
+C 0xB10D el jefe baja un pixel por cuadro
+C 0xB113 hasta la fila 0x24
+C 0xB115 y ahi pasa al paso siguiente
+C 0xB118 y se dibuja
+C 0xB11B paso 3 para abajo
+
+C 0xB11D velocidad de entrada 0x0018 y 0x0300
+C 0xB126 y su destino, la fila 0x34 columna 0x80
+C 0xB12C el destino horizontal
+C 0xB134 y se pone a repartir disparos
+C 0xB13A paso 3 para abajo
+C 0xB13F con la vertical dividida entre cuatro: mas suave
+C 0xB144 se mueve
+C 0xB147 se dibuja
+C 0xB14A y suelta sus disparos
+C 0xB14D en el ultimo paso se aparta a la esquina
+C 0xB155 los dos dibujos, alternando cada cuatro
+C 0xB161 el paso
+C 0xB164 paso 2 para abajo
+C 0xB16B el destino vertical
+C 0xB171 y ocho a la izquierda
+C 0xB17A y se pone a moverse
+C 0xB181 el rumbo se convierte en posicion
+C 0xB184 la vuelta
+C 0xB18C en la segunda y siguientes, el doble de a menudo
+C 0xB191 la cuenta
+C 0xB195 el bloque, a salvo del `call`
+C 0xB19D y en el ultimo paso, el sprite fuera
+C 0xB1A8 y el paso, en B
+C 0xB1AB paso 2 para abajo
+C 0xB1AD la vertical
+C 0xB1B0 contra la fila 0x20
+C 0xB1B4 fuera de esos ocho pixeles, nada
+C 0xB1B8 paso 3 para abajo
+C 0xB1BD la velocidad vertical
+C 0xB1C0 cambiada de signo: sube
+C 0xB1CD se le suma de golpe
+C 0xB1D6 al lado que le toque
+C 0xB1DD su contador
+C 0xB1E0 y a los 0x18 cuadros, al paso siguiente
+C 0xB1E6 los dos dibujos
+C 0xB1EC en el paso 2
+C 0xB1F0 cambia a otro par
+C 0xB1F9 solo hace algo en el paso 1
+C 0xB205 se para en seco
+C 0xB20B da la vuelta en vertical
+
+C 0xB216 el dibujo y el paso
+C 0xB219 paso 2 para abajo
+C 0xB21E menos el destino
+C 0xB221 con ocho pixeles de margen, se para
+C 0xB225 y si no, sube 0x30
+C 0xB228 de golpe
+C 0xB22B paso 3 para abajo
+C 0xB22D se para en vertical
+C 0xB233 y se va de lado
+C 0xB238 luego baja 0x40
+C 0xB23B de golpe
+C 0xB23E y se va hacia la izquierda
+C 0xB24C el paso
+C 0xB24F paso 2 para abajo
+C 0xB251 la vertical
+C 0xB254 contra la fila 0x30
+C 0xB258 fuera de esos 0x10 pixeles, nada
+C 0xB25B paso 2
+C 0xB262 el bloque, de vuelta
+C 0xB26A dos bits: cuatro salidas
+C 0xB272 con 0, a la mitad de velocidad
+C 0xB275 con 1, se frena en vertical
+C 0xB278 con 2, no cambia nada
+C 0xB279 y con 3 da la vuelta
+C 0xB27E `sra` conserva el signo
+C 0xB285 la velocidad vertical
+C 0xB28B a la mitad
+C 0xB296 el paso
+C 0xB299 paso 2 para abajo
+C 0xB29B con su dibujo
+C 0xB2A4 antes de la cuenta, nada
+C 0xB2AB en la primera vuelta tarda 0x10 cuadros
+C 0xB2AC su contador
+C 0xB2B2 y en las siguientes, 0x0A
+C 0xB2BE contra la cuenta que toque
+C 0xB2C0 y se pone a moverse
+C 0xB2C6 paso 3 para abajo
+C 0xB2C8 con el tercer dibujo
+C 0xB2D3 tres bits: ocho rumbos
+C 0xB2D8 la tabla de rumbos
+C 0xB2DC y ese es su angulo de salida
+C 0xB2DF apunta y arranca
+
+C 0xA450 tres bytes adelante: la posicion
+C 0xA459 la entrada de la tabla de marcos
+C 0xA45D en IY, que es donde se lee comodo
+C 0xA460 la horizontal del disparo
+C 0xA465 menos la del blanco
+C 0xA46A y ahora la vertical
+C 0xA46E menos la del blanco
+C 0xA46F contra su maximo
+C 0xA476 y donde esta su nave
+C 0xA480 el arma del segundo
+C 0xA489 la clase del arma
+C 0xA48E la vertical de la nave
+C 0xA491 y la horizontal
+C 0xA494 ese es el punto que se compara
+C 0xA495 los cinco huecos de enemigo grande
+C 0xA49C 0x10 bytes hasta el siguiente
+C 0xA4A0 su clase
+C 0xA4A8 cuatro bytes adelante: la posicion
+C 0xA4B3 fuera del marco, el siguiente
+C 0xA4BD 0x0A bytes hasta el siguiente
+C 0xA4C4 el hueco del grande
+C 0xA4C6 cinco bytes atras
+C 0xA4CB tres adelante
+C 0xA4CE con el paso a uno
+C 0xA4D6 y las dos velocidades a cero
+C 0xA4DE el bit 0: le queda partida
+C 0xA4E1 y no puede estar muriendose
+C 0xA4E9 con la marca del primer jugador
+C 0xA4F5 el bit 1: le queda partida al segundo
+
+C 0xA54D el hueco del grande
+C 0xA54F cinco bytes atras: su clase
+C 0xA552 quien le dio
+C 0xA556 dos bits del contador de cuadros
+C 0xA558 con el primer dibujo de explosion
+C 0xA55A y 5 puntos
+C 0xA55F o el segundo
+C 0xA561 y 1 punto
+C 0xA567 con 0x20 cuadros de explosion
+C 0xA56C al primero
+C 0xA571 o al segundo
+C 0xA57A seis bytes atras
+C 0xA584 el estado de la nave
+C 0xA58B y el bit 3: el arma
+C 0xA58F la musica cambia
+C 0xA595 seis bytes atras
+C 0xA59B y con el se van todos sus enemigos
+C 0xA59E con su ruido
+C 0xA5A5 seis bytes atras
+C 0xA5AB a que jugador
+C 0xA5B7 una vida mas, en BCD
+C 0xA5C2 el bit 0: le queda partida
+C 0xA5CA donde esta su nave
+C 0xA5D3 y donde su bomba
+C 0xA5F2 y su ruido
+
+C 0xA664 el hueco del disparo
+C 0xA66B su clase
+C 0xA671 seis bytes adelante: la posicion
+C 0xA67A menos la de la nave
+C 0xA67F la vertical
+C 0xA685 el hueco y la nave, a salvo
+C 0xA68C si devuelve 1, la nave se murio
+C 0xA691 0x17 bytes hasta el siguiente
+C 0xA693 y se avanza
+C 0xA69B nueve bytes atras: el bloque entero
+C 0xA6A4 su estado
+C 0xA6A7 y su marca de brazo
+C 0xA6AC el segundo, un byte mas alla
+C 0xA6BB y el estado vuelve a uno si estaba a cero
+C 0xA6C6 y devuelve 0: la nave sigue viva
+C 0xA6D2 al llegar a cero
+C 0xA6D4 o pasarse
+C 0xA6D9 se apaga la marca del arma
+C 0xA6DF y devuelve 1
+C 0xA6E2 cuatro disparos con uno, seis con dos
+C 0xA6E8 con la marca del primer jugador
+C 0xA6F7 dos vueltas
+C 0xA6FE en IX, que es como se lee comodo
+
+C 0xA726 la clase del enemigo
+C 0xA730 su horizontal
+C 0xA73F en B, que es lo que espera la de abajo
+C 0xA74A el enemigo siguiente
+C 0xA74D tres bytes hasta el disparo siguiente
+C 0xA754 el hueco, a salvo
+C 0xA759 el enemigo vale un punto
+C 0xA75E con C a 1
+C 0xA766 el punto, a salvo para el segundo reparto
+C 0xA76F nueve bytes atras
+C 0xA786 el hueco del disparo
+C 0xA78B y el enemigo, marcado
+C 0xA79D el bit 0: le queda partida
+C 0xA7A0 y no puede estar muriendose
+C 0xA7AB donde esta su nave
+C 0xA7AE con su marca
+C 0xA7BA el bit 1: le queda partida al segundo
+
+C 0xA7D1 la clase del enemigo
+C 0xA7D7 0x16 adelante: su marca de choque
+C 0xA7DD 0x0A hasta el siguiente
+C 0xA7E1 quince atras: la posicion
+C 0xA7EA menos la de la nave
+C 0xA7FA el bit de esa nave
+C 0xA7FD el hueco, la posicion y la cuenta, a salvo
+C 0xA806 y si la nave acaba de morir
+C 0xA80C se sale sin mirar mas
+C 0xA80E 0x17 hasta el enemigo siguiente
+C 0xA817 el jugador que choco
+C 0xA824 el estado, a salvo
+C 0xA827 sus usos de arma
+C 0xA82F al llegar a cero
+C 0xA831 o desbordar por debajo
+C 0xA83B nueve bytes atras: el bloque del enemigo
+C 0xA83F y a salvo
+C 0xA844 su clase
+C 0xA85A la marca del jefe
+C 0xA862 ese es el punto de comparacion
+C 0xA869 los disparos del primero
+C 0xA86C cuatro con uno, seis con dos
+C 0xA872 el bit 0: le queda partida
+
+C 0xA89A por dos: la entrada de la tabla
+C 0xA89F la entrada que le toca
+C 0xA8A3 en IY
+C 0xA8A6 tres bytes adelante: la posicion
+C 0xA8B5 que jugador disparo
+C 0xA8BF si el jefe murio, se sale
+C 0xA8C1 tres bytes hasta el disparo siguiente
+C 0xA8C7 y devuelve 0: el jefe sigue vivo
+C 0xA8CB el hueco del disparo
+C 0xA8DA y devuelve 0
+C 0xA8DC quien disparo, a salvo
+C 0xA8E1 con C a 3, van agarradas
+C 0xA8EA con C a 1
+C 0xA8F2 los puntos, a salvo para el segundo reparto
+C 0xA903 y devuelve 1
+C 0xA91D con la nave recien nacida no cuenta
+
+C 0xA949 quince bytes atras: la posicion del jefe
+C 0xA94D su horizontal
+C 0xA952 menos la de la nave
+C 0xA956 y su vertical
+C 0xA95E a que jugador
+C 0xA965 y su marca de bomba
+C 0xA96B las del segundo, todas un byte mas alla
+C 0xA977 y la marca de bomba, a cero
+C 0xA982 solo el primer jugador
+C 0xA991 y las del otro tambien
+C 0xA996 cuantos jugadores quedan
+C 0xA9A5 juntas
+C 0xA9AB si murio el segundo
+C 0xA9AE se mira el bit del primero
+C 0xA9B4 y al reves
+C 0xA9BE las del otro
+C 0xA9C1 si queda alguna, sigue la partida
+C 0xA9CF los cinco huecos
+C 0xA9D3 la clase
+C 0xA9F9 y las demas no se mueven
+C 0xA9FB las tres primeras bajan y disparan
+
+C 0xAA00 la 4 serpentea
+C 0xAA05 la 5 late
+C 0xAA0A las 5 y 6 se quedan quietas
+C 0xAA0F y las de 7 arriba se estan apagando
+C 0xAA1A y ahora, a dibujarlos
+C 0xAA1D los cinco
+C 0xAA1F la clase
+C 0xAA25 el dibujo que le toca
+C 0xAA2A la entrada de la tabla
+C 0xAA2D y el guion que sale de ella
+C 0xAA34 el paso
+C 0xAA36 por dos
+C 0xAA3B la columna
+C 0xAA3E y la fila
+C 0xAA4D mas la columna
+C 0xAA51 sin mascara
+C 0xAA62 0x10 bytes atras: el grande anterior
+C 0xAA6B con espera pendiente, nada
+C 0xAA6D y mientras no haya, se sacan seguidas
+C 0xAA75 uno mas
+C 0xAA7B la tabla de esperas
+C 0xAA88 la entrada que le toca
+C 0xAA8E por dos, y luego se corre a la derecha
+C 0xAA91 mas uno: la clase de verdad
+C 0xAA93 el mismo byte otra vez
+C 0xAA9B el nibble alto del escenario dice la vuelta
+
+C 0x6840 el bit 4 del mando
+C 0x6842 sin gatillo, nada
+C 0x6850 el bit 1 de sus banderas
+C 0x6858 y a soltarlo
+C 0x685D con hueco arriba
+C 0x685F o abajo
+C 0x6865 el bloque de la nave 1
+C 0x686C sin sonido extra
+C 0x6871 con doble disparo, tres
+C 0x6879 y a soltarlo
+C 0x687E hueco arriba
+C 0x6880 o abajo
+C 0x6886 el bloque de la nave 1
+C 0x688D sin sonido extra
+C 0x688A con el guion de mirar arriba
+C 0x689D el bloque de la nave 1
+C 0x68A1 con su ruido
+C 0x68A3 una tanda
+C 0x68A8 y otras dos detras, sin ruido
+C 0x68AC una cada una
+C 0x68BD si hay arma grande en marcha, esa manda
+C 0x68C1 el gatillo del primero
+C 0x68C7 el estado de la nave 1
+C 0x68CE el bit 0: mira arriba
+C 0x68D8 el gatillo del segundo
+C 0x68E2 el bit 0: mira arriba
+C 0x68E6 sin dos huecos, nada
+C 0x68EA el bloque de la nave 2
+C 0x68EE uno solo
+C 0x68F7 el bloque de la nave 2
+C 0x6909 ocho bytes hasta el siguiente
+
+C 0x6913 el bit 7, al acarreo
+C 0x6914 la nave 1
+C 0x691A o la nave 2
+C 0x691F una tanda
+C 0x6921 con el guion de la pareja
+C 0x6927 la nave 1
+C 0x692D o la nave 2
+C 0x6931 y se guarda cual es
+C 0x6938 cuatro
+C 0x693E ocho bytes atras
+C 0x6946 con la marca del arma
+C 0x694B y el guion del arma
+C 0x694E cuatro
+C 0x6951 la nave que manda
+C 0x6955 uno por vuelta
+C 0x6967 su clase
+C 0x696D y la posicion dentro de la tanda
+C 0x6976 al hueco
+C 0x6977 el byte siguiente del guion
+C 0x697C la vertical
+C 0x6982 y la horizontal
+C 0x698B y el ultimo byte es el ruido
+C 0x6990 el hueco, a salvo
+C 0x69C1 seis huecos
+C 0x69C5 o cuatro
+C 0x69C7 el primero
+C 0x69CC ocho bytes hasta el siguiente
+
+C 0x6226 dos pixeles por cuadro
+C 0x622C y vuelve a cero
+C 0x6241 con la marca del segundo
+C 0x6244 su potencia
+C 0x624C el bit 4 tambien
+C 0x625E con la marca del primero
+C 0x6261 su potencia
+C 0x6264 el puntero, a salvo
+C 0x6268 la palabra que le toca
+C 0x626B la velocidad, en BC
+C 0x6270 lo que se lee ahora
+C 0x6279 el mando entero, a salvo
+C 0x627E sin velocidad
+C 0x6285 los dos: tampoco
+C 0x6287 el bit 0: hacia arriba
+C 0x6292 y de vuelta al bloque
+C 0x629B por debajo de 0xAF
+C 0x629D se clava en el tope
+C 0x62AA por encima de 0x10
+C 0x62AC y se clava en el de arriba
+C 0x62B8 solo la 1 deja rastro
+C 0x62BF por donde va el rastro
+C 0x62C4 la vertical
+C 0x62C7 el mando, de vuelta
+C 0x62D3 los dos: tampoco
+C 0x62D5 el bit 2: a la izquierda
+C 0x62E0 mas la velocidad
+C 0x62EA por debajo de 0xE8
+C 0x62EC se clava
+
+C 0x4E4E el numero de registro del primer canal
+C 0x4E54 el juego de repuesto lleva la cuenta
+C 0x4E5A y se vuelve al normal para trabajar
+C 0x4E66 con volumen cero
+C 0x4E6B el canal
+C 0x4E75 la melodia que lleva
+C 0x4E7B se calla
+C 0x4E80 y si la tiene, sigue su partitura
+C 0x4E85 al de repuesto
+C 0x4E86 0x13 bytes hasta el canal siguiente
+C 0x4E91 con volumen cero: se calla
+C 0x4EA1 mientras dure, la partitura sigue
+C 0x4EA6 con 0x4A cuadros por paso
+C 0x4EB2 y 0x15 a partir del tercero
+C 0x4EB7 el paso
+C 0x4EC9 con jugadores vivos no se apaga
+C 0x4ED5 y se pide, si no suena ya
+C 0x4EE1 el paso, a cero
+C 0x4EE4 y la melodia de fondo, fuera
+C 0x4EE8 con el reloj a uno
+C 0x4EF0 la melodia que suena
+C 0x4EF2 las de 0x22 arriba no bajan de tono
+C 0x4EFB los dos bits altos
+C 0x4F0C el byte de mando
+C 0x4F15 los dos bits altos del numero
+
+C 0x4F1D con los dos, es un efecto y va por otro lado
+C 0x4F27 la forma de la onda
+C 0x4F37 se retrocede un byte
+C 0x4F38 sin volumen
+C 0x4F43 el periodo bajo
+C 0x4F4A y el alto
+C 0x4F5A los cuatro bits bajos
+C 0x4F5C por dos
+C 0x4F67 el volumen, a salvo en B
+C 0x4F74 el volumen, al nibble bajo
+C 0x4F79 la duracion que puso el instrumento
+C 0x4F7F y a sonar
+C 0x4F8B y el bajo
+C 0x4F9B con un paso mas de partitura
+C 0x4FA3 la melodia que suena
+C 0x4FB2 la melodia
+C 0x4FB9 el canal se apaga
+C 0x4FC4 el canal, callado
+C 0x4FC8 sin instrumento
+C 0x4FCB ni desafinado
+C 0x4FD3 a salvo
+
+C 0x5008 el numero de canal
+C 0x500C 8, 9 o 10 segun el canal
+C 0x5013 la forma va en H
+C 0x501C el registro
+C 0x501D y el valor
+C 0x502D contra la de la nota
+C 0x5033 y contra el escalon de desvanecido
+C 0x503C el nibble alto
+C 0x5045 los cuatro bits bajos son el paso
+C 0x5049 y sigue el byte siguiente
+C 0x504E los cuatro bits bajos
+C 0x5055 el byte siguiente
+C 0x505C el alto, en D
+C 0x5060 y el bajo, en E
+C 0x5061 la melodia que suena
+C 0x507C o 2
+C 0x507F el ataque
+C 0x5083 y el desvanecido
+C 0x508C los cuatro bits bajos
+C 0x5092 con el bit 3, es el desvanecido
+C 0x5098 y sin el, el ataque
+C 0x509F la octava, en B
+C 0x50A0 el paso de escala
+C 0x50A3 con octava cero, no se suma nada
+C 0x50AA y eso es la duracion base
+C 0x50AD el codigo de nota
+C 0x50B1 su nibble alto
+
+C 0x6329 la tabla de velocidades
+C 0x632F la velocidad, en BC
+C 0x6334 el mando, a salvo
+C 0x6335 los bits de arriba y abajo
+C 0x6339 ninguno o los dos: quieta
+C 0x6342 el bit 0: hacia arriba
+C 0x6347 el mando, de vuelta
+C 0x6348 y los de izquierda y derecha
+C 0x634C ninguno o los dos: quieta
+C 0x6355 el bit 2: a la izquierda
+C 0x635D mas la velocidad
+C 0x635E a las dos naves
+C 0x6369 y se clavan las dos
+C 0x6378 igual arriba
+C 0x6384 la velocidad, a DE
+C 0x6395 y si se sale, no se mueve ninguna
+C 0x639C la segunda vuelta
+C 0x63A1 la primera se mueve
+C 0x63A5 y la segunda tambien
+C 0x63AE el bit 7 de D: el paso va hacia la izquierda
+C 0x63B3 y aqui al reves
+C 0x63BD los dos sprites de la nave 2
+C 0x63C0 dos, y ocho de retraso
+C 0x63CC el sitio del rastro
+C 0x63D0 la entrada que le toca
+
+C 0x6CE1 una fila mas de mapa
+C 0x6CEC los cinco
+C 0x6CEE su clase
+C 0x6CF0 0x10 bytes hasta el siguiente
+C 0x6CF4 dos adelante: el paso
+C 0x6CFA 0x0E hasta el siguiente
+C 0x6CFE dos atras: el bloque entero
+C 0x6D03 y al siguiente
+C 0x6D0E la fila del mapa
+C 0x6117 el contador de fase
+C 0x6120 la palabra que le toca
+C 0x6123 y se guarda
+C 0x612C con la de que dispara
+C 0x6141 la cuenta, a cero
+C 0x6144 y el jefe, fuera
+C 0x6157 uno mas
+C 0x615F el contador de oleadas, a cero
+C 0x6163 con una oleada pendiente
+C 0x6166 y sin aviso
+C 0x6171 el numero de fase
+
+C 0xBC2F la marca de que hay jefe
+C 0xBC34 la marca de la tanda final
+C 0xBC42 uno menos
+C 0xBC46 el reloj de entre enemigos
+C 0xBC4A uno menos
+C 0xBC4F el paso del enemigo
+C 0xBC52 solo los que estan a cero
+C 0xBC62 contra la mitad de la pantalla
+C 0xBC64 con la marca a cero
+C 0xBC6A o a uno
+C 0xBC6D su clase
+C 0xBC74 y los demas recargan la espera
+C 0xBC7C 0x20 bytes hasta el siguiente
+C 0xBC87 la tabla de guiones
+C 0xBC90 se avanza hasta el paso
+C 0xBC98 el paso, a cero
+C 0xBC9D menos uno, por dos
+C 0xBC9F la tabla de velocidades
+C 0xBCB4 y el byte siguiente
+C 0xBCC9 el mismo byte otra vez
+C 0xBCE4 y si desborda, se queda arriba
+
+C 0xA2DD el bit 0: le queda partida
+C 0xA2E8 tres campanas, y el jugador 1
+C 0xA2F5 el bit 1: le queda partida al segundo
+C 0xA2FF tres campanas, y el jugador 2
+C 0xA302 la primera campana
+C 0xA305 la cuenta, a salvo
+C 0xA308 0x10 hasta la siguiente
+C 0xA314 la clase, en B
+C 0xA315 siete adelante: la posicion
+C 0xA31E menos la de la nave
+C 0xA323 y la vertical
+C 0xA32B con B a uno, la recoge
+C 0xA335 siete hasta la siguiente
+C 0xA33E ocho bytes atras: el premio
+C 0xA342 el hueco, a salvo
+C 0xA354 a que jugador
+C 0xA35B el nivel de puntos, uno mas
+C 0xA366 la entrada de la tabla
+C 0xA36B a que jugador
+C 0xA36D los puntos que da
+
+C 0xB329 los dos, alternando cada ocho
+C 0xB332 ocho pixeles de margen
+C 0xB33A cambiado de signo
+C 0xB340 los dos dibujos
+C 0xB345 y el paso, en B
+C 0xB348 paso 2 para abajo
+C 0xB34D contra la fila 0x10
+C 0xB355 y sin horizontal
+C 0xB35C paso 2
+C 0xB360 paso 3
+C 0xB36D el dibujo y el paso
+C 0xB370 solo hace algo en el paso 1
+C 0xB378 menos su destino
+C 0xB37B ocho pixeles de margen
+C 0xB380 velocidad 0x0400
+C 0xB383 y sin vertical
+C 0xB396 el dibujo y el paso
+C 0xB399 paso 2 para abajo
+C 0xB39E contra la fila 0x60
+C 0xB3AB con la marca a cero
+C 0xB3AF o a ocho
+C 0xB3B1 y esa es su cuenta de partida
+C 0xB3B4 al paso siguiente
+C 0xB3B8 su contador
+C 0xB3BB el bit 3 dice el sentido
+C 0xB3C5 el dibujo y el paso
+C 0xB3CC paso 2 para abajo
+C 0xB3D1 contra la fila 0x40
+C 0xB3DC paso 2
+
+C 0x6459 el bit 1 del contador
+C 0x645B con un par de dibujos
+C 0x6463 o con el otro
+C 0x646C el par de arriba
+C 0x646F y el de abajo
+C 0x6478 con otro patron
+C 0x647E el bit 7 dice cual
+C 0x6485 el bloque de sprites de la nave 1
+C 0x64A0 el bit 1 del contador
+C 0x64B3 el par de arriba
+C 0x64B6 y el de abajo
+C 0x64C5 el bit 7 dice cual
+C 0x64CC el bloque de sprites de la nave 2
+C 0x64D1 y su color
+C 0x64D5 el patron del segundo
+C 0x64D7 y su color
+C 0x64E0 las banderas
+C 0x64E3 y las dos marcas de rastro
+C 0x64EC su bloque de sprites
+C 0x64EF y su cuenta
+
+C 0x4C1E la de abajo
+C 0x4C28 la que NO esta marcada, a salvo
+C 0x4C29 se le pinta la flecha
+C 0x4C2D y con C a cero, se borra de la otra
+C 0x4C2F el guion de la flecha
+C 0x456A el escalon, en BCD
+C 0x456F menos la puntuacion
+C 0x4576 el byte bajo mas 0x10
+C 0x4579 a salvo para el `or`
+C 0x457B y el alto, con el acarreo
+C 0x4580 con los dos a cero, desbordo
+C 0x4586 dos bytes atras: las vidas
+C 0x4597 el record
+C 0x459A y la puntuacion
+
+C 0x45BC y su puntuacion
+C 0x45C4 el record vive en 0xE06F
+C 0x45C6 cuatro bytes: ocho cifras
+C 0x45CD y el numero de fase
+C 0x45D5 y sus vidas
+C 0x45E1 y las vidas del primero
+C 0x45E3 una sola cifra
+C 0x45F6 la casilla siguiente
+C 0x45F7 y si era la ultima
+C 0x45F9 la cifra baja ya no se come
+C 0x45FB se deshace el `djnz`
+C 0x4606 la casilla
+C 0x4612 y se apila para el bucle
+C 0x4619 el guion, a salvo
+C 0x461D la entrada de la tabla
+
+C 0xA187 el segundo hueco
+C 0xA18E o el tercero
+C 0xA199 con la clase 0xFE
+C 0xA19C y velocidad 0x80
+C 0xA1A5 con velocidad 0x7F
+C 0xA1AA la horizontal
+C 0xA1AE y la vertical
+C 0xA1B5 y su dibujo
+C 0xA1BC devuelve 1: la nube se rompio
+C 0xA1C5 cuatro con uno, seis con dos
+C 0xA1C8 los disparos del primero
+C 0xA1D2 y los del segundo
+C 0xA1D7 la cuenta, a salvo
+C 0xA1DA tres bytes hasta el siguiente
+C 0xA1E8 la campana y el hueco, a salvo
+C 0xA1F9 cinco bytes atras
+C 0xA20C uno mas
+C 0xA212 y vuelve a cero
+C 0xA217 la entrada que le toca
+C 0xA21A el premio, en C
+C 0xA21E la potencia del primero
+C 0xA222 y su estado
+C 0xA227 con dos jugadores
+C 0xA22A el bit 0: vive el primero
+C 0xA22D y el bit 1: vive el segundo
+C 0xA230 con los dos, van agarradas
+
+C 0x5D2C el hito de la primera nube
+C 0x5D31 y el de la primera melodia
+C 0x5D37 el hito del jefe
+C 0x5D3A H vale uno: la semilla de la tabla de premios
+C 0x5D3B la bomba del primero, cargada
+C 0x5D3E y la del segundo
+C 0x5D54 el patron y el color de la nave 1
+C 0x5D5A y su segundo sprite
+C 0x5D62 la cuenta del aviso
+C 0x5D6D los dos sprites del segundo
+C 0x5D76 el bit 0 del truco
+C 0x5D81 y dieciseis usos de arma
+C 0x5D87 con dos tandas de veinte casillas
+C 0x5D96 los dos sprites
+C 0x5DA1 con la bomba cargada
+C 0x5DB1 ocho bytes por sprite
+C 0x5DB4 seis premios
+C 0x5DBD cuatro sprites
+
+C 0x66B5 con el brazo en el paso 2
+C 0x66BD los dos signos que se acaban de dejar
+C 0x66CB la fila, en C
+C 0x66CC el signo de la horizontal
+C 0x66D3 apuntado
+C 0x66D8 la columna, en B
+C 0x66E4 el codigo que sale de la tabla
+C 0x66E8 la mascara del primero
+C 0x66EA el signo
+C 0x66F3 se le da la vuelta
+C 0x66F5 el otro signo
+C 0x66F6 con su mascara
+C 0x66FD el codigo, guardado
+C 0x6705 el dibujo
+C 0x6707 al byte de al lado
+C 0x6709 con color 9
+C 0x670E o color 1
+
+C 0xAAD5 dos bytes adelante
+C 0xAAD9 la vertical
+C 0xAADE cuatro bytes adelante
+C 0xAAE3 la horizontal, en E
+C 0xAAE8 y la vertical, en D
+C 0xAAE9 tres mas: la cuenta
+C 0xAB05 y si no, sigue como iba
+C 0xAB09 cuatro bytes adelante
+C 0xAB10 y la vertical igual
+C 0xAB12 tres mas: la cuenta
+C 0xAB1E siete bytes atras: el bloque
+C 0xAB25 la clase original
+C 0xAB27 al byte del paso
+C 0xAB29 cinco bytes atras
+C 0xAB2E dos atras: la posicion
+C 0xAB33 cinco bytes atras
+C 0xAB40 tres bytes adelante
+C 0xAB44 tres mas: la cuenta
+C 0xAB47 solo la clase 1 late
+C 0xAB53 la cuenta del latido
+C 0xAB59 con el dibujo 2
+C 0xAB5D o el 3
+
+C 0x6B1B se marca ocupado
+C 0x6B25 y esta nube si cuenta
+C 0x6B2B al tercer byte: la horizontal
+C 0x6B2C la ruleta de sentidos
+C 0x6B32 una vuelta mas de la ruleta
+C 0x6B36 dieciseis entradas
+C 0x6B3B el byte del sentido
+C 0x6B45 la horizontal, byte bajo
+C 0x6B47 y el alto
+C 0x6B49 la vertical, byte bajo
+C 0x6B51 el dibujo
+C 0x6B53 el color
+C 0x6B55 hasta el siguiente hueco
+C 0x6B57 ocho bytes por nube
+
+C 0x6BEF el hueco tiene que estar ocupado
+C 0x6BF1 ocho bytes por nube
+C 0x6BFA cuatro bytes adelante: la posicion
+C 0x6BFE la horizontal
+C 0x6BFF a los registros de repuesto
+C 0x6C03 y la vertical
+C 0x6C05 ocho pixeles mas abajo: el centro
+C 0x6C0D dos bytes atras si no le dan
+C 0x6C12 cinco atras: la marca de entera
+C 0x6C17 siete bytes hasta la siguiente
+C 0x6C19 se avanza al hueco que toque
+C 0x6D5A una fila mas atras
+C 0x6D5E una fila menos
+C 0x6D5F hasta las veinticuatro
+C 0x661D la vertical a cero
+C 0x6620 y la horizontal fuera de pantalla
+C 0x6624 sin dibujo todavia
+C 0x662B los cuatro sprites que lo forman
+C 0x662D el primero
+C 0x6632 el segundo
+C 0x6637 el tercero
+C 0x663C y el cuarto
+C 0x6641 dos bytes adelante
+C 0x6645 dos mas: el paso
+C 0x664B y en marcha
+C 0x664F hasta que se agote
+C 0x6652 dos bytes atras
+C 0x6660 la nueva vertical
+C 0x6663 la cuenta de la subida
+C 0x6AC0 se vuelve al juego principal
+C 0x6AC1 el hueco tiene que estar ocupado
+C 0x6AC3 diez bytes por bomba
+C 0x6ACC la velocidad horizontal
+C 0x6ACE y la vertical
+C 0x6AD3 un byte hasta la siguiente
+C 0x6AD7 la cuenta vuelve a B
+C 0x6ADC un byte atras: la marca
+C 0x6ADD y se borra de la pantalla
+
+C 0x4DA6 dos bytes adelante
+C 0x4DA9 al puntero de la partitura
+C 0x4DAE y el alto
+C 0x4DB0 seis bytes mas alla
+C 0x4DB6 cinco mas: el canal siguiente
+C 0x4DBC dos bytes adelante
+C 0x4DBE la nota, a cero
+C 0x4DC3 la partitura siguiente
+C 0x4DC4 los canales que pidan
+C 0x4DCA de un juego al otro
+C 0x4DCC el numero que traia
+C 0x4DCE y se suelta la marca de ocupado
+C 0xA504 los cinco huecos de enemigo
+C 0xA506 la cuenta, a salvo
+C 0xA509 dieciseis bytes por enemigo
+C 0xA50D el segundo byte es la clase
+C 0xA511 quince: ya se avanzo uno
+C 0xA51D la clase, a B
+C 0xA522 la horizontal
+C 0xA523 y luego la vertical
+C 0xA526 contra la del disparo
+C 0xA527 fuera del marco, no le da
+C 0xA52C el mismo marco en vertical
+C 0xA533 con la clase en A
+C 0xA53D se avanza al hueco que toque
+C 0x6C49 la cuenta, a salvo
+C 0x6C4A el estado de la campana
+C 0x6C4C el estado, a C
+C 0x6C4D dieciseis bytes por campana
+C 0x6C57 dos bytes adelante
+C 0x6C5B y el alto
+C 0x6C63 un byte atras
+C 0x6C64 la velocidad ya acelerada
+C 0x6C70 dentro de la banda de recogida
+C 0x6C74 al byte del color
+C 0x6C7A seis bytes hasta la siguiente
+C 0x6C7F el color nuevo
+C 0x6C81 cuatro colores en rueda
+C 0xAE40 siete huecos
+C 0xAE46 la tabla de disparos del jefe
+C 0xAE4A la cuenta que decide cuando sale otro
+C 0xAE4F la fase, de 1 a 5
+C 0xAE55 se indexa por fase
+C 0xAE58 la espera de esta fase
+C 0xAE5B todavia no toca
+C 0xAE5E la cuenta vuelve a cero
+C 0xAE5F y H tambien
+C 0xAE62 por dos
+C 0xAE63 por cuatro
+C 0xAE64 por ocho
+C 0xAE65 por dieciseis
+C 0xAE66 por treinta y dos
+C 0xAE68 al hueco que toca
+C 0xAE6E un disparo mas en el aire
+C 0xAE79 el segundo byte dice si vuela
+
+C 0x485D el registro 15 del PSG
+C 0x4862 primero el joystick, que ya trae las direcciones
+C 0x4865 lo leido, a la pila
+C 0x486B la matriz viene invertida
+C 0x486F el bit al sitio
+C 0x4871 el disparo del dos
+C 0x4873 y se va juntando en E
+C 0x487A la linea 3, a salvo
+C 0x487B otra tecla del dos
+C 0x487D se acumula
+C 0x4880 la siguiente al sitio
+C 0x4882 y otra mas
+C 0x4887 tres vueltas
+C 0x488A el ultimo bit
+C 0x4894 tres vueltas tambien
+C 0xA6FD el hueco, a IX
+C 0xA702 ocho bytes por disparo
+C 0xA706 el segundo byte es la clase
+C 0xA709 la clase, a salvo en C
+C 0xA70A la tabla arranca en la clase 1
+C 0xA70B dos bytes por entrada
+C 0xA70F el marco de la clase, a HL
+C 0xA713 y a IY, que se lee comodo
+C 0xA719 la horizontal
+C 0xA71E y la vertical
+C 0xA727 clase cero es hueco vacio
+C 0xA72A treinta y dos bytes por enemigo
+C 0xBD23 treinta y dos bytes por hueco
+C 0xBD2B la espera entre tandas
+C 0xBD2F todavia no toca
+C 0xBD33 la clase que se va a sacar
+C 0xBD38 uno solo
+C 0xBD41 y ocho cuadros de espera
+C 0xBD49 una tanda mas
+C 0xBD4E se reinicia la cuenta
+C 0xBD50 y la espera tambien
+C 0xBD52 y se suelta la bandera del final
+C 0xBD59 un cuadro menos de espera
+C 0x6717 la potencia del uno
+C 0x6719 menos la del dos
+C 0x671F las armas del uno
+C 0x6721 contra las del dos
+C 0x672A y la segunda nave igual
+C 0x6730 la horizontal de una
+C 0x6731 menos la de la otra
+C 0x6732 el hueco entre las dos, 0x10 pixeles
+C 0x673A la otra nave manda
+C 0x673B y el hueco, al otro lado
+C 0x673D la posicion de la pareja
+C 0x6747 el estado de la que manda
+C 0x6B95 ocho bytes por nube
+C 0x6B99 dos bytes adelante
+C 0x6B9B la velocidad horizontal
+C 0x6B9D y la vertical
+C 0x6BA1 al byte alto
+
+C 0x67D6 y su dibujo de reposo
+C 0x67E4 la bomba del primer jugador
+C 0x67E7 el hueco, a la pila
+C 0xA29F el premio 0 es el primero
+C 0xA2A4 el bit 0
+C 0xA2A5 blanco
+C 0xA2A9 el bit 1
+C 0xA2AA gris
+C 0xA2AE el bit 2
+C 0xA2AF verde
+C 0xA2B3 el bit 3
+C 0xA2B4 rojo
+C 0xA2B8 y azul para el resto
+C 0xA2BD sin fraccion
+C 0xA2C2 dos pixeles por cuadro hacia arriba
+C 0xA2C6 la vertical donde nace
+C 0xA2CD hacia abajo
+C 0x60FA al byte alto
+C 0x60FB la velocidad horizontal, byte alto
+C 0x60FE la fraccion de la vertical
+C 0x6100 y el byte entero
+C 0x6104 la vertical nueva, a D
+C 0x6107 la fraccion de la horizontal
+C 0x6109 y el byte entero
+C 0x50EB el registro del periodo, byte alto
+C 0x50EC el valor
+C 0x50F0 y el byte bajo
+C 0x50F6 el estado del canal
+C 0x50F9 los dos bits altos
+C 0x50FB con los dos puestos, se sigue
+C 0x50FE el volumen que traia
+C 0x50FF y el canal pasa al estado 2
+C 0x5107 el puntero de vuelta a la partitura
+C 0x9F44 la fase, sin la decena
+C 0x9F4D a 0x01E0 de la VRAM
+C 0x9F53 el segundo
+C 0x9F5C y el tercero
+C 0xB4EA los dibujos 0xB0 y 0xB4
+C 0xB4ED cada quince cuadros
+C 0xB4F2 el paso 1
+C 0xB4F6 y el paso 2
+C 0xB4FB sin vertical
+C 0xB4FD el bit 7 de la horizontal dice el lado
+C 0xB509 los dibujos 0xB8 y 0xBC
+C 0xB50C cada siete cuadros
+C 0xB514 catorce pasos de subida
+C 0xB51C hacia arriba
+C 0x658D el dibujo
+C 0x658F la horizontal
+C 0x6593 en blanco
+C 0x6596 el segundo sprite, misma fila
+C 0x6599 dieciseis dibujos mas alla
+C 0x659D ocho pixeles a la derecha
+C 0x65A2 y el sprite siguiente, fuera
+C 0x65A5 los jugadores que quedan
+
+C 0xB755 un paso menos
+C 0xB759 se descarta el bit 7
+C 0xB75A el dado, a salvo
+C 0xB760 la tabla de rumbos
+C 0xB763 el angulo
+C 0xB768 y su paso
+C 0xB770 el dibujo 0xE0
+C 0xA5F9 los jugadores vivos
+C 0xA5FC el bit 1: el segundo
+C 0xA5FF si le queda bomba
+C 0xA603 y donde esta su nave, en HL
+C 0xA60B la posicion de la bomba
+C 0xA612 contra la de la nave
+C 0xA613 fuera del marco, no le da
+C 0xA617 el mismo marco en vertical
+C 0xA61D el hueco de la bomba del dos
+C 0x4D74 la prioridad, sin los dos bits altos
+C 0x4D76 a E
+C 0x4D77 la melodia que se pide
+C 0x4D7E tambien sin los dos bits altos
+C 0x4D8D una mas
+C 0x4D8E y dos mas
+C 0xB5D1 cada tres cuadros
+C 0xB5D6 solo en el paso 0
+C 0xB5E8 cinco pixeles por cuadro
+C 0xB5EE sin fraccion
+C 0xB5F9 el byte alto
+C 0xB5FD y la tabla vertical
+C 0x964B a los patrones de sprite de 0x1D80
+C 0x964E cuatro dibujos
+C 0x9659 la tabla arranca en la fase 1
+C 0x965A los sprites propios de cada jefe
+C 0x9660 detras de los comunes
+C 0x9663 dos dibujos
+C 0x60A8 se pasa a la siguiente
+C 0x60AE o a la de mas ritmo aun
+C 0x60B7 la de siempre
+C 0x60BB el de arriba otra vez
+C 0xAB83 seis bytes atras
+C 0xAB87 tres bytes adelante
+C 0xAB8D cuatro mas: las velocidades
+C 0xAB92 y la otra
+C 0xAB95 siete atras: la clase
+C 0xAB9D el grande 6
+
+C 0x4385 el paso, uno menos
+C 0x4386 las dos de abajo, en blanco
+C 0x4392 la de la izquierda
+C 0x4394 y la de la derecha
+C 0x4398 la otra pareja
+C 0x43A1 y la de la derecha
+C 0x43A7 la de abajo a la izquierda
+C 0x43A9 y la de abajo a la derecha
+C 0x6A96 tres pixeles mas abajo
+C 0x6A9B y la horizontal de la nave
+C 0x6A9E con el desvio de C
+C 0x6AA2 la velocidad que traia
+C 0x6AAB la fraccion
+C 0x6AAE y el byte entero
+C 0x6AB1 el hueco, ocupado
+C 0xBBE8 el desvio de esta casilla
+C 0xBBEA a la siguiente
+C 0xBBEC y la vertical igual
+C 0xBBFB la fase, de 1 a 5
+C 0xBC01 el estado del jefe
+C 0xBC04 0xFE es muriendose
+C 0xBC0B el color, al bloque
+C 0x9F88 la fase
+C 0x9F8B sin la decena
+C 0x9F8D la tabla arranca en la fase 1
+C 0x9F9A otra vez la fase
+C 0x9FA6 se salta el primer puntero
+C 0x9FA7 el byte bajo del segundo
+C 0x9FA9 y el alto
+C 0xAF34 el segundo byte: si esta vivo
+C 0xAF3F y el hueco queda ocupado
+C 0xAF48 la fase
+C 0xAF51 el bit 7 al acarreo
+C 0xADED el dibujo que toca
+C 0xADF3 mientras dure, nada
+C 0xADF8 se borra el estado
+C 0xADFA y de ahi arrastra el resto
+C 0xADFD once bytes en total
+C 0xAE01 la marca de jefe en pantalla
+C 0xAE07 su estado
+C 0xAE0A su paso
+C 0xAE15 uno
+C 0xAE1C la mitad del recorrido
+
+C 0x63CD el rastro de verticales
+C 0x63D4 y la fraccion
+C 0x63D7 y el rastro de horizontales
+C 0x63E5 los dos sprites de la nave
+C 0x63E8 los jugadores vivos
+C 0xB724 se baja al bit 0
+C 0xB72A la tabla de pasos
+C 0xB72D el paso de este tramo
+C 0xB72E sin fraccion
+C 0xB73D otra vez el lado
+C 0xBD9C la tabla de rumbos
+C 0xBDA2 el angulo
+C 0xBDA3 apuntado en el enemigo
+C 0xBDA6 arriba del todo
+C 0xBDA8 con ese rumbo
+C 0xBDAF la mariposa
+C 0xBDC1 la vertical
+C 0xBDC4 y la horizontal
+C 0x9971 sin la decena
+C 0x9973 la tabla arranca en la fase 1
+C 0x9980 otra vez la fase
+C 0x998D el byte bajo
+C 0x998F y el alto
+C 0xA37A el hueco de la campana
+C 0xA380 la posicion, de vuelta
+C 0xA385 seis bytes mas alla: el cartel
+C 0xA38D sin fraccion
+C 0xA390 centrado sobre la campana
+C 0xA394 sin fraccion tampoco
+C 0x47B1 el bajo que ya se permuto
+C 0x4832 dos vueltas
+C 0x4834 lo leido, a salvo
+C 0x4837 se va juntando en E
+C 0x4839 dos vueltas mas
+C 0x483C dos direcciones de golpe
+C 0x4841 una vuelta mas
+
+C 0x6BD0 al byte siguiente
+C 0x6BD4 el bloque de sprites, a HL
+C 0x6BD8 la horizontal
+C 0x6BDA el dibujo
+C 0x6BDC y el color, tal cual estaba
+C 0x6BDE al byte de la horizontal
+C 0x6BDF el dibujo, a salvo
+C 0x667C los jugadores vivos
+C 0x6683 sin abrazo
+C 0x6687 el estado de la nave 1
+C 0x6690 a salvo en C
+C 0x6694 la de la 2, en B
+C 0x6695 dieciseis pixeles de margen
+C 0x669B dos bytes adelante
+C 0x66A0 a salvo en E
+C 0x66A1 y la de la 2 en D
+C 0x69D0 dos bytes adelante
+C 0x69D3 y la horizontal
+C 0x69D8 al byte de la horizontal
+C 0x69E8 tres bytes hasta el siguiente
+C 0x69EA se avanza al hueco que toque
+C 0xAABD sin recorrido todavia
+C 0xAABF el hueco, ocupado
+C 0xAAC5 sin paso
+C 0xAACB y en marcha
+C 0xAACF dos bytes adelante
+C 0xAAD0 la clase otra vez
+C 0xBC9E dos bytes por oleada
+C 0xBCA5 el primer byte
+C 0xBCA8 la clase que sale
+C 0xBCAE una vuelta
+C 0xBCAF dos vueltas
+C 0xBCB0 tres: ya son los bits 0 y 1
+C 0xBCB1 cuantos salen
+C 0xBCB8 por dos
+C 0xBCB9 por cuatro
+C 0xBCBA por ocho
+C 0xBCC1 una vuelta
+C 0xBCC2 dos: ya son los bits 2 y 3
+C 0xBCC6 y la cuenta arranca ahi

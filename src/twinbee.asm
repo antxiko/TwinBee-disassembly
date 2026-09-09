@@ -579,29 +579,29 @@ L_436F:
 	ld (0ebf8h),a		;4381
 dibuja_la_nave_que_cruza:
 	xor a			;4384   ; sin paso, no se dibuja
-	dec b			;4385
-	ld b,a			;4386
+	dec b			;4385   ; el paso, uno menos
+	ld b,a			;4386   ; las dos de abajo, en blanco
 	ld d,a			;4387
 	ld e,a			;4388
 	jr nz,escribe_las_cuatro_casillas		;4389
 	ld de,07475h		;438b   ; las casillas de la estela
 	ld a,(0ebf7h)		;438e   ; el bit 0 del estado: dos parejas de dibujos
 	rra			;4391
-	ld a,070h		;4392
-	ld b,071h		;4394
+	ld a,070h		;4392   ; la de la izquierda
+	ld b,071h		;4394   ; y la de la derecha
 	jr c,escribe_las_cuatro_casillas		;4396
-	ld a,072h		;4398
+	ld a,072h		;4398   ; la otra pareja
 	ld b,073h		;439a
 escribe_las_cuatro_casillas:
 	ld hl,(0ebf9h)		;439c   ; donde va
 	ld (hl),a			;439f   ; las dos casillas de arriba
 	inc hl			;43a0
-	ld (hl),b			;43a1
+	ld (hl),b			;43a1   ; y la de la derecha
 	ld a,01fh		;43a2   ; y 0x1F mas alla, o sea la fila de abajo
 	call suma_a_a_hl		;43a4
-	ld (hl),d			;43a7
+	ld (hl),d			;43a7   ; la de abajo a la izquierda
 	inc hl			;43a8
-	ld (hl),e			;43a9
+	ld (hl),e			;43a9   ; y la de abajo a la derecha
 	ld a,c			;43aa   ; los tres bits altos: por donde tira
 	and 0e0h		;43ab
 	ld de,00002h		;43ad   ; a la derecha
@@ -915,30 +915,30 @@ L_4547:
 	ret			;4568
 L_4569:
 	push bc			;4569   ; el escalon de la vida extra
-	ld a,(de)			;456a
+	ld a,(de)			;456a   ; el escalon, en BCD
 	ld b,a			;456b
 	dec de			;456c
 	ld a,(de)			;456d
 	ld c,a			;456e
-	and a			;456f
+	and a			;456f   ; menos la puntuacion
 	sbc hl,bc		;4570   ; hasta llegar a el no hay nada
 	jr c,L_4594		;4572
 	ld a,010h		;4574   ; y al pasarlo, el escalon sube 0x1000
-	add a,c			;4576
+	add a,c			;4576   ; el byte bajo mas 0x10
 	daa			;4577
 	ld (de),a			;4578
-	ld l,a			;4579
+	ld l,a			;4579   ; a salvo para el `or`
 	inc de			;457a
-	ld a,000h		;457b
+	ld a,000h		;457b   ; y el alto, con el acarreo
 	adc a,b			;457d
 	daa			;457e
 	ld (de),a			;457f
-	or l			;4580
+	or l			;4580   ; con los dos a cero, desbordo
 	jr nz,L_4586		;4581
 	ld a,0a0h		;4583   ; y al desbordar se pone en 0xA0
 	ld (de),a			;4585
 L_4586:
-	dec de			;4586
+	dec de			;4586   ; dos bytes atras: las vidas
 	dec de			;4587
 	ld a,(de)			;4588   ; las vidas
 	cp 099h		;4589   ; con 99 ya no caben mas
@@ -950,8 +950,8 @@ L_4586:
 L_4594:
 	pop hl			;4594
 	ld b,004h		;4595   ; cuatro cifras del record
-	ld de,0e067h		;4597
-	ld c,l			;459a
+	ld de,0e067h		;4597   ; el record
+	ld c,l			;459a   ; y la puntuacion
 L_459B:
 	ld a,(de)			;459b   ; se compara con la puntuacion
 	sub (hl)			;459c
@@ -972,26 +972,26 @@ escribe_los_marcadores:
 	call escribe_cuatro_cifras		;45b3
 	call es_el_segundo_jugador		;45b6   ; y si juegan dos
 	ld hl,0ee51h		;45b9   ; tambien el del segundo
-	ld e,06bh		;45bc
+	ld e,06bh		;45bc   ; y su puntuacion
 	call nz,escribe_cuatro_cifras		;45be
 	ld hl,0edb1h		;45c1   ; y el record, que siempre se pinta
-	ld e,06fh		;45c4
+	ld e,06fh		;45c4   ; el record vive en 0xE06F
 escribe_cuatro_cifras:
-	ld b,004h		;45c6
+	ld b,004h		;45c6   ; cuatro bytes: ocho cifras
 	jr escribe_cifras		;45c8
 escribe_la_fase:
 	ld hl,0ecf2h		;45ca   ; la fase
-	ld de,0e07dh		;45cd
+	ld de,0e07dh		;45cd   ; y el numero de fase
 	jr escribe_una_cifra		;45d0
 escribe_las_vidas:
 	ld hl,0ee91h		;45d2   ; las vidas del segundo
-	ld de,0e073h		;45d5
+	ld de,0e073h		;45d5   ; y sus vidas
 	call es_el_segundo_jugador		;45d8
 	call nz,escribe_una_cifra		;45db
 	ld hl,0edf1h		;45de   ; y las del primero
-	ld e,070h		;45e1
+	ld e,070h		;45e1   ; y las vidas del primero
 escribe_una_cifra:
-	ld b,001h		;45e3
+	ld b,001h		;45e3   ; una sola cifra
 escribe_cifras:
 	ld c,000h		;45e5   ; sin ceros a la izquierda todavia
 L_45E7:
@@ -1007,11 +1007,11 @@ L_45F2:
 	add a,010h		;45f2   ; el codigo de la casilla del digito
 	and c			;45f4   ; y con C a cero, la casilla se queda en blanco
 	ld (hl),a			;45f5
-	inc hl			;45f6
-	djnz L_45FB		;45f7
-	ld c,0ffh		;45f9
+	inc hl			;45f6   ; la casilla siguiente
+	djnz L_45FB		;45f7   ; y si era la ultima
+	ld c,0ffh		;45f9   ; la cifra baja ya no se come
 L_45FB:
-	inc b			;45fb
+	inc b			;45fb   ; se deshace el `djnz`
 	ld a,(de)			;45fc   ; la cifra baja
 	and 00fh		;45fd
 	jr z,L_4603		;45ff
@@ -1019,7 +1019,7 @@ L_45FB:
 L_4603:
 	add a,010h		;4603
 	and c			;4605
-	ld (hl),a			;4606
+	ld (hl),a			;4606   ; la casilla
 	dec e			;4607   ; y al byte anterior, que las cifras van al reves
 	inc hl			;4608
 	djnz L_45E7		;4609
@@ -1027,7 +1027,7 @@ L_4603:
 descomprime_el_mapa:
 	ld de,0e400h		;460c   ; el mapa se descomprime a la RAM
 	ld hl,06d74h		;460f   ; el guion, que es una lista de tramos
-	push hl			;4612
+	push hl			;4612   ; y se apila para el bucle
 el_siguiente_tramo:
 	pop hl			;4613
 	ld a,(hl)			;4614   ; el tramo que toca
@@ -1035,9 +1035,9 @@ el_siguiente_tramo:
 	ret z			;4616
 	dec a			;4617
 	inc hl			;4618
-	push hl			;4619
+	push hl			;4619   ; el guion, a salvo
 	ld hl,06e01h		;461a   ; la tabla de tramos
-	call suma_a_a_hl		;461d
+	call suma_a_a_hl		;461d   ; la entrada de la tabla
 	ld a,(hl)			;4620   ; y su direccion
 	inc hl			;4621
 	ld h,(hl)			;4622
@@ -1339,7 +1339,7 @@ L_479A:
 	rlca			;47ae
 	ld l,a			;47af
 	ld a,h			;47b0
-	and 00fh		;47b1
+	and 00fh		;47b1   ; el bajo que ya se permuto
 	or l			;47b3
 	ret			;47b4
 permuta_un_nibble:
@@ -1445,20 +1445,20 @@ lee_el_mando_del_uno:
 	ld a,008h		;482c   ; linea 8 del teclado
 	call 00141h		;482e   ; BIOS SNSMAT - Returns the value of the specified line from the keyboard matrix
 	cpl			;4831   ; las teclas van a cero cuando se pulsan
-	rrca			;4832
+	rrca			;4832   ; dos vueltas
 	rrca			;4833
-	ld b,a			;4834
+	ld b,a			;4834   ; lo leido, a salvo
 	and 004h		;4835   ; el bit de una direccion
-	ld e,a			;4837
+	ld e,a			;4837   ; se va juntando en E
 	ld a,b			;4838
-	rrca			;4839
+	rrca			;4839   ; dos vueltas mas
 	rrca			;483a
 	ld b,a			;483b
-	and 018h		;483c
+	and 018h		;483c   ; dos direcciones de golpe
 	or e			;483e
 	ld e,a			;483f
 	ld a,b			;4840
-	rrca			;4841
+	rrca			;4841   ; una vuelta mas
 	and 003h		;4842
 	or e			;4844
 	ld e,a			;4845
@@ -1477,42 +1477,42 @@ lee_el_mando_del_uno:
 	jr pega_el_ultimo_bit		;4859
 lee_el_mando_del_dos:
 	ld e,0cfh		;485b   ; el mando 2
-	ld a,00fh		;485d
+	ld a,00fh		;485d   ; el registro 15 del PSG
 	call 00093h		;485f   ; BIOS WRTPSG - Writes data to PSG-register
-	call lee_el_joystick		;4862
-	push af			;4865
+	call lee_el_joystick		;4862   ; primero el joystick, que ya trae las direcciones
+	push af			;4865   ; lo leido, a la pila
 	ld a,005h		;4866   ; linea 5
 	call 00141h		;4868   ; BIOS SNSMAT - Returns the value of the specified line from the keyboard matrix
-	cpl			;486b
+	cpl			;486b   ; la matriz viene invertida
 	ld (0e063h),a		;486c   ; se guarda entera: de aqui salen los bits de servicio
-	rlca			;486f
+	rlca			;486f   ; el bit al sitio
 	rlca			;4870
-	and 004h		;4871
-	ld e,a			;4873
+	and 004h		;4871   ; el disparo del dos
+	ld e,a			;4873   ; y se va juntando en E
 	ld a,003h		;4874   ; linea 3
 	call 00141h		;4876   ; BIOS SNSMAT - Returns the value of the specified line from the keyboard matrix
 	cpl			;4879
-	ld b,a			;487a
-	and 008h		;487b
-	or e			;487d
+	ld b,a			;487a   ; la linea 3, a salvo
+	and 008h		;487b   ; otra tecla del dos
+	or e			;487d   ; se acumula
 	ld e,a			;487e
 	ld a,b			;487f
-	rlca			;4880
+	rlca			;4880   ; la siguiente al sitio
 	ld b,a			;4881
-	and 002h		;4882
+	and 002h		;4882   ; y otra mas
 	or e			;4884
 	ld e,a			;4885
 	ld a,b			;4886
-	rrca			;4887
+	rrca			;4887   ; tres vueltas
 	rrca			;4888
 	rrca			;4889
-	and 001h		;488a
+	and 001h		;488a   ; el ultimo bit
 	or e			;488c
 	ld e,a			;488d
 	ld a,006h		;488e   ; linea 6
 	call 00141h		;4890   ; BIOS SNSMAT - Returns the value of the specified line from the keyboard matrix
 	cpl			;4893
-	rlca			;4894
+	rlca			;4894   ; tres vueltas tambien
 	rlca			;4895
 	rlca			;4896
 	and 010h		;4897
@@ -1735,18 +1735,18 @@ parpadea_la_eleccion:
 	inc c			;4c1a
 marca_la_eleccion:
 	ld hl,03a0bh		;4c1b   ; las dos filas de la eleccion
-	ld de,03a4bh		;4c1e
+	ld de,03a4bh		;4c1e   ; la de abajo
 	ld a,(0e062h)		;4c21   ; y la que este marcada
 	or a			;4c24
 	jr z,L_4C28		;4c25
 	ex de,hl			;4c27
 L_4C28:
-	push de			;4c28
-	call escribe_la_flecha		;4c29
+	push de			;4c28   ; la que NO esta marcada, a salvo
+	call escribe_la_flecha		;4c29   ; se le pinta la flecha
 	pop hl			;4c2c
-	ld c,000h		;4c2d
+	ld c,000h		;4c2d   ; y con C a cero, se borra de la otra
 escribe_la_flecha:
-	ld de,048fah		;4c2f
+	ld de,048fah		;4c2f   ; el guion de la flecha
 	jp L_46B2		;4c32
 
 ; ----------------------------------------------------------------------
@@ -1841,14 +1841,14 @@ L_4D6E:
 	jr nz,L_4D74		;4d71
 	ld d,a			;4d73
 L_4D74:
-	and 03fh		;4d74
-	ld e,a			;4d76
-	ld a,c			;4d77
+	and 03fh		;4d74   ; la prioridad, sin los dos bits altos
+	ld e,a			;4d76   ; a E
+	ld a,c			;4d77   ; la melodia que se pide
 	cp 0d5h		;4d78   ; la de la pausa entra siempre
 	jr z,L_4D99		;4d7a
 	cp d			;4d7c   ; y si es la misma, no se repite
 	ret z			;4d7d
-	and 03fh		;4d7e
+	and 03fh		;4d7e   ; tambien sin los dos bits altos
 	ld d,a			;4d80
 	cp 014h		;4d81   ; tres melodias se cuelan una posicion mas arriba
 	jr z,L_4D94		;4d83
@@ -1856,9 +1856,9 @@ L_4D74:
 	jr z,L_4D8E		;4d87
 	cp 025h		;4d89
 	jr nz,L_4D90		;4d8b
-	inc a			;4d8d
+	inc a			;4d8d   ; una mas
 L_4D8E:
-	inc a			;4d8e
+	inc a			;4d8e   ; y dos mas
 	inc a			;4d8f
 L_4D90:
 	cp e			;4d90   ; y si la que suena manda mas, no se cambia
@@ -1879,41 +1879,41 @@ L_4D99:
 	dec l			;4da3
 monta_los_canales:
 	ld (hl),001h		;4da4   ; el canal, en marcha
-	inc l			;4da6
+	inc l			;4da6   ; dos bytes adelante
 	inc l			;4da7
 	ld (hl),c			;4da8   ; con su numero
-	inc l			;4da9
+	inc l			;4da9   ; al puntero de la partitura
 	ld a,(de)			;4daa   ; y el puntero a la partitura
 	ld (hl),a			;4dab
 	inc l			;4dac
 	inc de			;4dad
-	ld a,(de)			;4dae
+	ld a,(de)			;4dae   ; y el alto
 	ld (hl),a			;4daf
-	ld a,006h		;4db0
+	ld a,006h		;4db0   ; seis bytes mas alla
 	add a,l			;4db2
 	ld l,a			;4db3
 	xor a			;4db4   ; sin nota puesta
 	ld (hl),a			;4db5
-	ld a,005h		;4db6
+	ld a,005h		;4db6   ; cinco mas: el canal siguiente
 	add a,l			;4db8
 	ld l,a			;4db9
 	ld (hl),001h		;4dba   ; el siguiente canal
-	inc l			;4dbc
+	inc l			;4dbc   ; dos bytes adelante
 	inc l			;4dbd
-	xor a			;4dbe
+	xor a			;4dbe   ; la nota, a cero
 	ld (hl),a			;4dbf
 	inc l			;4dc0
 	ld (hl),a			;4dc1
 	inc l			;4dc2
-	inc de			;4dc3
-	djnz monta_los_canales		;4dc4
+	inc de			;4dc3   ; la partitura siguiente
+	djnz monta_los_canales		;4dc4   ; los canales que pidan
 	ret			;4dc6
 guarda_el_canal:
 	ld bc,00013h		;4dc7   ; los 0x13 bytes del canal
-	ldir		;4dca
-	ld c,a			;4dcc
+	ldir		;4dca   ; de un juego al otro
+	ld c,a			;4dcc   ; el numero que traia
 	xor a			;4dcd
-	ld (0e05fh),a		;4dce
+	ld (0e05fh),a		;4dce   ; y se suelta la marca de ocupado
 	ret			;4dd1
 el_paso_de_la_nota:
 	inc hl			;4dd2   ; el byte de la partitura
@@ -1994,45 +1994,45 @@ enciende_el_bit:
 el_reproductor:		; Lo que suena en cada interrupcion: tres canales de tono y uno de ruido
 	ld a,(0e05ch)		;4e48   ; el mezclador, otra vez
 	call escribe_el_mezclador		;4e4b
-	ld c,001h		;4e4e
+	ld c,001h		;4e4e   ; el numero de registro del primer canal
 	ld ix,0e010h		;4e50   ; el primer canal
-	exx			;4e54
+	exx			;4e54   ; el juego de repuesto lleva la cuenta
 	ld b,003h		;4e55   ; tres canales
 	ld de,00013h		;4e57   ; de 0x13 bytes
 L_4E5A:
-	exx			;4e5a
+	exx			;4e5a   ; y se vuelve al normal para trabajar
 	ld a,c			;4e5b
 	cp 005h		;4e5c   ; el canal 5, que es el del ruido
 	jr nz,canal_de_la_pausa		;4e5e
 	ld a,(0e05fh)		;4e60   ; con la pausa puesta
 	or a			;4e63
 	jr z,L_4E75		;4e64
-	ld h,000h		;4e66
+	ld h,000h		;4e66   ; con volumen cero
 	call escribe_el_volumen		;4e68
-	ld a,c			;4e6b
+	ld a,c			;4e6b   ; el canal
 	ld hl,0e049h		;4e6c   ; se devuelve lo que se habia guardado
 	ld de,0e036h		;4e6f
 	call guarda_el_canal		;4e72
 L_4E75:
-	ld a,(ix+002h)		;4e75
+	ld a,(ix+002h)		;4e75   ; la melodia que lleva
 	or a			;4e78   ; sin melodia, se calla
 	jr nz,L_4E80		;4e79
-	call acaba_la_melodia		;4e7b
+	call acaba_la_melodia		;4e7b   ; se calla
 	jr L_4E83		;4e7e
 L_4E80:
-	call sigue_la_partitura		;4e80
+	call sigue_la_partitura		;4e80   ; y si la tiene, sigue su partitura
 L_4E83:
 	inc c			;4e83   ; dos numeros de registro por canal
 	inc c			;4e84
-	exx			;4e85
-	add ix,de		;4e86
+	exx			;4e85   ; al de repuesto
+	add ix,de		;4e86   ; 0x13 bytes hasta el canal siguiente
 	djnz L_4E5A		;4e88
 	ret			;4e8a
 canal_de_la_pausa:
 	ld a,(0e079h)		;4e8b   ; en pausa no avanza nada
 	or a			;4e8e
 	jr z,el_avance_de_la_melodia		;4e8f
-	ld h,000h		;4e91
+	ld h,000h		;4e91   ; con volumen cero: se calla
 	call escribe_el_volumen		;4e93
 	jr L_4E83		;4e96
 el_avance_de_la_melodia:
@@ -2040,48 +2040,48 @@ el_avance_de_la_melodia:
 	or a			;4e9b
 	jr z,L_4EE1		;4e9c
 	dec (ix+00fh)		;4e9e   ; su reloj
-	jr nz,L_4E75		;4ea1
+	jr nz,L_4E75		;4ea1   ; mientras dure, la partitura sigue
 	inc (ix+010h)		;4ea3   ; un paso mas
-	ld a,04ah		;4ea6
+	ld a,04ah		;4ea6   ; con 0x4A cuadros por paso
 	ld (ix+00fh),a		;4ea8
 	ld a,(ix+010h)		;4eab
 	cp 003h		;4eae   ; tres pasos
 	jr c,L_4E75		;4eb0
-	ld a,015h		;4eb2
+	ld a,015h		;4eb2   ; y 0x15 a partir del tercero
 	ld (ix+00fh),a		;4eb4
-	ld a,(ix+010h)		;4eb7
+	ld a,(ix+010h)		;4eb7   ; el paso
 	cp 004h		;4eba   ; el cuarto baja el tono
 	call z,baja_el_tono		;4ebc
 	ld a,(ix+010h)		;4ebf
 	cp 005h		;4ec2
 	jr c,L_4E75		;4ec4
 	ld a,(0e077h)		;4ec6   ; y al quinto, se acaba
-	and a			;4ec9
+	and a			;4ec9   ; con jugadores vivos no se apaga
 	jr nz,L_4ECF		;4eca
 	ld (0e05eh),a		;4ecc
 L_4ECF:
 	ld a,(0e05eh)		;4ecf   ; la melodia de fondo pasa a primer plano
 	ld (0e05dh),a		;4ed2
-	call pide_si_no_suena_ya		;4ed5
+	call pide_si_no_suena_ya		;4ed5   ; y se pide, si no suena ya
 	cp 0f7h		;4ed8   ; y si era la del final, se calla
 	ld a,000h		;4eda
 	jr nz,L_4EE1		;4edc
 	ld (0e05dh),a		;4ede
 L_4EE1:
-	ld (ix+010h),a		;4ee1
-	ld (0e05eh),a		;4ee4
+	ld (ix+010h),a		;4ee1   ; el paso, a cero
+	ld (0e05eh),a		;4ee4   ; y la melodia de fondo, fuera
 	inc a			;4ee7
-	ld (ix+00fh),a		;4ee8
+	ld (ix+00fh),a		;4ee8   ; con el reloj a uno
 	jr L_4E75		;4eeb
 baja_el_tono:
 	ld a,(ix+002h)		;4eed
-	and 03fh		;4ef0
-	cp 022h		;4ef2
+	and 03fh		;4ef0   ; la melodia que suena
+	cp 022h		;4ef2   ; las de 0x22 arriba no bajan de tono
 	ret nc			;4ef4
 	jp L_4FC3		;4ef5
 sigue_la_partitura:
 	ld a,(ix+002h)		;4ef8   ; los dos bits altos del numero
-	and 0c0h		;4efb
+	and 0c0h		;4efb   ; los dos bits altos
 	cp 0c0h		;4efd   ; con los dos puestos, es efecto y no melodia
 	jp z,el_paso_de_un_efecto		;4eff
 	dec (ix+000h)		;4f02   ; la cuenta de la nota
@@ -2093,20 +2093,20 @@ sigue_la_partitura:
 lee_el_paso:
 	ld l,(ix+003h)		;4f06   ; por donde va la partitura
 	ld h,(ix+004h)		;4f09
-	ld a,(hl)			;4f0c
+	ld a,(hl)			;4f0c   ; el byte de mando
 	cp 0feh		;4f0d   ; 0xFE es "salta"
 	jp z,el_paso_de_la_nota		;4f0f
 	jp nc,acaba_la_melodia		;4f12   ; y de 0xFF arriba, se acabo
-	ld a,(ix+002h)		;4f15
+	ld a,(ix+002h)		;4f15   ; los dos bits altos del numero
 	and 0c0h		;4f18
 	cp 0c0h		;4f1a
 	ld a,(hl)			;4f1c
-	jp z,lee_una_nota		;4f1d
+	jp z,lee_una_nota		;4f1d   ; con los dos, es un efecto y va por otro lado
 	and 0f0h		;4f20   ; el nibble alto del mando
 	cp 020h		;4f22   ; el 2 cambia el instrumento
 	jr nz,L_4F52		;4f24
 	ld a,(hl)			;4f26
-	ld (ix+005h),a		;4f27
+	ld (ix+005h),a		;4f27   ; la forma de la onda
 	inc hl			;4f2a
 	ld a,(hl)			;4f2b
 	ld (ix+001h),a		;4f2c   ; y la duracion
@@ -2114,18 +2114,18 @@ lee_el_paso:
 	ld a,(ix+005h)		;4f30
 	cp 020h		;4f33   ; con 0x20 exacto, solo silencio
 	jr nz,L_4F3C		;4f35
-	dec hl			;4f37
-	ld b,000h		;4f38
+	dec hl			;4f37   ; se retrocede un byte
+	ld b,000h		;4f38   ; sin volumen
 	jr L_4F6C		;4f3a
 L_4F3C:
 	bit 3,(ix+005h)		;4f3c   ; el bit 3 trae envolvente
 	jr z,L_4F52		;4f40
 	ld a,(hl)			;4f42
-	ld e,a			;4f43
+	ld e,a			;4f43   ; el periodo bajo
 	ld a,00ch		;4f44   ; registro 12 del PSG: el periodo
 	call 00093h		;4f46   ; BIOS WRTPSG - Writes data to PSG-register
 	inc hl			;4f49
-	ld a,(hl)			;4f4a
+	ld a,(hl)			;4f4a   ; y el alto
 	ld e,a			;4f4b
 	ld a,00bh		;4f4c   ; y el 11
 	call 00093h		;4f4e   ; BIOS WRTPSG - Writes data to PSG-register
@@ -2136,8 +2136,8 @@ L_4F52:
 	cp 010h		;4f55   ; el 1 pone el ruido
 	jr nz,L_4F64		;4f57
 	ld a,(hl)			;4f59
-	and 00fh		;4f5a
-	add a,a			;4f5c
+	and 00fh		;4f5a   ; los cuatro bits bajos
+	add a,a			;4f5c   ; por dos
 	ld e,a			;4f5d
 	ld a,006h		;4f5e   ; registro 6 del PSG
 	call 00093h		;4f60   ; BIOS WRTPSG - Writes data to PSG-register
@@ -2145,7 +2145,7 @@ L_4F52:
 L_4F64:
 	ld a,(hl)			;4f64
 	and 0f0h		;4f65   ; el volumen, en el nibble alto
-	ld b,a			;4f67
+	ld b,a			;4f67   ; el volumen, a salvo en B
 	xor (hl)			;4f68   ; y la octava en el bajo
 	ld d,a			;4f69
 	inc hl			;4f6a
@@ -2155,31 +2155,31 @@ L_4F6C:
 	ex de,hl			;4f6f
 	call pon_el_periodo		;4f70   ; y se escribe
 	ld a,b			;4f73
-	rrca			;4f74
+	rrca			;4f74   ; el volumen, al nibble bajo
 	rrca			;4f75
 	rrca			;4f76
 	rrca			;4f77
 	ld h,a			;4f78
-	ld a,(ix+001h)		;4f79
+	ld a,(ix+001h)		;4f79   ; la duracion que puso el instrumento
 	ld (ix+000h),a		;4f7c   ; con la duracion que toque
-	jp escribe_el_volumen		;4f7f
+	jp escribe_el_volumen		;4f7f   ; y a sonar
 acaba_la_melodia:
 	ld a,(ix+012h)		;4f82   ; el sitio al que volver de un salto
 	or a			;4f85
 	jr z,L_4F9E		;4f86
 	ld (ix+004h),a		;4f88   ; se recupera
-	ld a,(ix+011h)		;4f8b
+	ld a,(ix+011h)		;4f8b   ; y el bajo
 	ld (ix+003h),a		;4f8e
 	xor a			;4f91
 	ld (ix+00ah),a		;4f92   ; y el desliz se para
 	ld (ix+011h),a		;4f95
 	ld (ix+012h),a		;4f98
-	jp L_4E09		;4f9b
+	jp L_4E09		;4f9b   ; con un paso mas de partitura
 L_4F9E:
 	ld a,c			;4f9e
 	cp 005h		;4f9f   ; el canal de ruido
 	jr nz,L_4FAD		;4fa1
-	ld a,(ix+002h)		;4fa3
+	ld a,(ix+002h)		;4fa3   ; la melodia que suena
 	cp 094h		;4fa6   ; con la melodia 0x94
 	jr nz,L_4FAD		;4fa8
 	call pide_si_no_suena_ya		;4faa
@@ -2187,24 +2187,24 @@ L_4FAD:
 	ld a,c			;4fad
 	cp 003h		;4fae   ; el canal 3
 	jr nz,L_4FC3		;4fb0
-	ld a,(ix+002h)		;4fb2
+	ld a,(ix+002h)		;4fb2   ; la melodia
 	and 03fh		;4fb5
 	cp 022h		;4fb7   ; y las melodias de 0x22 arriba
-	ld (ix+002h),000h		;4fb9
+	ld (ix+002h),000h		;4fb9   ; el canal se apaga
 	call nc,pide_si_no_suena_ya		;4fbd
 	xor a			;4fc0
 	jr L_4FC7		;4fc1
 L_4FC3:
 	xor a			;4fc3
-	ld (ix+002h),a		;4fc4
+	ld (ix+002h),a		;4fc4   ; el canal, callado
 L_4FC7:
 	ld h,a			;4fc7
-	ld (ix+005h),a		;4fc8
-	ld (ix+00ch),a		;4fcb
+	ld (ix+005h),a		;4fc8   ; sin instrumento
+	ld (ix+00ch),a		;4fcb   ; ni desafinado
 	jr escribe_el_volumen		;4fce
 pide_si_no_suena_ya:
 	ld a,(0e012h)		;4fd0   ; lo que suena en el canal de arriba
-	ld e,a			;4fd3
+	ld e,a			;4fd3   ; a salvo
 	ld a,(0e05dh)		;4fd4
 	cp e			;4fd7   ; y si es la misma, no se pide otra vez
 	ret z			;4fd8
@@ -2235,62 +2235,62 @@ L_5003:
 	ld h,000h		;5003
 escribe_el_volumen:
 	call pon_el_mezclador		;5005   ; el mezclador
-	ld a,c			;5008
+	ld a,c			;5008   ; el numero de canal
 	rrca			;5009   ; el registro de volumen del canal
 	add a,088h		;500a
-	ld d,a			;500c
+	ld d,a			;500c   ; 8, 9 o 10 segun el canal
 	bit 3,(ix+005h)		;500d   ; con envolvente
 	jr z,L_501C		;5011
-	ld e,h			;5013
+	ld e,h			;5013   ; la forma va en H
 	ld a,00dh		;5014   ; registro 13 del PSG: la forma
 	call 00093h		;5016   ; BIOS WRTPSG - Writes data to PSG-register
 	ld a,010h		;5019   ; y el volumen pasa a ser "envolvente"
 	ld h,a			;501b
 L_501C:
-	ld a,d			;501c
-	ld e,h			;501d
+	ld a,d			;501c   ; el registro
+	ld e,h			;501d   ; y el valor
 	jp 00093h		;501e   ; BIOS WRTPSG - Writes data to PSG-register | registro 8, 9 o 10
 el_paso_de_un_efecto:
 	dec (ix+000h)		;5021   ; la cuenta de la nota
 	jp z,lee_el_paso		;5024   ; acabada, al paso siguiente
 	dec (ix+009h)		;5027   ; y la del efecto
 	ld a,(ix+009h)		;502a
-	cp (ix+000h)		;502d
+	cp (ix+000h)		;502d   ; contra la de la nota
 	jr nz,L_4FDC		;5030
 	ld e,a			;5032
-	ld a,(ix+00eh)		;5033
+	ld a,(ix+00eh)		;5033   ; y contra el escalon de desvanecido
 	cp e			;5036
 	ld a,e			;5037
 	jr nc,L_4FDF		;5038
 	ret			;503a
 lee_una_nota:
 	ld a,(hl)			;503b   ; el nibble alto
-	and 0f0h		;503c
+	and 0f0h		;503c   ; el nibble alto
 	cp 0d0h		;503e   ; el 0xD cambia el paso de la escala
 	ld a,(hl)			;5040
 	jr nz,lee_la_duracion		;5041
 	and 00fh		;5043
-	ld (ix+00bh),a		;5045
+	ld (ix+00bh),a		;5045   ; los cuatro bits bajos son el paso
 	inc hl			;5048
-	ld a,(hl)			;5049
+	ld a,(hl)			;5049   ; y sigue el byte siguiente
 lee_la_duracion:
 	cp 0f0h		;504a   ; de 0xF0 arriba viene la duracion
 	jr c,lee_el_ataque		;504c
-	and 00fh		;504e
+	and 00fh		;504e   ; los cuatro bits bajos
 	inc a			;5050
 	ld (ix+007h),a		;5051   ; sus cuatro bits bajos, mas uno
 	inc hl			;5054
-	ld a,(hl)			;5055
+	ld a,(hl)			;5055   ; el byte siguiente
 	and 0f0h		;5056
 	rrca			;5058   ; y el byte siguiente trae dos numeros
 	rrca			;5059
 	rrca			;505a
 	rrca			;505b
-	ld d,a			;505c
+	ld d,a			;505c   ; el alto, en D
 	ld a,(hl)			;505d
 	and 00fh		;505e
-	ld e,a			;5060
-	ld a,(ix+002h)		;5061
+	ld e,a			;5060   ; y el bajo, en E
+	ld a,(ix+002h)		;5061   ; la melodia que suena
 	cp 0d6h		;5064   ; dos melodias concretas
 	jr z,L_506C		;5066
 	cp 0d8h		;5068
@@ -2304,42 +2304,42 @@ L_506C:
 	ld a,001h		;5077   ; cambian de duracion
 	ld e,a			;5079
 	jr nz,L_507D		;507a
-	inc e			;507c
+	inc e			;507c   ; o 2
 L_507D:
 	ld d,a			;507d
 L_507E:
 	ld a,d			;507e   ; los dos numeros, a su sitio
-	ld (ix+00dh),a		;507f
+	ld (ix+00dh),a		;507f   ; el ataque
 	ld a,e			;5082
-	ld (ix+00eh),a		;5083
+	ld (ix+00eh),a		;5083   ; y el desvanecido
 	inc hl			;5086
 	ld a,(hl)			;5087
 lee_el_ataque:
 	cp 0e0h		;5088   ; de 0xE0 arriba viene el ataque
 	jr c,pon_la_nota		;508a
-	and 00fh		;508c
+	and 00fh		;508c   ; los cuatro bits bajos
 	bit 3,a		;508e   ; el bit 3 lo separa del desvanecido
 	jr z,L_5098		;5090
-	ld (ix+00ch),a		;5092
+	ld (ix+00ch),a		;5092   ; con el bit 3, es el desvanecido
 	inc hl			;5095
 	jr lee_una_nota		;5096
 L_5098:
-	ld (ix+006h),a		;5098
+	ld (ix+006h),a		;5098   ; y sin el, el ataque
 	inc hl			;509b
 	ld a,(hl)			;509c
 pon_la_nota:
 	and 00fh		;509d   ; la octava
-	ld b,a			;509f
-	ld a,(ix+00bh)		;50a0
-	jr z,L_50AA		;50a3
+	ld b,a			;509f   ; la octava, en B
+	ld a,(ix+00bh)		;50a0   ; el paso de escala
+	jr z,L_50AA		;50a3   ; con octava cero, no se suma nada
 L_50A5:
 	add a,(ix+00bh)		;50a5   ; sumando el paso de escala tantas veces
 	djnz L_50A5		;50a8
 L_50AA:
-	ld (ix+001h),a		;50aa
-	ld a,(hl)			;50ad
+	ld (ix+001h),a		;50aa   ; y eso es la duracion base
+	ld a,(hl)			;50ad   ; el codigo de nota
 	call avanza_la_partitura		;50ae   ; el codigo de nota
-	and 0f0h		;50b1
+	and 0f0h		;50b1   ; su nibble alto
 	rrca			;50b3
 	rrca			;50b4
 	rrca			;50b5
@@ -2374,23 +2374,23 @@ pon_el_periodo:
 	jr z,L_50EB		;50e8
 	inc hl			;50ea
 L_50EB:
-	ld a,c			;50eb
-	ld e,h			;50ec
+	ld a,c			;50eb   ; el registro del periodo, byte alto
+	ld e,h			;50ec   ; el valor
 	call 00093h		;50ed   ; BIOS WRTPSG - Writes data to PSG-register
-	ld a,c			;50f0
+	ld a,c			;50f0   ; y el byte bajo
 	dec a			;50f1
 	ld e,l			;50f2
 	call 00093h		;50f3   ; BIOS WRTPSG - Writes data to PSG-register
-	ld a,(ix+002h)		;50f6
-	and 0c0h		;50f9
-	cp 0c0h		;50fb
+	ld a,(ix+002h)		;50f6   ; el estado del canal
+	and 0c0h		;50f9   ; los dos bits altos
+	cp 0c0h		;50fb   ; con los dos puestos, se sigue
 	ret nz			;50fd
-	ld h,d			;50fe
-	ld (ix+005h),002h		;50ff
+	ld h,d			;50fe   ; el volumen que traia
+	ld (ix+005h),002h		;50ff   ; y el canal pasa al estado 2
 	jp escribe_el_volumen		;5103
 avanza_la_partitura:
 	inc hl			;5106
-	ld (ix+003h),l		;5107
+	ld (ix+003h),l		;5107   ; el puntero de vuelta a la partitura
 	ld (ix+004h),h		;510a
 	ret			;510d
 
@@ -2638,14 +2638,14 @@ empieza_la_partida:
 	ld a,017h		;5d25
 	ld (0ebf0h),a		;5d27   ; por donde empieza el decorado: la fila 23
 	ld a,021h		;5d2a
-	ld (0ebb0h),a		;5d2c
+	ld (0ebb0h),a		;5d2c   ; el hito de la primera nube
 	ld a,0edh		;5d2f
-	ld (0ebb3h),a		;5d31
+	ld (0ebb3h),a		;5d31   ; y el de la primera melodia
 	ld hl,00105h		;5d34   ; donde arranca la nave
-	ld (0ebb6h),hl		;5d37
-	ld a,h			;5d3a
-	ld (0e087h),a		;5d3b
-	ld (0e08dh),a		;5d3e
+	ld (0ebb6h),hl		;5d37   ; el hito del jefe
+	ld a,h			;5d3a   ; H vale uno: la semilla de la tabla de premios
+	ld (0e087h),a		;5d3b   ; la bomba del primero, cargada
+	ld (0e08dh),a		;5d3e   ; y la del segundo
 	ld (0eb8ch),a		;5d41   ; la tabla de premios, escrita a mano: potencia en la casilla 4
 	rlca			;5d44   ; doblando cada vez
 	ld (0eb90h),a		;5d45   ; doble disparo en la 8
@@ -2655,51 +2655,51 @@ empieza_la_partida:
 	ld (0eb9ch),a		;5d4d   ; el arma en la 20
 	rlca			;5d50
 	ld (0eba8h),a		;5d51   ; y el escudo en la 32
-	ld hl,00700h		;5d54
+	ld hl,00700h		;5d54   ; el patron y el color de la nave 1
 	ld (0ef82h),hl		;5d57
-	ld hl,00f04h		;5d5a
+	ld hl,00f04h		;5d5a   ; y su segundo sprite
 	ld (0ef86h),hl		;5d5d
 	ld a,030h		;5d60
-	ld (0e34bh),a		;5d62
+	ld (0e34bh),a		;5d62   ; la cuenta del aviso
 	call es_el_segundo_jugador		;5d65   ; con dos jugadores
 	jr nz,L_5D93		;5d68
 	ld hl,00118h		;5d6a   ; cada nave tiene su sitio
-	ld (0ef8ah),hl		;5d6d
+	ld (0ef8ah),hl		;5d6d   ; los dos sprites del segundo
 	ld (0ef8eh),hl		;5d70
 	ld a,(0f0ffh)		;5d73   ; el truco que se apunto en 0xF0FF
-	and 001h		;5d76
+	and 001h		;5d76   ; el bit 0 del truco
 	jr z,L_5DAC		;5d78
 	ld a,006h		;5d7a   ; da potencia de salida
 	ld (0e083h),a		;5d7c
 	ld a,010h		;5d7f
-	ld (0e095h),a		;5d81
+	ld (0e095h),a		;5d81   ; y dieciseis usos de arma
 	ld hl,0e0b1h		;5d84   ; y campanas ya cargadas
-	ld a,078h		;5d87
+	ld a,078h		;5d87   ; con dos tandas de veinte casillas
 	call pon_veinte_alternas		;5d89
 	ld a,040h		;5d8c
 	call pon_veinte_alternas		;5d8e
 	jr L_5DAC		;5d91
 L_5D93:
 	ld hl,0060ch		;5d93   ; y con uno solo, la nave va en medio
-	ld (0ef8ah),hl		;5d96
+	ld (0ef8ah),hl		;5d96   ; los dos sprites
 	ld hl,00f10h		;5d99
 	ld (0ef8eh),hl		;5d9c
 	ld a,001h		;5d9f
-	ld (0e088h),a		;5da1
+	ld (0e088h),a		;5da1   ; con la bomba cargada
 	ld (0e08eh),a		;5da4
 	ld a,030h		;5da7
 	ld (0e343h),a		;5da9
 L_5DAC:
 	ld a,0e0h		;5dac   ; Y = 0xE0
 	ld hl,0e104h		;5dae   ; los sprites de los premios
-	ld de,00008h		;5db1
-	ld b,006h		;5db4
+	ld de,00008h		;5db1   ; ocho bytes por sprite
+	ld b,006h		;5db4   ; seis premios
 L_5DB6:
 	ld (hl),a			;5db6
 	add hl,de			;5db7
 	djnz L_5DB6		;5db8
 	ld hl,0e0a1h		;5dba   ; y los de las naves
-	ld b,004h		;5dbd
+	ld b,004h		;5dbd   ; cuatro sprites
 	ld e,b			;5dbf
 L_5DC0:
 	ld (hl),a			;5dc0   ; los sprites de las dos naves
@@ -3128,16 +3128,16 @@ L_609F:
 L_60A3:
 	ld a,(0e012h)		;60a3   ; lo que esta sonando en el otro canal
 	cp 0dah		;60a6   ; la de la fase
-	ld c,0dch		;60a8
+	ld c,0dch		;60a8   ; se pasa a la siguiente
 	jr z,$+40		;60aa
 	cp 0deh		;60ac   ; o la de mas ritmo
-	ld c,0e0h		;60ae
+	ld c,0e0h		;60ae   ; o a la de mas ritmo aun
 	jr z,$+34		;60b0
 	ld a,(0e05eh)		;60b2   ; y lo que suena en el de abajo
 	cp 0dah		;60b5
-	ld c,0d6h		;60b7
+	ld c,0d6h		;60b7   ; la de siempre
 	jr nc,$+25		;60b9
-	ld a,(0e012h)		;60bb
+	ld a,(0e012h)		;60bb   ; el de arriba otra vez
 	cp 0d8h		;60be
 	jr z,$+27		;60c0
 	ld a,(0e05dh)		;60c2
@@ -3187,22 +3187,22 @@ L_60F5:
 	jr L_60D8		;60f7
 suma_a_la_posicion:
 	ld c,(hl)			;60f9   ; la velocidad horizontal
-	inc l			;60fa
-	ld b,(hl)			;60fb
+	inc l			;60fa   ; al byte alto
+	ld b,(hl)			;60fb   ; la velocidad horizontal, byte alto
 	inc l			;60fc
 	ld a,e			;60fd   ; la vertical, sumada con su fraccion
-	add a,(hl)			;60fe
+	add a,(hl)			;60fe   ; la fraccion de la vertical
 	ld (hl),a			;60ff
-	inc hl			;6100
+	inc hl			;6100   ; y el byte entero
 	ld a,d			;6101
 	adc a,(hl)			;6102
 	ld (hl),a			;6103
-	ld d,a			;6104
+	ld d,a			;6104   ; la vertical nueva, a D
 	inc l			;6105
 	ld a,c			;6106   ; y luego la horizontal
-	add a,(hl)			;6107
+	add a,(hl)			;6107   ; la fraccion de la horizontal
 	ld (hl),a			;6108
-	inc hl			;6109
+	inc hl			;6109   ; y el byte entero
 	ld a,b			;610a
 	adc a,(hl)			;610b
 	ld (hl),a			;610c
@@ -3212,14 +3212,14 @@ prepara_el_marcador:
 	ld hl,(0ebf0h)		;6112   ; por donde va el decorado
 	rst 20h			;6115   ; y si no ha llegado, nada
 	ret nz			;6116
-	ld hl,0ebb8h		;6117
+	ld hl,0ebb8h		;6117   ; el contador de fase
 	call avanza_hasta_cinco		;611a   ; el contador de fase, uno mas
 	ld hl,06132h		;611d   ; el hito siguiente
-	call palabra_de_tabla		;6120
-	ld (0ebb6h),de		;6123
+	call palabra_de_tabla		;6120   ; la palabra que le toca
+	ld (0ebb6h),de		;6123   ; y se guarda
 	ld a,001h		;6127   ; con la marca del jefe
 	ld (0ebf2h),a		;6129
-	ld (0e155h),a		;612c
+	ld (0e155h),a		;612c   ; con la de que dispara
 	jp L_9648		;612f   ; y sus sprites
 
 ; ----------------------------------------------------------------------
@@ -3242,8 +3242,8 @@ pasa_de_fase:
 	ld a,(0e07ch)		;613c   ; la cuenta atras del final de fase
 	dec a			;613f
 	ret nz			;6140   ; mientras no llegue a cero, nada
-	ld (0e07ch),a		;6141
-	ld (0ebf2h),a		;6144
+	ld (0e07ch),a		;6141   ; la cuenta, a cero
+	ld (0ebf2h),a		;6144   ; y el jefe, fuera
 	ld a,(0e07dh)		;6147   ; el numero de fase, en BCD
 	cp 099h		;614a   ; con 99 se acabo el juego
 	jr z,L_618E		;614c
@@ -3251,20 +3251,20 @@ pasa_de_fase:
 	daa			;6150
 	ld (0e07dh),a		;6151
 	ld hl,0e076h		;6154   ; y el escenario
-	inc (hl)			;6157
+	inc (hl)			;6157   ; uno mas
 	ld a,(hl)			;6158
 	and 00fh		;6159   ; su nibble bajo
 	sub 006h		;615b   ; al llegar a seis
 	jr nz,L_6171		;615d
-	ld (0e3a0h),a		;615f
+	ld (0e3a0h),a		;615f   ; el contador de oleadas, a cero
 	inc a			;6162
-	ld (0e3a1h),a		;6163
-	ld (0ebfdh),a		;6166
+	ld (0e3a1h),a		;6163   ; con una oleada pendiente
+	ld (0ebfdh),a		;6166   ; y sin aviso
 	ld (hl),011h		;6169   ; vuelve al 0x11: primer escenario, segunda vuelta
 	ld hl,0001ah		;616b   ; y el decorado, a la fila 26
 	ld (0ebf0h),hl		;616e
 L_6171:
-	ld a,(0e07dh)		;6171
+	ld a,(0e07dh)		;6171   ; el numero de fase
 	cp 006h		;6174   ; en la fase 6
 	jr z,L_617C		;6176
 	cp 011h		;6178   ; y en la 17
@@ -3372,12 +3372,12 @@ avanza_hasta_c:
 	ret			;6222
 mueve_el_marcador_de_potencia:
 	ld hl,0e080h		;6223   ; la barra de potencia, de dos en dos
-	inc (hl)			;6226
+	inc (hl)			;6226   ; dos pixeles por cuadro
 	inc (hl)			;6227
 	ld a,(hl)			;6228
 	sub 028h		;6229   ; y da la vuelta en 0x28
 	ret nz			;622b
-	ld (hl),a			;622c
+	ld (hl),a			;622c   ; y vuelve a cero
 	ret			;622d
 mueve_la_nave_dos:
 	ld a,(0e084h)		;622e   ; el estado de la nave 2
@@ -3387,79 +3387,79 @@ mueve_la_nave_dos:
 	ld iy,0e009h		;6238   ; su mando
 	ld hl,0e090h		;623c   ; y su potencia
 	ld a,002h		;623f
-	ld (0ebc0h),a		;6241
-	ld a,(0e082h)		;6244
+	ld (0ebc0h),a		;6241   ; con la marca del segundo
+	ld a,(0e082h)		;6244   ; su potencia
 	jr L_6264		;6247
 mueve_la_nave_uno:
 	ld a,(0e083h)		;6249   ; y lo mismo para la 1
-	and 010h		;624c
+	and 010h		;624c   ; el bit 4 tambien
 	jp nz,mueve_las_dos_agarradas		;624e
 	ld ix,0e0a0h		;6251
 	ld iy,0e007h		;6255
 	ld hl,0e08fh		;6259
 	ld a,001h		;625c
-	ld (0ebc0h),a		;625e
-	ld a,(0e081h)		;6261
+	ld (0ebc0h),a		;625e   ; con la marca del primero
+	ld a,(0e081h)		;6261   ; su potencia
 L_6264:
-	push hl			;6264
+	push hl			;6264   ; el puntero, a salvo
 	ld hl,06316h		;6265   ; la velocidad que le toca a esa potencia
-	call palabra_de_tabla		;6268
-	ld c,e			;626b
+	call palabra_de_tabla		;6268   ; la palabra que le toca
+	ld c,e			;626b   ; la velocidad, en BC
 	ld b,d			;626c
 	pop hl			;626d
 	ld a,(hl)			;626e   ; si hay recuerdo de mando
 	and a			;626f
-	ld a,(iy+000h)		;6270
+	ld a,(iy+000h)		;6270   ; lo que se lee ahora
 	jr z,L_6279		;6273   ; se usa el del cuadro
 	dec (hl)			;6275   ; y si no, el que se guardo
 	inc l			;6276
 	inc l			;6277
 	ld a,(hl)			;6278
 L_6279:
-	push af			;6279
+	push af			;6279   ; el mando entero, a salvo
 	and 003h		;627a   ; los bits de arriba y abajo
 	jr nz,L_6283		;627c   ; ninguno o los dos: no se mueve
 L_627E:
-	ld de,00000h		;627e
+	ld de,00000h		;627e   ; sin velocidad
 	jr L_628B		;6281
 L_6283:
 	cp 003h		;6283
-	jr z,L_627E		;6285
-	rra			;6287
+	jr z,L_627E		;6285   ; los dos: tampoco
+	rra			;6287   ; el bit 0: hacia arriba
 	call c,niega_de		;6288   ; hacia arriba, la velocidad cambia de signo
 L_628B:
 	ld l,(ix+000h)		;628b   ; la posicion vertical
 	ld h,(ix+001h)		;628e
 	add hl,de			;6291   ; mas la velocidad
-	ld (ix+000h),l		;6292
+	ld (ix+000h),l		;6292   ; y de vuelta al bloque
 	ld (ix+001h),h		;6295
 	ld a,h			;6298
 	cp 0afh		;6299   ; con el tope de abajo
-	jr c,L_62A8		;629b
-	ld hl,0af00h		;629d
+	jr c,L_62A8		;629b   ; por debajo de 0xAF
+	ld hl,0af00h		;629d   ; se clava en el tope
 	ld (ix+000h),l		;62a0
 	ld (ix+001h),h		;62a3
 	jr L_62B5		;62a6
 L_62A8:
 	cp 010h		;62a8   ; y el de arriba
-	jr nc,L_62B5		;62aa
-	ld hl,01000h		;62ac
+	jr nc,L_62B5		;62aa   ; por encima de 0x10
+	ld hl,01000h		;62ac   ; y se clava en el de arriba
 	ld (ix+000h),l		;62af
 	ld (ix+001h),h		;62b2
 L_62B5:
 	ld a,(0ebc0h)		;62b5   ; la nave 1
-	dec a			;62b8
+	dec a			;62b8   ; solo la 1 deja rastro
 	jr nz,L_62C7		;62b9
 	ex de,hl			;62bb
 	ld hl,0e0b0h		;62bc   ; deja rastro: donde estuvo, para que la 2 la siga
-	ld a,(0e080h)		;62bf
+	ld a,(0e080h)		;62bf   ; por donde va el rastro
 	add a,l			;62c2
 	ld l,a			;62c3
-	ld (hl),e			;62c4
+	ld (hl),e			;62c4   ; la vertical
 	inc hl			;62c5
 	ld (hl),d			;62c6
 L_62C7:
-	pop af			;62c7
+	pop af			;62c7   ; el mando, de vuelta
 	and 00ch		;62c8   ; y ahora los bits de izquierda y derecha
 	jr nz,L_62D1		;62ca
 L_62CC:
@@ -3467,19 +3467,19 @@ L_62CC:
 	jr L_62DA		;62cf
 L_62D1:
 	cp 00ch		;62d1
-	jr z,L_62CC		;62d3
-	bit 2,a		;62d5
+	jr z,L_62CC		;62d3   ; los dos: tampoco
+	bit 2,a		;62d5   ; el bit 2: a la izquierda
 	call nz,niega_bc		;62d7   ; a la izquierda, la velocidad cambia de signo
 L_62DA:
 	ld l,(ix+002h)		;62da   ; la posicion horizontal
 	ld h,(ix+003h)		;62dd
-	add hl,bc			;62e0
+	add hl,bc			;62e0   ; mas la velocidad
 	ld (ix+002h),l		;62e1
 	ld (ix+003h),h		;62e4
 	ld a,h			;62e7
 	cp 0e8h		;62e8   ; el tope de la derecha
-	jr c,L_62F7		;62ea
-	ld hl,0e800h		;62ec
+	jr c,L_62F7		;62ea   ; por debajo de 0xE8
+	ld hl,0e800h		;62ec   ; se clava
 	ld (ix+002h),l		;62ef
 	ld (ix+003h),h		;62f2
 	jr L_6304		;62f5
@@ -3521,55 +3521,55 @@ DATA_velocidades_del_disparo:
 ; ----------------------------------------------------------------------
 mueve_las_dos_agarradas:
 	ld a,(0e081h)		;6326   ; la potencia del primero manda
-	ld hl,06316h		;6329
+	ld hl,06316h		;6329   ; la tabla de velocidades
 	call palabra_de_tabla		;632c
-	ld c,e			;632f
+	ld c,e			;632f   ; la velocidad, en BC
 	ld b,d			;6330
 	ld a,(0e094h)		;6331   ; el mando de la pareja
-	push af			;6334
-	and 003h		;6335
+	push af			;6334   ; el mando, a salvo
+	and 003h		;6335   ; los bits de arriba y abajo
 	jr nz,L_633E		;6337
 L_6339:
-	ld de,00000h		;6339
+	ld de,00000h		;6339   ; ninguno o los dos: quieta
 	jr L_6347		;633c
 L_633E:
 	cp 003h		;633e
 	jr z,L_6339		;6340
-	bit 0,a		;6342
+	bit 0,a		;6342   ; el bit 0: hacia arriba
 	call nz,niega_de		;6344
 L_6347:
-	pop af			;6347
-	and 00ch		;6348
+	pop af			;6347   ; el mando, de vuelta
+	and 00ch		;6348   ; y los de izquierda y derecha
 	jr nz,L_6351		;634a
 L_634C:
-	ld bc,00000h		;634c
+	ld bc,00000h		;634c   ; ninguno o los dos: quieta
 	jr L_635A		;634f
 L_6351:
 	cp 00ch		;6351
 	jr z,L_634C		;6353
-	bit 2,a		;6355
+	bit 2,a		;6355   ; el bit 2: a la izquierda
 	call nz,niega_bc		;6357
 L_635A:
 	ld hl,(0e0a0h)		;635a   ; la posicion vertical, compartida
-	add hl,de			;635d
-	ld (0e0a0h),hl		;635e
+	add hl,de			;635d   ; mas la velocidad
+	ld (0e0a0h),hl		;635e   ; a las dos naves
 	ld (0e0ach),hl		;6361
 	ld a,h			;6364
 	cp 0afh		;6365   ; el tope de abajo
 	jr c,L_6374		;6367
-	ld hl,0af00h		;6369
+	ld hl,0af00h		;6369   ; y se clavan las dos
 	ld (0e0a0h),hl		;636c
 	ld (0e0ach),hl		;636f
 	jr L_6381		;6372
 L_6374:
 	cp 010h		;6374   ; y el de arriba
 	jr nc,L_6381		;6376
-	ld hl,01000h		;6378
+	ld hl,01000h		;6378   ; igual arriba
 	ld (0e0a0h),hl		;637b
 	ld (0e0ach),hl		;637e
 L_6381:
 	ld hl,(0e0a2h)		;6381   ; la horizontal de la primera
-	ld e,c			;6384
+	ld e,c			;6384   ; la velocidad, a DE
 	ld d,b			;6385
 	ld b,002h		;6386   ; y se miran las dos
 L_6388:
@@ -3581,27 +3581,27 @@ L_6388:
 	add hl,de			;6391   ; si cabe el paso
 	ld a,h			;6392
 	cp 0e8h		;6393
-	ret nc			;6395
+	ret nc			;6395   ; y si se sale, no se mueve ninguna
 	cp 008h		;6396
 	ret c			;6398
 	ld hl,(0e0aeh)		;6399   ; se mira la otra nave
-	djnz L_6388		;639c
+	djnz L_6388		;639c   ; la segunda vuelta
 L_639E:
 	ld hl,(0e0a2h)		;639e   ; y solo si caben las dos, se mueven
-	add hl,de			;63a1
+	add hl,de			;63a1   ; la primera se mueve
 	ld (0e0a2h),hl		;63a2
-	ld hl,(0e0aeh)		;63a5
+	ld hl,(0e0aeh)		;63a5   ; y la segunda tambien
 	add hl,de			;63a8
 	ld (0e0aeh),hl		;63a9
 	ret			;63ac
 L_63AD:
 	ld a,d			;63ad   ; contra el tope, se deja pasar si el paso va hacia dentro
-	rla			;63ae
+	rla			;63ae   ; el bit 7 de D: el paso va hacia la izquierda
 	jr c,L_639E		;63af
 	ret			;63b1
 L_63B2:
 	ld a,d			;63b2
-	rla			;63b3
+	rla			;63b3   ; y aqui al reves
 	jr nc,L_639E		;63b4
 	ret			;63b6
 
@@ -3612,8 +3612,8 @@ la_nave_dos_sigue_a_la_uno:
 	ld a,(0e083h)		;63b7
 	bit 1,a		;63ba   ; el bit 1: va a rastra
 	ret z			;63bc
-	ld de,0e0a4h		;63bd
-	ld bc,00208h		;63c0
+	ld de,0e0a4h		;63bd   ; los dos sprites de la nave 2
+	ld bc,00208h		;63c0   ; dos, y ocho de retraso
 L_63C3:
 	push bc			;63c3
 	ld a,(0e080h)		;63c4   ; por donde va el rastro
@@ -3621,14 +3621,14 @@ L_63C3:
 	jr nc,L_63CC		;63c8
 	add a,028h		;63ca   ; dando la vuelta a las 40 posiciones
 L_63CC:
-	ld b,a			;63cc
-	ld hl,0e0b0h		;63cd
-	add a,l			;63d0
+	ld b,a			;63cc   ; el sitio del rastro
+	ld hl,0e0b0h		;63cd   ; el rastro de verticales
+	add a,l			;63d0   ; la entrada que le toca
 	ld l,a			;63d1
 	ldi		;63d2   ; la vertical
-	ldi		;63d4
+	ldi		;63d4   ; y la fraccion
 	ld a,b			;63d6
-	ld hl,0e0d8h		;63d7
+	ld hl,0e0d8h		;63d7   ; y el rastro de horizontales
 	add a,l			;63da
 	ld l,a			;63db
 	ldi		;63dc   ; y la horizontal
@@ -3637,10 +3637,10 @@ L_63CC:
 	ld a,c			;63e1
 	add a,008h		;63e2   ; y ocho mas atras para el segundo sprite
 	ld c,a			;63e4
-	djnz L_63C3		;63e5
+	djnz L_63C3		;63e5   ; los dos sprites de la nave
 	ret			;63e7
 coloca_los_sprites_de_las_naves:
-	ld a,(0e077h)		;63e8
+	ld a,(0e077h)		;63e8   ; los jugadores vivos
 	rra			;63eb   ; el bit 0: le queda partida
 	jr nc,L_63FC		;63ec
 	ld ix,0e0a0h		;63ee   ; los sprites de la nave 1
@@ -3690,30 +3690,30 @@ dibuja_la_nave_uno:
 	bit 2,a		;6452   ; el bit 2: en llamas
 	jr z,L_6468		;6454
 	ld a,(0e003h)		;6456   ; y el dibujo alterna cada dos cuadros
-	and 002h		;6459
-	ld de,00f4ch		;645b
+	and 002h		;6459   ; el bit 1 del contador
+	ld de,00f4ch		;645b   ; con un par de dibujos
 	ld bc,00f50h		;645e
 	jr nz,L_6485		;6461
-	ld d,007h		;6463
+	ld d,007h		;6463   ; o con el otro
 	ld b,d			;6465
 	jr L_6485		;6466
 L_6468:
 	ld a,(0e08dh)		;6468   ; el bit 0 de sus banderas: mirando arriba o abajo
 	rra			;646b
-	ld de,00700h		;646c
-	ld bc,00f08h		;646f
+	ld de,00700h		;646c   ; el par de arriba
+	ld bc,00f08h		;646f   ; y el de abajo
 	jr nc,L_6485		;6472
 	ld a,(0e13ch)		;6474   ; con bomba cargada, el dibujo cambia
 	and a			;6477
-	ld e,000h		;6478
+	ld e,000h		;6478   ; con otro patron
 	ld c,004h		;647a
 	jr z,L_6485		;647c
-	rla			;647e
+	rla			;647e   ; el bit 7 dice cual
 	ld c,044h		;647f
 	jr nc,L_6485		;6481
 	ld c,048h		;6483
 L_6485:
-	ld hl,0ef82h		;6485
+	ld hl,0ef82h		;6485   ; el bloque de sprites de la nave 1
 	call escribe_dos_sprites		;6488
 	call es_el_segundo_jugador		;648b   ; y con dos jugadores
 	ret nz			;648e
@@ -3726,7 +3726,7 @@ dibuja_la_nave_dos:
 	bit 2,a		;6499   ; el bit 2: en llamas
 	jr z,L_64AF		;649b
 	ld a,(0e003h)		;649d   ; y el dibujo alterna cada dos cuadros
-	and 002h		;64a0
+	and 002h		;64a0   ; el bit 1 del contador
 	ld de,00f5ch		;64a2
 	ld bc,00f60h		;64a5
 	jr nz,L_64CC		;64a8
@@ -3736,30 +3736,30 @@ dibuja_la_nave_dos:
 L_64AF:
 	ld a,(0e08eh)		;64af   ; el bit 0 de sus banderas
 	rra			;64b2
-	ld de,0060ch		;64b3
-	ld bc,00f14h		;64b6
+	ld de,0060ch		;64b3   ; el par de arriba
+	ld bc,00f14h		;64b6   ; y el de abajo
 	jr nc,L_64CC		;64b9
 	ld a,(0e146h)		;64bb   ; con bomba cargada, el dibujo cambia
 	and a			;64be
 	ld e,00ch		;64bf
 	ld c,010h		;64c1
 	jr z,L_64CC		;64c3
-	rla			;64c5
+	rla			;64c5   ; el bit 7 dice cual
 	ld c,054h		;64c6
 	jr nc,L_64CC		;64c8
 	ld c,058h		;64ca
 L_64CC:
-	ld hl,0ef8ah		;64cc
+	ld hl,0ef8ah		;64cc   ; el bloque de sprites de la nave 2
 escribe_dos_sprites:
 	ld (hl),e			;64cf   ; el patron y el color de los dos sprites
 	inc l			;64d0
-	ld (hl),d			;64d1
+	ld (hl),d			;64d1   ; y su color
 	inc l			;64d2
 	inc l			;64d3
 	inc l			;64d4
-	ld (hl),c			;64d5
+	ld (hl),c			;64d5   ; el patron del segundo
 	inc l			;64d6
-	ld (hl),b			;64d7
+	ld (hl),b			;64d7   ; y su color
 	ret			;64d8
 
 ; ----------------------------------------------------------------------
@@ -3769,12 +3769,12 @@ se_estrella_la_uno:
 	xor a			;64d9
 	ld (0e081h),a		;64da   ; la potencia, a cero
 	ld (0e083h),a		;64dd   ; y el estado
-	ld (0e093h),a		;64e0
-	ld (0e08fh),a		;64e3
+	ld (0e093h),a		;64e0   ; las banderas
+	ld (0e08fh),a		;64e3   ; y las dos marcas de rastro
 	ld (0e091h),a		;64e6
 	ld (0e362h),a		;64e9   ; y el nivel de oleada
-	ld de,0ef82h		;64ec
-	ld hl,0e085h		;64ef
+	ld de,0ef82h		;64ec   ; su bloque de sprites
+	ld hl,0e085h		;64ef   ; y su cuenta
 	dec (hl)			;64f2   ; la cuenta de la explosion
 	jr nz,L_650B		;64f3
 	ld hl,0e078h		;64f5
@@ -3848,24 +3848,24 @@ L_656F:
 	ld c,002h		;6589
 pon_la_nave_nueva:
 	ld (hl),010h		;658b   ; los cuatro bytes de cada sprite de la nave
-	inc l			;658d
+	inc l			;658d   ; el dibujo
 	ld (hl),a			;658e
-	inc l			;658f
+	inc l			;658f   ; la horizontal
 	ld (hl),0a8h		;6590
 	inc l			;6592
-	ld (hl),00fh		;6593
+	ld (hl),00fh		;6593   ; en blanco
 	inc l			;6595
-	ld (hl),010h		;6596
+	ld (hl),010h		;6596   ; el segundo sprite, misma fila
 	inc l			;6598
-	add a,010h		;6599
+	add a,010h		;6599   ; dieciseis dibujos mas alla
 	ld (hl),a			;659b
 	inc l			;659c
-	ld (hl),0ach		;659d
+	ld (hl),0ach		;659d   ; ocho pixeles a la derecha
 	inc l			;659f
 	ld (hl),00fh		;65a0
-	ld a,0c0h		;65a2
+	ld a,0c0h		;65a2   ; y el sprite siguiente, fuera
 	ld (de),a			;65a4
-	ld hl,0e077h		;65a5
+	ld hl,0e077h		;65a5   ; los jugadores que quedan
 	ld a,(hl)			;65a8
 	xor c			;65a9   ; se apaga el bit del jugador
 	ld (hl),a			;65aa
@@ -3965,39 +3965,39 @@ reparte_el_estado_del_brazo:
 	ret			;661b
 saca_el_brazo:
 	xor a			;661c   ; el brazo arranca arriba del todo
-	ld (ix+000h),a		;661d
-	ld (ix+001h),0c0h		;6620
-	ld (ix+002h),a		;6624
+	ld (ix+000h),a		;661d   ; la vertical a cero
+	ld (ix+001h),0c0h		;6620   ; y la horizontal fuera de pantalla
+	ld (ix+002h),a		;6624   ; sin dibujo todavia
 	ld a,(de)			;6627   ; con el dibujo de su tanda
 	ld (ix+003h),a		;6628
-	inc de			;662b
+	inc de			;662b   ; los cuatro sprites que lo forman
 	ld a,(de)			;662c
-	ld (iy+002h),a		;662d
+	ld (iy+002h),a		;662d   ; el primero
 	inc de			;6630
 	ld a,(de)			;6631
-	ld (iy+003h),a		;6632
+	ld (iy+003h),a		;6632   ; el segundo
 	inc de			;6635
 	ld a,(de)			;6636
-	ld (iy+006h),a		;6637
+	ld (iy+006h),a		;6637   ; el tercero
 	inc de			;663a
 	ld a,(de)			;663b
-	ld (iy+007h),a		;663c
+	ld (iy+007h),a		;663c   ; y el cuarto
 	ld (hl),002h		;663f   ; y a esperar 2 cuadros
-	inc l			;6641
+	inc l			;6641   ; dos bytes adelante
 	inc l			;6642
 	ld (hl),010h		;6643   ; luego 0x10
-	inc l			;6645
+	inc l			;6645   ; dos mas: el paso
 	inc l			;6646
 	ld (hl),000h		;6647
 	inc l			;6649
 	inc l			;664a
-	ld (hl),001h		;664b
+	ld (hl),001h		;664b   ; y en marcha
 	ret			;664d
 recoge_el_brazo:
 	dec (hl)			;664e   ; la cuenta
-	ret nz			;664f
+	ret nz			;664f   ; hasta que se agote
 	ld (hl),018h		;6650   ; y al llegar a cero se pasa a subir
-	dec l			;6652
+	dec l			;6652   ; dos bytes atras
 	dec l			;6653
 	ld (hl),004h		;6654
 	ld a,093h		;6656   ; con su ruido
@@ -4005,8 +4005,8 @@ recoge_el_brazo:
 sube_el_brazo:
 	ld a,(ix+001h)		;665b   ; tres pixeles por cuadro hacia arriba
 	sub 003h		;665e
-	ld (ix+001h),a		;6660
-	dec (hl)			;6663
+	ld (ix+001h),a		;6660   ; la nueva vertical
+	dec (hl)			;6663   ; la cuenta de la subida
 	ret nz			;6664
 	ld (hl),018h		;6665   ; hasta que se acaba la cuenta
 	dec l			;6667
@@ -4036,29 +4036,29 @@ DATA_dos_guiones_de_disparo:
 ; EL ABRAZO. Twin Bee tiene un truco que casi ningun juego de dos jugadores de la epoca: las dos naves pueden darse la mano y volar juntas. Aqui se mide la distancia entre las dos en las dos coordenadas y, si las dos caben en 0x22 pixeles, se enciende el bit 4 de los dos estados y a partir de ahi las mueve 0x6326 como si fueran una sola.
 ; ----------------------------------------------------------------------
 mira_si_se_dan_la_mano:
-	ld a,(0e077h)		;667c
+	ld a,(0e077h)		;667c   ; los jugadores vivos
 	rra			;667f   ; los dos jugadores tienen que estar vivos
 	ret nc			;6680
 	rra			;6681
 	ret nc			;6682
-	xor a			;6683
+	xor a			;6683   ; sin abrazo
 	ld (0e093h),a		;6684   ; la marca del abrazo, a cero
-	ld a,(0e083h)		;6687
+	ld a,(0e083h)		;6687   ; el estado de la nave 1
 	bit 4,a		;668a   ; si ya estan agarradas, nada
 	ret nz			;668c
 	ld a,(0e0a1h)		;668d   ; la vertical de la 1
-	ld c,a			;6690
+	ld c,a			;6690   ; a salvo en C
 	ld hl,0e0adh		;6691   ; y la de la 2
-	ld b,(hl)			;6694
-	add a,010h		;6695
+	ld b,(hl)			;6694   ; la de la 2, en B
+	add a,010h		;6695   ; dieciseis pixeles de margen
 	sub (hl)			;6697
 	cp 022h		;6698   ; tienen que caber en 0x22 pixeles
 	ret nc			;669a
-	inc l			;669b
+	inc l			;669b   ; dos bytes adelante
 	inc l			;669c
 	ld a,(0e0a3h)		;669d   ; lo mismo con la horizontal
-	ld e,a			;66a0
-	ld d,(hl)			;66a1
+	ld e,a			;66a0   ; a salvo en E
+	ld d,(hl)			;66a1   ; y la de la 2 en D
 	add a,010h		;66a2
 	sub (hl)			;66a4
 	cp 022h		;66a5
@@ -4075,10 +4075,10 @@ mira_si_se_dan_la_mano:
 L_66AF:
 	ld hl,00000h		;66af   ; por donde se estira el brazo
 	ld (0ebc0h),hl		;66b2
-	ld a,002h		;66b5
+	ld a,002h		;66b5   ; con el brazo en el paso 2
 	ld (0e08fh),a		;66b7   ; y los dos brazos se ponen en marcha
 	ld (0e090h),a		;66ba
-	ld hl,0ebc0h		;66bd
+	ld hl,0ebc0h		;66bd   ; los dos signos que se acaban de dejar
 	ld a,c			;66c0   ; la distancia vertical
 	sub b			;66c1
 	jr nc,L_66C8		;66c2
@@ -4087,17 +4087,17 @@ L_66AF:
 L_66C8:
 	rra			;66c8   ; entre dos, y ocho pasos
 	and 00fh		;66c9
-	ld c,a			;66cb
-	inc l			;66cc
+	ld c,a			;66cb   ; la fila, en C
+	inc l			;66cc   ; el signo de la horizontal
 	ld a,e			;66cd   ; ahora la horizontal
 	sub d			;66ce
 	jr nc,L_66D5		;66cf
 	neg		;66d1
-	ld (hl),001h		;66d3
+	ld (hl),001h		;66d3   ; apuntado
 L_66D5:
 	rra			;66d5
 	and 00fh		;66d6
-	ld b,a			;66d8
+	ld b,a			;66d8   ; la columna, en B
 	ld a,c			;66d9
 	add a,a			;66da   ; fila por ocho
 	add a,a			;66db
@@ -4105,37 +4105,37 @@ L_66D5:
 	add a,b			;66dd   ; mas la columna
 	ld de,0eb00h		;66de   ; la tabla, que vino de la VRAM
 	call suma_a_a_de		;66e1
-	ld a,(de)			;66e4
+	ld a,(de)			;66e4   ; el codigo que sale de la tabla
 	ld c,a			;66e5
 	ld b,002h		;66e6   ; los dos signos
-	ld d,00ch		;66e8
+	ld d,00ch		;66e8   ; la mascara del primero
 L_66EA:
-	ld a,(hl)			;66ea
+	ld a,(hl)			;66ea   ; el signo
 	rra			;66eb
 	jr nc,L_66F5		;66ec
 	ld a,c			;66ee
 	and d			;66ef   ; y cada uno da la vuelta a su eje
 	jr z,L_66F5		;66f0
 	ld a,c			;66f2
-	xor d			;66f3
+	xor d			;66f3   ; se le da la vuelta
 	ld c,a			;66f4
 L_66F5:
-	dec l			;66f5
-	ld d,003h		;66f6
+	dec l			;66f5   ; el otro signo
+	ld d,003h		;66f6   ; con su mascara
 	djnz L_66EA		;66f8
 	ld hl,0e091h		;66fa   ; por donde se estira
-	ld (hl),c			;66fd
+	ld (hl),c			;66fd   ; el codigo, guardado
 	ld a,c			;66fe
 	ld de,0677dh		;66ff   ; y el dibujo que le toca
 	call suma_a_a_de		;6702
-	ld a,(de)			;6705
+	ld a,(de)			;6705   ; el dibujo
 	inc l			;6706
-	ld (hl),a			;6707
+	ld (hl),a			;6707   ; al byte de al lado
 	dec a			;6708   ; con el brazo recto
-	ld c,009h		;6709
+	ld c,009h		;6709   ; con color 9
 	jr z,L_6711		;670b
 	dec a			;670d
-	ld c,001h		;670e
+	ld c,001h		;670e   ; o color 1
 	ret nz			;6710
 L_6711:
 	inc l			;6711
@@ -4143,33 +4143,33 @@ L_6711:
 	ret			;6713
 L_6714:
 	ld hl,0e081h		;6714   ; los dos tienen que llevar la misma potencia
-	ld a,(hl)			;6717
+	ld a,(hl)			;6717   ; la potencia del uno
 	inc l			;6718
-	sub (hl)			;6719
+	sub (hl)			;6719   ; menos la del dos
 	jr nz,L_66AF		;671a
 	ld hl,0e08dh		;671c   ; y las mismas armas
-	ld a,(hl)			;671f
+	ld a,(hl)			;671f   ; las armas del uno
 	inc l			;6720
-	and (hl)			;6721
+	and (hl)			;6721   ; contra las del dos
 	jp z,L_66AF		;6722
 	ld hl,0e083h		;6725
 	set 4,(hl)		;6728   ; y entonces si: agarradas
-	inc l			;672a
+	inc l			;672a   ; y la segunda nave igual
 	set 4,(hl)		;672b
 	ld hl,(0e0a2h)		;672d   ; la que este a la izquierda manda
-	ld a,e			;6730
-	sub d			;6731
-	ld de,01000h		;6732
+	ld a,e			;6730   ; la horizontal de una
+	sub d			;6731   ; menos la de la otra
+	ld de,01000h		;6732   ; el hueco entre las dos, 0x10 pixeles
 	ld bc,0e083h		;6735
 	jr c,L_673D		;6738
-	inc c			;673a
-	ld d,0f0h		;673b
+	inc c			;673a   ; la otra nave manda
+	ld d,0f0h		;673b   ; y el hueco, al otro lado
 L_673D:
-	add hl,de			;673d
+	add hl,de			;673d   ; la posicion de la pareja
 	ld (0e0aeh),hl		;673e
 	ld hl,(0e0a0h)		;6741   ; y las dos comparten posicion
 	ld (0e0ach),hl		;6744
-	ld a,(bc)			;6747
+	ld a,(bc)			;6747   ; el estado de la que manda
 	or 080h		;6748   ; con el bit 7 del estado
 	ld (bc),a			;674a
 	ld a,08ch		;674b   ; y suena el enganche
@@ -4258,7 +4258,7 @@ apaga_la_bomba:
 	inc l			;67d3
 	ld (hl),a			;67d4
 	inc l			;67d5
-	ld (hl),030h		;67d6
+	ld (hl),030h		;67d6   ; y su dibujo de reposo
 	inc l			;67d8
 	ld (hl),a			;67d9
 	inc l			;67da
@@ -4270,9 +4270,9 @@ apaga_la_bomba:
 	ret			;67e0
 mueve_las_bombas:
 	call cuantas_bombas		;67e1   ; una bomba por jugador
-	ld hl,0e348h		;67e4
+	ld hl,0e348h		;67e4   ; la bomba del primer jugador
 L_67E7:
-	push hl			;67e7
+	push hl			;67e7   ; el hueco, a la pila
 	ld a,(hl)			;67e8   ; si esa bomba no esta viva, nada
 	and a			;67e9
 	jr z,L_6811		;67ea
@@ -4331,53 +4331,53 @@ L_6830:
 	ret			;683c
 dispara_el_uno:
 	ld a,(0e006h)		;683d   ; el gatillo
-	and 010h		;6840
-	ret z			;6842
+	and 010h		;6840   ; el bit 4 del mando
+	ret z			;6842   ; sin gatillo, nada
 	ld a,(0e083h)		;6843   ; el estado de la nave
 	rra			;6846   ; el bit 0: mira hacia arriba
 	jp c,L_6870		;6847
 	bit 2,a		;684a   ; el bit 2: en llamas
 	jp nz,L_6891		;684c
 	rra			;684f   ; el bit 1: doble disparo
-	jr c,L_685A		;6850
+	jr c,L_685A		;6850   ; el bit 1 de sus banderas
 L_6852:
 	call hay_dos_huecos_del_uno		;6852   ; y si no hay hueco de disparo, nada
 	ret nz			;6855
 	ld b,001h		;6856   ; uno solo
-	jr L_6865		;6858
+	jr L_6865		;6858   ; y a soltarlo
 L_685A:
 	call hay_hueco_arriba		;685a
-	jr z,L_6863		;685d
-	call hay_hueco_abajo		;685f
+	jr z,L_6863		;685d   ; con hueco arriba
+	call hay_hueco_abajo		;685f   ; o abajo
 	ret nz			;6862
 L_6863:
 	ld b,003h		;6863   ; o tres a la vez
 L_6865:
-	ld ix,0e0a0h		;6865
+	ld ix,0e0a0h		;6865   ; el bloque de la nave 1
 L_6869:
 	ld hl,0699bh		;6869   ; con el guion normal
-	xor a			;686c
+	xor a			;686c   ; sin sonido extra
 	jp saca_los_disparos		;686d
 L_6870:
 	rra			;6870   ; mirando arriba, el otro guion
-	jr c,L_687B		;6871
+	jr c,L_687B		;6871   ; con doble disparo, tres
 L_6873:
 	call hay_dos_huecos_del_uno		;6873
 	ret nz			;6876
 	ld b,001h		;6877
-	jr L_6886		;6879
+	jr L_6886		;6879   ; y a soltarlo
 L_687B:
 	call hay_hueco_arriba		;687b
-	jr z,L_6884		;687e
-	call hay_hueco_abajo		;6880
+	jr z,L_6884		;687e   ; hueco arriba
+	call hay_hueco_abajo		;6880   ; o abajo
 	ret nz			;6883
 L_6884:
 	ld b,003h		;6884
 L_6886:
-	ld ix,0e0a0h		;6886
+	ld ix,0e0a0h		;6886   ; el bloque de la nave 1
 L_688A:
-	ld hl,069a2h		;688a
-	xor a			;688d
+	ld hl,069a2h		;688a   ; con el guion de mirar arriba
+	xor a			;688d   ; sin sonido extra
 	jp saca_los_disparos		;688e
 L_6891:
 	call hay_hueco_arriba		;6891   ; y en llamas, el disparo grande
@@ -4386,47 +4386,47 @@ L_6891:
 	ret nz			;6899
 L_689A:
 	ld hl,069a9h		;689a   ; el disparo grande
-	ld ix,0e0a0h		;689d
-	ld a,0fah		;68a1
-	ld b,001h		;68a3
+	ld ix,0e0a0h		;689d   ; el bloque de la nave 1
+	ld a,0fah		;68a1   ; con su ruido
+	ld b,001h		;68a3   ; una tanda
 	call saca_los_disparos		;68a5   ; tres tandas seguidas
-	ld ix,0e0a0h		;68a8
-	ld b,001h		;68ac
+	ld ix,0e0a0h		;68a8   ; y otras dos detras, sin ruido
+	ld b,001h		;68ac   ; una cada una
 	call saca_una_tanda		;68ae
 	ld ix,0e0a0h		;68b1
 	ld b,001h		;68b5
 	jp saca_una_tanda		;68b7
 dispara_el_dos:
 	ld a,(0e093h)		;68ba   ; la nave 2
-	and a			;68bd
+	and a			;68bd   ; si hay arma grande en marcha, esa manda
 	jp nz,dispara_el_arma_grande		;68be
-	ld a,(0e006h)		;68c1
+	ld a,(0e006h)		;68c1   ; el gatillo del primero
 	and 010h		;68c4
 	ret z			;68c6
-	ld a,(0e083h)		;68c7
+	ld a,(0e083h)		;68c7   ; el estado de la nave 1
 	bit 4,a		;68ca   ; agarradas, disparan las dos a la vez
 	jr nz,dispara_la_pareja		;68cc
-	rra			;68ce
+	rra			;68ce   ; el bit 0: mira arriba
 	jp c,L_6873		;68cf
 	jp L_6852		;68d2
 dispara_el_dos_de_verdad:
 	ld a,(0e008h)		;68d5
-	and 010h		;68d8
+	and 010h		;68d8   ; el gatillo del segundo
 	ret z			;68da
 	ld a,(0e084h)		;68db   ; el estado de la nave 2
 	bit 4,a		;68de   ; agarradas: disparan juntas
 	jr nz,dispara_la_pareja		;68e0
-	rra			;68e2
+	rra			;68e2   ; el bit 0: mira arriba
 	jp c,L_68F3		;68e3
-	call hay_dos_huecos_del_dos		;68e6
+	call hay_dos_huecos_del_dos		;68e6   ; sin dos huecos, nada
 	ret nz			;68e9
-	ld ix,0e0ach		;68ea
-	ld b,001h		;68ee
+	ld ix,0e0ach		;68ea   ; el bloque de la nave 2
+	ld b,001h		;68ee   ; uno solo
 	jp L_6869		;68f0
 L_68F3:
 	call hay_dos_huecos_del_dos		;68f3
 	ret nz			;68f6
-	ld ix,0e0ach		;68f7
+	ld ix,0e0ach		;68f7   ; el bloque de la nave 2
 	ld b,001h		;68fb
 	jp L_688A		;68fd
 dispara_la_pareja:
@@ -4436,48 +4436,48 @@ L_6905:
 	ld a,(de)			;6905   ; se busca uno libre
 	and a			;6906
 	jr z,L_6910		;6907
-	ld a,008h		;6909
+	ld a,008h		;6909   ; ocho bytes hasta el siguiente
 	add a,e			;690b
 	ld e,a			;690c
 	djnz L_6905		;690d
 	ret			;690f   ; y sin hueco, no se dispara
 L_6910:
 	ld a,(0e083h)		;6910   ; el bit 7 dice cual de las dos manda
-	rla			;6913
-	ld ix,0e0a0h		;6914
+	rla			;6913   ; el bit 7, al acarreo
+	ld ix,0e0a0h		;6914   ; la nave 1
 	jr c,L_691E		;6918
-	ld ix,0e0ach		;691a
+	ld ix,0e0ach		;691a   ; o la nave 2
 L_691E:
 	xor a			;691e
-	ld b,001h		;691f
-	ld hl,069b0h		;6921
+	ld b,001h		;691f   ; una tanda
+	ld hl,069b0h		;6921   ; con el guion de la pareja
 	jr saca_los_disparos		;6924
 dispara_el_arma_grande:
 	rla			;6926   ; el arma grande sale de la que mande
-	ld ix,0e0a0h		;6927
+	ld ix,0e0a0h		;6927   ; la nave 1
 	jr nc,L_6931		;692b
-	ld ix,0e0ach		;692d
+	ld ix,0e0ach		;692d   ; o la nave 2
 L_6931:
-	ld (0ebc1h),ix		;6931
+	ld (0ebc1h),ix		;6931   ; y se guarda cual es
 	ld de,0e118h		;6935   ; los cuatro huecos tienen que estar libres
-	ld b,004h		;6938
+	ld b,004h		;6938   ; cuatro
 L_693A:
 	ld a,(de)			;693a   ; los cuatro huecos
 	and a			;693b
 	ret nz			;693c
 	ld a,e			;693d   ; y hacen falta los cuatro libres
-	sub 008h		;693e
+	sub 008h		;693e   ; ocho bytes atras
 	ld e,a			;6940
 	djnz L_693A		;6941
 	ld de,0e100h		;6943   ; y ocupa los cuatro de golpe
-	ld a,0fbh		;6946
+	ld a,0fbh		;6946   ; con la marca del arma
 	ld (0ebc0h),a		;6948
-	ld hl,069b7h		;694b
-	ld b,004h		;694e
+	ld hl,069b7h		;694b   ; y el guion del arma
+	ld b,004h		;694e   ; cuatro
 L_6950:
 	push bc			;6950   ; cuatro tandas, una por hueco
-	ld ix,(0ebc1h)		;6951
-	ld b,001h		;6955
+	ld ix,(0ebc1h)		;6951   ; la nave que manda
+	ld b,001h		;6955   ; uno por vuelta
 	call saca_una_tanda		;6957
 	pop bc			;695a
 	djnz L_6950		;695b
@@ -4490,34 +4490,34 @@ L_6963:
 	push hl			;6963
 	ld a,001h		;6964   ; el disparo, vivo
 	ld (de),a			;6966
-	inc e			;6967
+	inc e			;6967   ; su clase
 	ldi		;6968   ; su clase
 	ld a,0f4h		;696a   ; y su cuenta de vida
 	ld (de),a			;696c
-	inc e			;696d
+	inc e			;696d   ; y la posicion dentro de la tanda
 	ld a,(0ebc0h)		;696e   ; la posicion se corrige con lo que diga el guion
 	add a,(hl)			;6971
 	ld (0ebc0h),a		;6972
 	ld (de),a			;6975
-	inc e			;6976
-	inc hl			;6977
+	inc e			;6976   ; al hueco
+	inc hl			;6977   ; el byte siguiente del guion
 	ld a,(ix+001h)		;6978   ; la vertical, la de la nave
 	ld (de),a			;697b
-	inc e			;697c
+	inc e			;697c   ; la vertical
 	ld a,(ix+003h)		;697d   ; y la horizontal, con su desvio
 	add a,(hl)			;6980
 	ld (de),a			;6981
-	inc e			;6982
+	inc e			;6982   ; y la horizontal
 	inc hl			;6983
 	ldi		;6984   ; el patron
 	ldi		;6986   ; y el color
 	ld a,(hl)			;6988
 	add a,e			;6989   ; el hueco siguiente
 	ld e,a			;698a
-	inc hl			;698b
+	inc hl			;698b   ; y el ultimo byte es el ruido
 	ld a,(hl)			;698c
 	call pide_un_sonido_si_se_juega		;698d   ; y el ruido que le toca
-	push de			;6990
+	push de			;6990   ; el hueco, a salvo
 	ld de,00004h		;6991   ; cuatro bytes mas de la nave: el otro punto de salida
 	add ix,de		;6994
 	pop de			;6996
@@ -4544,25 +4544,25 @@ DATA_guion_de_los_disparos:
 
 mueve_los_disparos:
 	call es_el_segundo_jugador		;69be   ; con dos jugadores hay seis disparos, y con uno solo, cuatro
-	ld b,006h		;69c1
+	ld b,006h		;69c1   ; seis huecos
 	jr z,L_69C7		;69c3
-	ld b,004h		;69c5
+	ld b,004h		;69c5   ; o cuatro
 L_69C7:
-	ld hl,0e100h		;69c7
+	ld hl,0e100h		;69c7   ; el primero
 L_69CA:
 	ld a,(hl)			;69ca   ; si el hueco esta libre, se salta
 	and a			;69cb
-	ld a,008h		;69cc
+	ld a,008h		;69cc   ; ocho bytes hasta el siguiente
 	jr z,L_69EA		;69ce
-	inc l			;69d0
+	inc l			;69d0   ; dos bytes adelante
 	inc l			;69d1
 	ld a,(hl)			;69d2   ; la velocidad
-	inc l			;69d3
+	inc l			;69d3   ; y la horizontal
 	ld e,(hl)			;69d4
 	inc l			;69d5
 	add a,(hl)			;69d6   ; y se le suma a la vertical
 	ld (hl),a			;69d7
-	inc l			;69d8
+	inc l			;69d8   ; al byte de la horizontal
 	cp 0f0h		;69d9   ; pasado el borde de abajo, fuera
 	jr nc,L_69EF		;69db
 	ld a,e			;69dd
@@ -4572,9 +4572,9 @@ L_69CA:
 	jr c,L_69EF		;69e2
 	cp 0fch		;69e4
 	jr nc,L_69EF		;69e6
-	ld a,003h		;69e8
+	ld a,003h		;69e8   ; tres bytes hasta el siguiente
 L_69EA:
-	add a,l			;69ea
+	add a,l			;69ea   ; se avanza al hueco que toque
 	ld l,a			;69eb
 L_69EC:
 	djnz L_69CA		;69ec
@@ -4675,17 +4675,17 @@ pon_el_arma:
 	ld bc,0810eh		;6a90
 L_6A93:
 	ld a,(iy+001h)		;6a93   ; desde donde este la nave
-	add a,003h		;6a96
+	add a,003h		;6a96   ; tres pixeles mas abajo
 	ld (ix+007h),a		;6a98
-	ld a,(iy+003h)		;6a9b
-	add a,c			;6a9e
+	ld a,(iy+003h)		;6a9b   ; y la horizontal de la nave
+	add a,c			;6a9e   ; con el desvio de C
 	ld (ix+009h),a		;6a9f
-	ld (ix+004h),e		;6aa2
+	ld (ix+004h),e		;6aa2   ; la velocidad que traia
 	ld (ix+005h),d		;6aa5
 	ld hl,0fd00h		;6aa8   ; cayendo deprisa
-	ld (ix+002h),l		;6aab
-	ld (ix+003h),h		;6aae
-	ld (ix+000h),b		;6ab1
+	ld (ix+002h),l		;6aab   ; la fraccion
+	ld (ix+003h),h		;6aae   ; y el byte entero
+	ld (ix+000h),b		;6ab1   ; el hueco, ocupado
 	ld a,083h		;6ab4   ; con su ruido
 	jp pide_un_sonido_si_se_juega		;6ab6
 mueve_las_armas:
@@ -4693,32 +4693,32 @@ mueve_las_armas:
 	exx			;6abc   ; el juego de registros de repuesto lleva la cuenta
 	call cuantas_bombas		;6abd
 L_6AC0:
-	exx			;6ac0
-	ld a,(hl)			;6ac1
+	exx			;6ac0   ; se vuelve al juego principal
+	ld a,(hl)			;6ac1   ; el hueco tiene que estar ocupado
 	and a			;6ac2
-	ld a,00ah		;6ac3
+	ld a,00ah		;6ac3   ; diez bytes por bomba
 	jr z,L_6AD5		;6ac5
 	inc l			;6ac7
 	dec (hl)			;6ac8   ; se le acaba la vida
 	jr z,L_6ADC		;6ac9
 	inc l			;6acb
-	ld e,(hl)			;6acc
+	ld e,(hl)			;6acc   ; la velocidad horizontal
 	inc l			;6acd
-	ld d,(hl)			;6ace
+	ld d,(hl)			;6ace   ; y la vertical
 	inc l			;6acf
 	call suma_a_la_posicion		;6ad0   ; y si no, se mueve
 L_6AD3:
-	ld a,001h		;6ad3
+	ld a,001h		;6ad3   ; un byte hasta la siguiente
 L_6AD5:
 	add a,l			;6ad5   ; el arma siguiente
 	ld l,a			;6ad6
-	exx			;6ad7
+	exx			;6ad7   ; la cuenta vuelve a B
 	djnz L_6AC0		;6ad8
 	exx			;6ada
 	ret			;6adb
 L_6ADC:
-	dec l			;6adc
-	call apaga_siete_sprites		;6add
+	dec l			;6adc   ; un byte atras: la marca
+	call apaga_siete_sprites		;6add   ; y se borra de la pantalla
 	jr L_6AD3		;6ae0
 coloca_las_armas:
 	ld hl,0e143h		;6ae2   ; el arma del primer jugador
@@ -4759,43 +4759,43 @@ L_6B15:
 	and a			;6b16
 	ld a,008h		;6b17
 	jr nz,L_6B57		;6b19
-	ld (hl),001h		;6b1b
+	ld (hl),001h		;6b1b   ; se marca ocupado
 	inc l			;6b1d
 	ld a,(0e360h)		;6b1e   ; cuantas nubes van en este tramo
 	cp 003h		;6b21   ; con tres ya no cuentan
 	jr z,L_6B2B		;6b23
-	ld (hl),001h		;6b25
+	ld (hl),001h		;6b25   ; y esta nube si cuenta
 	inc a			;6b27
 	ld (0e360h),a		;6b28
 L_6B2B:
-	inc l			;6b2b
-	ld de,06b5ch		;6b2c
+	inc l			;6b2b   ; al tercer byte: la horizontal
+	ld de,06b5ch		;6b2c   ; la ruleta de sentidos
 	ld a,(0e361h)		;6b2f   ; la rueda de sentidos
-	inc a			;6b32
+	inc a			;6b32   ; una vuelta mas de la ruleta
 	ld (0e361h),a		;6b33
-	and 00fh		;6b36
+	and 00fh		;6b36   ; dieciseis entradas
 	call suma_a_a_de		;6b38
-	ld a,(de)			;6b3b
+	ld a,(de)			;6b3b   ; el byte del sentido
 	rra			;6b3c   ; el bit 0
 	ld de,00140h		;6b3d   ; por la derecha
 	jr c,L_6B45		;6b40
 	ld de,000c0h		;6b42   ; o por la izquierda
 L_6B45:
-	ld (hl),e			;6b45
+	ld (hl),e			;6b45   ; la horizontal, byte bajo
 	inc l			;6b46
-	ld (hl),d			;6b47
+	ld (hl),d			;6b47   ; y el alto
 	inc l			;6b48
-	ld (hl),000h		;6b49
+	ld (hl),000h		;6b49   ; la vertical, byte bajo
 	inc l			;6b4b
 	ld (hl),0f0h		;6b4c   ; arriba del todo
 	inc l			;6b4e
 	sla a		;6b4f   ; el dibujo, doblado
-	ld (hl),a			;6b51
+	ld (hl),a			;6b51   ; el dibujo
 	inc l			;6b52
-	ld (hl),078h		;6b53
-	ld a,001h		;6b55
+	ld (hl),078h		;6b53   ; el color
+	ld a,001h		;6b55   ; hasta el siguiente hueco
 L_6B57:
-	add a,l			;6b57
+	add a,l			;6b57   ; ocho bytes por nube
 	ld l,a			;6b58
 	djnz L_6B15		;6b59
 	ret			;6b5b
@@ -4861,17 +4861,17 @@ mueve_las_nubes:
 L_6B93:
 	ld a,(hl)			;6b93   ; hueco vacio, nada
 	and a			;6b94
-	ld a,008h		;6b95
+	ld a,008h		;6b95   ; ocho bytes por nube
 	jr z,L_6BBC		;6b97
-	inc l			;6b99
+	inc l			;6b99   ; dos bytes adelante
 	inc l			;6b9a
-	ld a,(hl)			;6b9b
+	ld a,(hl)			;6b9b   ; la velocidad horizontal
 	inc l			;6b9c
-	ld c,(hl)			;6b9d
+	ld c,(hl)			;6b9d   ; y la vertical
 	inc l			;6b9e
 	add a,(hl)			;6b9f   ; la posicion mas la velocidad
 	ld (hl),a			;6ba0
-	inc hl			;6ba1
+	inc hl			;6ba1   ; al byte alto
 	ld a,c			;6ba2
 	adc a,(hl)			;6ba3
 	ld (hl),a			;6ba4
@@ -4901,22 +4901,22 @@ L_6BBE:
 	ld hl,0e35dh		;6bcc
 coloca_una_nube:
 	ld e,(hl)			;6bcf   ; la posicion
-	inc l			;6bd0
+	inc l			;6bd0   ; al byte siguiente
 	ld d,(hl)			;6bd1   ; y la horizontal
 	inc l			;6bd2
 	ld a,(hl)			;6bd3   ; con su dibujo
-	ld l,c			;6bd4
+	ld l,c			;6bd4   ; el bloque de sprites, a HL
 	ld h,b			;6bd5
 	ld (hl),e			;6bd6   ; al primer sprite
 	inc l			;6bd7
-	ld (hl),d			;6bd8
+	ld (hl),d			;6bd8   ; la horizontal
 	inc l			;6bd9
-	ld (hl),a			;6bda
+	ld (hl),a			;6bda   ; el dibujo
 	inc l			;6bdb
-	inc l			;6bdc
+	inc l			;6bdc   ; y el color, tal cual estaba
 	ld (hl),e			;6bdd   ; y el segundo sprite, medio ancho a la derecha
-	inc l			;6bde
-	ld e,a			;6bdf
+	inc l			;6bde   ; al byte de la horizontal
+	ld e,a			;6bdf   ; el dibujo, a salvo
 	ld a,010h		;6be0   ; dieciseis pixeles
 	add a,d			;6be2
 	ld (hl),a			;6be3
@@ -4929,39 +4929,39 @@ mira_si_le_dan_a_la_nube:
 	ld hl,0e350h		;6bea   ; las dos nubes
 	ld b,002h		;6bed
 L_6BEF:
-	ld a,(hl)			;6bef
+	ld a,(hl)			;6bef   ; el hueco tiene que estar ocupado
 	and a			;6bf0
-	ld a,008h		;6bf1
+	ld a,008h		;6bf1   ; ocho bytes por nube
 	jr z,L_6C19		;6bf3
 	inc l			;6bf5
 	ld a,(hl)			;6bf6   ; sin nube, nada
 	and a			;6bf7
 	jr z,L_6C17		;6bf8
-	ld a,004h		;6bfa
+	ld a,004h		;6bfa   ; cuatro bytes adelante: la posicion
 	add a,l			;6bfc
 	ld l,a			;6bfd
-	ld a,(hl)			;6bfe
-	exx			;6bff
+	ld a,(hl)			;6bfe   ; la horizontal
+	exx			;6bff   ; a los registros de repuesto
 	ld l,a			;6c00
 	exx			;6c01
 	inc l			;6c02
-	ld a,(hl)			;6c03
+	ld a,(hl)			;6c03   ; y la vertical
 	exx			;6c04
-	add a,008h		;6c05
+	add a,008h		;6c05   ; ocho pixeles mas abajo: el centro
 	ld h,a			;6c07
 	call mira_los_disparos_contra_la_nube		;6c08   ; se mira si algun disparo le da
 	exx			;6c0b
 	and a			;6c0c
-	ld a,002h		;6c0d
+	ld a,002h		;6c0d   ; dos bytes atras si no le dan
 	jr z,L_6C19		;6c0f
 	ld a,l			;6c11
-	sub 005h		;6c12
+	sub 005h		;6c12   ; cinco atras: la marca de entera
 	ld l,a			;6c14
 	ld (hl),000h		;6c15   ; y la nube se rompe: sale la campana
 L_6C17:
-	ld a,007h		;6c17
+	ld a,007h		;6c17   ; siete bytes hasta la siguiente
 L_6C19:
-	add a,l			;6c19
+	add a,l			;6c19   ; se avanza al hueco que toque
 	ld l,a			;6c1a
 	djnz L_6BEF		;6c1b
 	ret			;6c1d
@@ -4996,27 +4996,27 @@ mueve_las_campanas:
 	ld hl,0e370h		;6c44   ; las tres campanas
 	ld b,003h		;6c47
 L_6C49:
-	push bc			;6c49
-	ld a,(hl)			;6c4a
+	push bc			;6c49   ; la cuenta, a salvo
+	ld a,(hl)			;6c4a   ; el estado de la campana
 	and a			;6c4b   ; apagada, nada
-	ld c,a			;6c4c
-	ld a,010h		;6c4d
+	ld c,a			;6c4c   ; el estado, a C
+	ld a,010h		;6c4d   ; dieciseis bytes por campana
 	jr z,L_6C95		;6c4f
 	ld a,c			;6c51
 	sub 003h		;6c52   ; con 3 se esta apagando
 	jp z,se_apaga_la_campana		;6c54
-	inc l			;6c57
+	inc l			;6c57   ; dos bytes adelante
 	inc l			;6c58
 	ld e,(hl)			;6c59   ; la velocidad
 	inc l			;6c5a
-	ld d,(hl)			;6c5b
+	ld d,(hl)			;6c5b   ; y el alto
 	push hl			;6c5c
 	ld hl,00020h		;6c5d   ; mas 0x20: caen acelerando
 	add hl,de			;6c60
 	ex de,hl			;6c61
 	pop hl			;6c62
-	dec l			;6c63
-	ld (hl),e			;6c64
+	dec l			;6c63   ; un byte atras
+	ld (hl),e			;6c64   ; la velocidad ya acelerada
 	inc l			;6c65
 	ld (hl),d			;6c66
 	inc l			;6c67
@@ -5024,18 +5024,18 @@ L_6C49:
 	ld a,d			;6c6b
 	cp 0d1h		;6c6c   ; pasado el borde de abajo
 	jr nc,L_6C74		;6c6e
-	cp 0c0h		;6c70
+	cp 0c0h		;6c70   ; dentro de la banda de recogida
 	jr nc,la_campana_recogida		;6c72
 L_6C74:
-	inc l			;6c74
+	inc l			;6c74   ; al byte del color
 	ld a,(0e003h)		;6c75   ; cada dieciseis cuadros
 	and 00fh		;6c78
-	ld a,006h		;6c7a
+	ld a,006h		;6c7a   ; seis bytes hasta la siguiente
 	jr nz,L_6C95		;6c7c
 	inc (hl)			;6c7e   ; cambia de color
-	ld a,(hl)			;6c7f
+	ld a,(hl)			;6c7f   ; el color nuevo
 	inc l			;6c80
-	and 003h		;6c81
+	and 003h		;6c81   ; cuatro colores en rueda
 	ld (hl),02ch		;6c83   ; el primero
 	jr z,L_6C93		;6c85
 	dec a			;6c87
@@ -5099,36 +5099,36 @@ avanza_el_decorado:
 	and a			;6cdb
 	jr nz,monta_las_veinticuatro_filas		;6cdc
 	ld hl,(0ebf0h)		;6cde   ; una fila mas
-	inc hl			;6ce1
+	inc hl			;6ce1   ; una fila mas de mapa
 	ld (0ebf0h),hl		;6ce2
 	ld hl,0e3a1h		;6ce5
 	dec (hl)			;6ce8   ; y una menos para la siguiente oleada
 	ld hl,0e3b0h		;6ce9   ; los cinco enemigos grandes
-	ld c,005h		;6cec
+	ld c,005h		;6cec   ; los cinco
 L_6CEE:
-	ld a,(hl)			;6cee
+	ld a,(hl)			;6cee   ; su clase
 	and a			;6cef
-	ld a,010h		;6cf0
+	ld a,010h		;6cf0   ; 0x10 bytes hasta el siguiente
 	jr z,L_6D03		;6cf2
-	inc l			;6cf4
+	inc l			;6cf4   ; dos adelante: el paso
 	inc l			;6cf5
 	inc (hl)			;6cf6   ; se les cuenta el paso
 	ld a,(hl)			;6cf7
 	cp 01ah		;6cf8   ; y al llegar a 0x1A se borran
-	ld a,00eh		;6cfa
+	ld a,00eh		;6cfa   ; 0x0E hasta el siguiente
 	jr nz,L_6D03		;6cfc
-	dec l			;6cfe
+	dec l			;6cfe   ; dos atras: el bloque entero
 	dec l			;6cff
 	call borra_dieciseis		;6d00
 L_6D03:
-	add a,l			;6d03
+	add a,l			;6d03   ; y al siguiente
 	ld l,a			;6d04
 	dec c			;6d05
 	jr nz,L_6CEE		;6d06
 monta_las_veinticuatro_filas:
 	ld hl,(0ebf0h)		;6d08   ; por donde va el decorado
 	ld de,0e400h		;6d0b   ; el mapa, en la RAM
-	add hl,de			;6d0e
+	add hl,de			;6d0e   ; la fila del mapa
 	call la_fila_numero		;6d0f   ; y la fila que toca
 	ld de,0ec40h		;6d12   ; al buffer de la pantalla
 	ld a,018h		;6d15   ; veinticuatro filas
@@ -5166,10 +5166,10 @@ L_6D17:
 	ldi		;6d53
 	ldi		;6d55
 	ld hl,(0ebc0h)		;6d57   ; y la fila de ABAJO en pantalla es la ANTERIOR del mapa
-	dec hl			;6d5a
+	dec hl			;6d5a   ; una fila mas atras
 	call la_fila_numero		;6d5b   ; por eso el mapa esta guardado del reves
-	dec a			;6d5e
-	jr nz,L_6D17		;6d5f
+	dec a			;6d5e   ; una fila menos
+	jr nz,L_6D17		;6d5f   ; hasta las veinticuatro
 	ret			;6d61
 la_fila_numero:		; Guarda el puntero del mapa en (0xEBC0) y devuelve en HL el bloque de 32 casillas
 	ld (0ebc0h),hl		;6d62   ; el puntero, a salvo
@@ -6116,16 +6116,16 @@ DATA_sprites_de_los_enemigos:
 
 L_9648:
 	ld de,09671h		;9648   ; los sprites del jefe, iguales en las cinco fases
-	ld hl,01d80h		;964b
-	ld bc,00401h		;964e
+	ld hl,01d80h		;964b   ; a los patrones de sprite de 0x1D80
+	ld bc,00401h		;964e   ; cuatro dibujos
 	call sube_patrones_de_sprite		;9651
 	ld a,(0e076h)		;9654   ; y los de esta fase
 	and 00fh		;9657
-	dec a			;9659
-	ld hl,096f1h		;965a
+	dec a			;9659   ; la tabla arranca en la fase 1
+	ld hl,096f1h		;965a   ; los sprites propios de cada jefe
 	call palabra_de_tabla		;965d
-	ld hl,01e80h		;9660
-	ld bc,00201h		;9663
+	ld hl,01e80h		;9660   ; detras de los comunes
+	ld bc,00201h		;9663   ; dos dibujos
 	call sube_patrones_de_sprite		;9666
 	ld hl,01f00h		;9669   ; con un bloque suelto detras
 	ld c,000h		;966c
@@ -6213,21 +6213,21 @@ sube_los_patrones_del_decorado:
 	call sube_espejado		;996b   ; y su espejo
 sube_los_patrones_de_la_fase:
 	ld a,(0e076h)		;996e   ; la fase, sin la vuelta
-	and 00fh		;9971
-	dec a			;9973
+	and 00fh		;9971   ; sin la decena
+	dec a			;9973   ; la tabla arranca en la fase 1
 	ld hl,09994h		;9974   ; la tabla de patrones
 	call palabra_de_tabla		;9977
 	ld hl,02600h		;997a   ; a la casilla 0xC0
 	call sube_tal_cual		;997d
-	ld a,(0e076h)		;9980
+	ld a,(0e076h)		;9980   ; otra vez la fase
 	and 00fh		;9983
 	dec a			;9985
 	ld hl,0999eh		;9986   ; y la pareja, que va ESPEJADA
 	call palabra_de_tabla_de_cuatro		;9989
 	inc hl			;998c   ; el segundo puntero del par: el destino
-	ld a,(hl)			;998d
+	ld a,(hl)			;998d   ; el byte bajo
 	inc hl			;998e
-	ld h,(hl)			;998f
+	ld h,(hl)			;998f   ; y el alto
 	ld l,a			;9990
 	jp sube_espejado		;9991
 
@@ -6363,16 +6363,16 @@ sube_el_color_del_decorado:
 ; ----------------------------------------------------------------------
 sube_el_color_comun:
 	ld a,(0e076h)		;9f41   ; la fase 3
-	and 00fh		;9f44
+	and 00fh		;9f44   ; la fase, sin la decena
 	cp 003h		;9f46
 	jr z,L_9F67		;9f48
 	ld de,09fcch		;9f4a   ; las demas suben su color tal cual
-	ld hl,001e0h		;9f4d
+	ld hl,001e0h		;9f4d   ; a 0x01E0 de la VRAM
 	call sube_tal_cual		;9f50
-	ld de,0a096h		;9f53
+	ld de,0a096h		;9f53   ; el segundo
 	ld hl,004e8h		;9f56
 	call sube_tal_cual		;9f59
-	ld de,0a0b6h		;9f5c
+	ld de,0a0b6h		;9f5c   ; y el tercero
 	ld hl,005a8h		;9f5f
 	call sube_tal_cual		;9f62
 	jr sube_el_color_de_la_fase		;9f65
@@ -6390,22 +6390,22 @@ L_9F67:
 	ld c,081h		;9f83
 	call sube_tres_bancos		;9f85
 sube_el_color_de_la_fase:
-	ld a,(0e076h)		;9f88
-	and 00fh		;9f8b
-	dec a			;9f8d
+	ld a,(0e076h)		;9f88   ; la fase
+	and 00fh		;9f8b   ; sin la decena
+	dec a			;9f8d   ; la tabla arranca en la fase 1
 	ld hl,09faeh		;9f8e   ; la tabla de color
 	call palabra_de_tabla		;9f91
 	ld hl,00600h		;9f94   ; a la casilla 0xC0
 	call sube_tal_cual		;9f97   ; y encima, el suyo
-	ld a,(0e076h)		;9f9a
+	ld a,(0e076h)		;9f9a   ; otra vez la fase
 	and 00fh		;9f9d
 	dec a			;9f9f
 	ld hl,09fb8h		;9fa0   ; y la pareja, que aqui NO va espejada
 	call palabra_de_tabla_de_cuatro		;9fa3
-	inc hl			;9fa6
-	ld a,(hl)			;9fa7
+	inc hl			;9fa6   ; se salta el primer puntero
+	ld a,(hl)			;9fa7   ; el byte bajo del segundo
 	inc hl			;9fa8
-	ld h,(hl)			;9fa9
+	ld h,(hl)			;9fa9   ; y el alto
 	ld l,a			;9faa
 	jp sube_tal_cual		;9fab
 
@@ -6501,11 +6501,11 @@ rompe_la_nube:
 	ld a,(hl)			;a183
 	and a			;a184
 	jr z,L_A191		;a185
-	ld hl,0e380h		;a187
+	ld hl,0e380h		;a187   ; el segundo hueco
 	ld a,(hl)			;a18a
 	and a			;a18b
 	jr z,L_A191		;a18c
-	ld hl,0e390h		;a18e
+	ld hl,0e390h		;a18e   ; o el tercero
 L_A191:
 	xor a			;a191
 	ld (hl),001h		;a192   ; y nace ahi
@@ -6514,56 +6514,56 @@ L_A191:
 	inc l			;a196
 	ld (hl),a			;a197
 	inc l			;a198
-	ld (hl),0feh		;a199
+	ld (hl),0feh		;a199   ; con la clase 0xFE
 	inc l			;a19b
-	ld (hl),080h		;a19c
+	ld (hl),080h		;a19c   ; y velocidad 0x80
 	inc l			;a19e
 	ld (hl),a			;a19f
 	ld a,d			;a1a0
 	cp 078h		;a1a1   ; mas abajo de la mitad, cae mas despacio
 	jr c,L_A1A6		;a1a3
-	dec (hl)			;a1a5
+	dec (hl)			;a1a5   ; con velocidad 0x7F
 L_A1A6:
 	inc l			;a1a6
 	xor a			;a1a7
 	ld (hl),a			;a1a8
 	inc l			;a1a9
-	ld (hl),e			;a1aa
+	ld (hl),e			;a1aa   ; la horizontal
 	inc l			;a1ab
 	ld (hl),a			;a1ac
 	inc l			;a1ad
-	ld (hl),d			;a1ae
+	ld (hl),d			;a1ae   ; y la vertical
 	inc l			;a1af
 	ld (hl),a			;a1b0
 	inc l			;a1b1
 	ld (hl),02ch		;a1b2   ; con el primer color
 	inc l			;a1b4
-	ld (hl),00ah		;a1b5
+	ld (hl),00ah		;a1b5   ; y su dibujo
 	ld a,08dh		;a1b7   ; y su ruido
 	call pide_un_sonido		;a1b9
-	ld a,001h		;a1bc
+	ld a,001h		;a1bc   ; devuelve 1: la nube se rompio
 	ret			;a1be
 mira_los_disparos_contra_la_campana:
 	ld l,(ix+007h)		;a1bf   ; donde esta la campana
 	ld h,(ix+009h)		;a1c2
-	call cuantos_disparos		;a1c5
-	ld de,0e100h		;a1c8
+	call cuantos_disparos		;a1c5   ; cuatro con uno, seis con dos
+	ld de,0e100h		;a1c8   ; los disparos del primero
 	call recorre_los_disparos_2		;a1cb
 	call es_el_segundo_jugador		;a1ce
 	ret z			;a1d1
-	ld de,0e110h		;a1d2
+	ld de,0e110h		;a1d2   ; y los del segundo
 	ld b,002h		;a1d5
 recorre_los_disparos_2:
-	push bc			;a1d7
+	push bc			;a1d7   ; la cuenta, a salvo
 	ld a,(de)			;a1d8   ; hueco vacio, se salta
 	and a			;a1d9
-	ld a,008h		;a1da
+	ld a,008h		;a1da   ; tres bytes hasta el siguiente
 	jr z,L_A1F1		;a1dc
 	call cabe_en_horizontal		;a1de   ; el marco horizontal
 	jr nc,L_A1EF		;a1e1
 	call cabe_en_vertical		;a1e3   ; y el vertical
 	jr nc,L_A1EF		;a1e6
-	push hl			;a1e8
+	push hl			;a1e8   ; la campana y el hueco, a salvo
 	push de			;a1e9
 	call recoge_la_campana		;a1ea   ; y entonces la recoge
 	pop de			;a1ed
@@ -6583,7 +6583,7 @@ L_A1F1:
 recoge_la_campana:
 	ex de,hl			;a1f7   ; el disparo se gasta
 	ld a,l			;a1f8
-	sub 005h		;a1f9
+	sub 005h		;a1f9   ; cinco bytes atras
 	ld l,a			;a1fb
 	call apaga_cuatro_sprites		;a1fc
 	ld a,(ix+001h)		;a1ff   ; y el premio depende del color que llevara
@@ -6591,25 +6591,25 @@ recoge_la_campana:
 	ld a,087h		;a204
 	jp z,pide_un_sonido		;a206
 	ld hl,0e364h		;a209   ; el contador de campanas recogidas
-	inc (hl)			;a20c
+	inc (hl)			;a20c   ; uno mas
 	ld a,(hl)			;a20d
 	cp 020h		;a20e   ; vuelve a cero a las 32
 	jr nz,L_A214		;a210
-	ld (hl),000h		;a212
+	ld (hl),000h		;a212   ; y vuelve a cero
 L_A214:
 	ld hl,0eb88h		;a214   ; y la tabla que escribio 0x5D41
-	call suma_a_a_hl		;a217
-	ld c,(hl)			;a21a
+	call suma_a_a_hl		;a217   ; la entrada que le toca
+	ld c,(hl)			;a21a   ; el premio, en C
 	call es_el_segundo_jugador		;a21b   ; con dos jugadores, cada uno tiene lo suyo
-	ld iy,0e081h		;a21e
-	ld hl,0e083h		;a222
+	ld iy,0e081h		;a21e   ; la potencia del primero
+	ld hl,0e083h		;a222   ; y su estado
 	jr z,L_A235		;a225
-	ld a,(0e077h)		;a227
-	rra			;a22a
+	ld a,(0e077h)		;a227   ; con dos jugadores
+	rra			;a22a   ; el bit 0: vive el primero
 	jr nc,L_A232		;a22b
-	rra			;a22d
+	rra			;a22d   ; y el bit 1: vive el segundo
 	jr nc,L_A235		;a22e
-	jr L_A263		;a230
+	jr L_A263		;a230   ; con los dos, van agarradas
 L_A232:
 	inc iy		;a232
 	inc l			;a234
@@ -6681,31 +6681,31 @@ L_A292:
 	ld a,c			;a29b
 L_A29C:
 	ld (ix+001h),a		;a29c   ; el premio, apuntado
-	and a			;a29f
+	and a			;a29f   ; el premio 0 es el primero
 	ld c,00ah		;a2a0   ; y cada uno tiene su color de aviso
 	jr z,L_A2BA		;a2a2
-	rra			;a2a4
-	ld c,007h		;a2a5
+	rra			;a2a4   ; el bit 0
+	ld c,007h		;a2a5   ; blanco
 	jr c,L_A2BA		;a2a7
-	rra			;a2a9
-	ld c,00fh		;a2aa
+	rra			;a2a9   ; el bit 1
+	ld c,00fh		;a2aa   ; gris
 	jr c,L_A2BA		;a2ac
-	rra			;a2ae
-	ld c,003h		;a2af
+	rra			;a2ae   ; el bit 2
+	ld c,003h		;a2af   ; verde
 	jr c,L_A2BA		;a2b1
-	rra			;a2b3
-	ld c,008h		;a2b4
+	rra			;a2b3   ; el bit 3
+	ld c,008h		;a2b4   ; rojo
 	jr c,L_A2BA		;a2b6
-	ld c,001h		;a2b8
+	ld c,001h		;a2b8   ; y azul para el resto
 L_A2BA:
 	ld (ix+00ch),c		;a2ba   ; el dibujo del cartel
-	ld c,000h		;a2bd
+	ld c,000h		;a2bd   ; sin fraccion
 	ld (ix+002h),c		;a2bf
-	ld (ix+003h),0feh		;a2c2
-	ld a,(ix+009h)		;a2c6
+	ld (ix+003h),0feh		;a2c2   ; dos pixeles por cuadro hacia arriba
+	ld a,(ix+009h)		;a2c6   ; la vertical donde nace
 	cp 078h		;a2c9   ; mas abajo de la mitad, sube en vez de bajar
 	jr c,L_A2CE		;a2cb
-	dec c			;a2cd
+	dec c			;a2cd   ; hacia abajo
 L_A2CE:
 	ld (ix+004h),080h		;a2ce
 	ld (ix+005h),c		;a2d2
@@ -6713,60 +6713,60 @@ L_A2CE:
 	jp pide_un_sonido		;a2d7
 mira_las_campanas_contra_la_nave:
 	ld a,(0e077h)		;a2da   ; el primer jugador
-	rra			;a2dd
+	rra			;a2dd   ; el bit 0: le queda partida
 	jr nc,L_A2EE		;a2de
 	call el_uno_tiene_bomba		;a2e0   ; vivo y sin morirse
 	jr nz,L_A2EE		;a2e3
 	call donde_esta_la_nave_uno		;a2e5   ; donde esta su nave
-	ld bc,00301h		;a2e8
+	ld bc,00301h		;a2e8   ; tres campanas, y el jugador 1
 	call recorre_las_campanas		;a2eb
 L_A2EE:
 	call es_el_segundo_jugador		;a2ee   ; con dos jugadores
 	ret z			;a2f1
 	ld a,(0e077h)		;a2f2
-	rra			;a2f5
+	rra			;a2f5   ; el bit 1: le queda partida al segundo
 	rra			;a2f6
 	ret nc			;a2f7
 	call el_dos_tiene_bomba		;a2f8   ; el segundo, vivo
 	ret nz			;a2fb
 	call donde_esta_la_nave_dos		;a2fc   ; donde esta su nave
-	ld bc,00302h		;a2ff
+	ld bc,00302h		;a2ff   ; tres campanas, y el jugador 2
 recorre_las_campanas:
-	ld de,0e370h		;a302
+	ld de,0e370h		;a302   ; la primera campana
 L_A305:
-	push bc			;a305
+	push bc			;a305   ; la cuenta, a salvo
 	ld a,(de)			;a306   ; campana apagada, nada
 	and a			;a307
-	ld a,010h		;a308
+	ld a,010h		;a308   ; 0x10 hasta la siguiente
 	jr z,L_A337		;a30a
 	ld a,(de)			;a30c
 	cp 003h		;a30d   ; o apagandose
 	ld a,010h		;a30f
 	jr z,L_A337		;a311
 	ld a,(de)			;a313
-	ld b,a			;a314
-	ld a,007h		;a315
+	ld b,a			;a314   ; la clase, en B
+	ld a,007h		;a315   ; siete adelante: la posicion
 	add a,e			;a317
 	ld e,a			;a318
 	ld a,(de)			;a319
 	inc e			;a31a
 	inc e			;a31b
 	add a,00fh		;a31c   ; el marco: 0x1F pixeles
-	sub l			;a31e
+	sub l			;a31e   ; menos la de la nave
 	cp 01fh		;a31f
 	jr nc,L_A335		;a321
-	ld a,(de)			;a323
+	ld a,(de)			;a323   ; y la vertical
 	add a,00fh		;a324
 	sub h			;a326
 	cp 01fh		;a327
 	jr nc,L_A335		;a329
-	djnz L_A332		;a32b
+	djnz L_A332		;a32b   ; con B a uno, la recoge
 	call recoge_una_campana		;a32d   ; la primera nave la recoge
 	jr L_A339		;a330
 L_A332:
 	call choca_con_la_campana		;a332   ; y la segunda tambien
 L_A335:
-	ld a,007h		;a335
+	ld a,007h		;a335   ; siete hasta la siguiente
 L_A337:
 	add a,e			;a337
 	ld e,a			;a338
@@ -6776,10 +6776,10 @@ L_A339:
 	ret			;a33c
 recoge_una_campana:
 	push hl			;a33d   ; la campana recogida
-	ld a,e			;a33e
+	ld a,e			;a33e   ; ocho bytes atras: el premio
 	sub 008h		;a33f
 	ld e,a			;a341
-	push de			;a342
+	push de			;a342   ; el hueco, a salvo
 	ld a,(de)			;a343
 	rra			;a344   ; el bit 0: la de velocidad
 	jr c,$+110		;a345
@@ -6790,24 +6790,24 @@ recoge_una_campana:
 	rra			;a34f   ; el bit 3: el arma
 	jp c,campana_del_arma		;a350
 	ld a,c			;a353
-	dec a			;a354
+	dec a			;a354   ; a que jugador
 	ld hl,0e362h		;a355   ; y si no, es la de puntos
 	jr z,L_A35B		;a358
 	inc l			;a35a
 L_A35B:
-	inc (hl)			;a35b
+	inc (hl)			;a35b   ; el nivel de puntos, uno mas
 	ld a,(hl)			;a35c
 	cp 004h		;a35d   ; con tope en tres
 	jr c,L_A363		;a35f
 	ld (hl),003h		;a361
 L_A363:
 	ld hl,0a3abh		;a363   ; los puntos que da cada nivel
-	dec a			;a366
+	dec a			;a366   ; la entrada de la tabla
 	ld b,a			;a367
 	call indexa_palabras		;a368
-	dec c			;a36b
+	dec c			;a36b   ; a que jugador
 	push bc			;a36c
-	ld c,(hl)			;a36d
+	ld c,(hl)			;a36d   ; los puntos que da
 	inc hl			;a36e
 	ld b,(hl)			;a36f
 	jr nz,L_A377		;a370
@@ -6816,25 +6816,25 @@ L_A363:
 L_A377:
 	call suma_al_segundo		;a377   ; o al segundo
 L_A37A:
-	pop bc			;a37a
+	pop bc			;a37a   ; el hueco de la campana
 	ld a,08eh		;a37b   ; con su ruido
 	call pide_un_sonido_si_se_juega		;a37d
-	pop hl			;a380
+	pop hl			;a380   ; la posicion, de vuelta
 	pop de			;a381
 	dec l			;a382   ; la campana pasa a "apagandose"
 	ld (hl),003h		;a383   ; y la campana se apaga
-	ld a,006h		;a385
+	ld a,006h		;a385   ; seis bytes mas alla: el cartel
 	add a,l			;a387
 	ld l,a			;a388
 	xor a			;a389
 	ld (0e364h),a		;a38a   ; el contador de campanas, a cero
-	ld (hl),a			;a38d
+	ld (hl),a			;a38d   ; sin fraccion
 	inc l			;a38e
 	ld a,e			;a38f   ; ocho pixeles a la izquierda
-	sub 008h		;a390
+	sub 008h		;a390   ; centrado sobre la campana
 	ld (hl),a			;a392
 	inc l			;a393
-	ld (hl),000h		;a394
+	ld (hl),000h		;a394   ; sin fraccion tampoco
 	inc l			;a396
 	ld (hl),d			;a397   ; y a la misma altura
 	inc l			;a398
@@ -6996,65 +6996,65 @@ DATA_marco_del_enemigo:
 cabe_en_horizontal:
 	inc e			;a44e   ; el marco de choque de esa clase de enemigo
 	ld a,(de)			;a44f   ; la clase del enemigo
-	inc e			;a450
+	inc e			;a450   ; tres bytes adelante: la posicion
 	inc e			;a451
 	inc e			;a452
 	dec a			;a453   ; por dos: la entrada de la tabla
 	add a,a			;a454
 	push hl			;a455
 	ld hl,0a442h		;a456
-	call indexa_palabras		;a459
+	call indexa_palabras		;a459   ; la entrada de la tabla de marcos
 	push hl			;a45c
-	pop iy		;a45d
+	pop iy		;a45d   ; en IY, que es donde se lee comodo
 	pop hl			;a45f
-	ld a,(de)			;a460
+	ld a,(de)			;a460   ; la horizontal del disparo
 cabe_en_el_marco:		; La posicion mas el minimo del marco, comparada con el maximo
 	inc e			;a461   ; la posicion, mas el minimo
 	add a,(iy+000h)		;a462
-	sub l			;a465
+	sub l			;a465   ; menos la del blanco
 	cp (iy+001h)		;a466   ; contra el maximo
 	ret			;a469
 cabe_en_vertical:
-	ld a,(de)			;a46a
+	ld a,(de)			;a46a   ; y ahora la vertical
 	add a,(iy+002h)		;a46b
-	sub h			;a46e
-	cp (iy+003h)		;a46f
+	sub h			;a46e   ; menos la del blanco
+	cp (iy+003h)		;a46f   ; contra su maximo
 	ret			;a472
 mira_el_arma_contra_los_grandes:
 	ld de,0e13ch		;a473   ; el arma del primer jugador
-	ld hl,0e0a1h		;a476
+	ld hl,0e0a1h		;a476   ; y donde esta su nave
 	call recorre_los_grandes		;a479
 	call es_el_segundo_jugador		;a47c   ; y si juegan dos
 	ret z			;a47f
-	ld de,0e146h		;a480
+	ld de,0e146h		;a480   ; el arma del segundo
 	ld hl,0e0adh		;a483
 recorre_los_grandes:
 	ld a,(de)			;a486   ; sin arma en el aire, nada
 	and a			;a487
 	ret z			;a488
-	inc e			;a489
+	inc e			;a489   ; la clase del arma
 	ld a,(de)			;a48a
 	cp 00fh		;a48b   ; solo cuenta cuando esta abajo del todo
 	ret nz			;a48d
-	ld a,(hl)			;a48e
+	ld a,(hl)			;a48e   ; la vertical de la nave
 	inc l			;a48f
 	inc l			;a490
-	ld h,(hl)			;a491
+	ld h,(hl)			;a491   ; y la horizontal
 	sub 030h		;a492   ; 0x30 pixeles mas arriba
-	ld l,a			;a494
-	ld de,0e3b0h		;a495
+	ld l,a			;a494   ; ese es el punto que se compara
+	ld de,0e3b0h		;a495   ; los cinco huecos de enemigo grande
 	ld b,005h		;a498   ; los cinco enemigos grandes
 L_A49A:
 	ld a,(de)			;a49a
 	and a			;a49b   ; hueco vacio, se salta
-	ld a,010h		;a49c
+	ld a,010h		;a49c   ; 0x10 bytes hasta el siguiente
 	jr z,L_A4BF		;a49e
-	inc e			;a4a0
+	inc e			;a4a0   ; su clase
 	ld a,(de)			;a4a1
 	cp 005h		;a4a2   ; y las clases 5 arriba no valen
 	ld a,00fh		;a4a4
 	jr nc,L_A4BF		;a4a6
-	ld a,004h		;a4a8
+	ld a,004h		;a4a8   ; cuatro bytes adelante: la posicion
 	add a,e			;a4aa
 	ld e,a			;a4ab
 	ld a,(de)			;a4ac
@@ -7062,53 +7062,53 @@ L_A49A:
 	add a,00fh		;a4ae   ; el marco horizontal: 0x17
 	sub l			;a4b0
 	cp 017h		;a4b1
-	jr nc,L_A4BD		;a4b3
+	jr nc,L_A4BD		;a4b3   ; fuera del marco, el siguiente
 	ld a,(de)			;a4b5   ; y el vertical: 0x1F
 	add a,00fh		;a4b6
 	sub h			;a4b8
 	cp 01fh		;a4b9
 	jr c,rompe_el_grande		;a4bb
 L_A4BD:
-	ld a,00ah		;a4bd
+	ld a,00ah		;a4bd   ; 0x0A bytes hasta el siguiente
 L_A4BF:
 	add a,e			;a4bf
 	ld e,a			;a4c0
 	djnz L_A49A		;a4c1
 	ret			;a4c3
 rompe_el_grande:
-	ex de,hl			;a4c4
+	ex de,hl			;a4c4   ; el hueco del grande
 	ld a,l			;a4c5
-	sub 005h		;a4c6
+	sub 005h		;a4c6   ; cinco bytes atras
 	ld l,a			;a4c8
 	ld (hl),005h		;a4c9   ; el grande, reventado
-	inc l			;a4cb
+	inc l			;a4cb   ; tres adelante
 	inc l			;a4cc
 	inc l			;a4cd
-	ld (hl),001h		;a4ce
+	ld (hl),001h		;a4ce   ; con el paso a uno
 	inc l			;a4d0
 	inc l			;a4d1
 	inc l			;a4d2
 	ld (hl),010h		;a4d3   ; con su cuenta
 	inc l			;a4d5
-	xor a			;a4d6
+	xor a			;a4d6   ; y las dos velocidades a cero
 	ld (hl),a			;a4d7
 	inc l			;a4d8
 	ld (hl),a			;a4d9
 	ret			;a4da
 mira_las_naves_contra_los_grandes:
 	ld a,(0e077h)		;a4db   ; el primer jugador
-	rra			;a4de
+	rra			;a4de   ; el bit 0: le queda partida
 	jr nc,L_A4EE		;a4df
-	call el_uno_tiene_bomba		;a4e1
+	call el_uno_tiene_bomba		;a4e1   ; y no puede estar muriendose
 	jr nz,L_A4EE		;a4e4
 	call donde_esta_la_nave_uno		;a4e6
-	ld c,001h		;a4e9
+	ld c,001h		;a4e9   ; con la marca del primer jugador
 	call recorre_los_grandes_2		;a4eb
 L_A4EE:
 	call es_el_segundo_jugador		;a4ee   ; y si juegan dos
 	ret z			;a4f1
 	ld a,(0e077h)		;a4f2
-	rra			;a4f5
+	rra			;a4f5   ; el bit 1: le queda partida al segundo
 	rra			;a4f6
 	ret nc			;a4f7
 	call el_dos_tiene_bomba		;a4f8
@@ -7117,39 +7117,39 @@ L_A4EE:
 	ld c,002h		;a4ff
 recorre_los_grandes_2:
 	ld de,0e3b0h		;a501
-	ld b,005h		;a504
+	ld b,005h		;a504   ; los cinco huecos de enemigo
 L_A506:
-	push bc			;a506
+	push bc			;a506   ; la cuenta, a salvo
 	ld a,(de)			;a507   ; hueco vacio, se salta
 	and a			;a508
-	ld a,010h		;a509
+	ld a,010h		;a509   ; dieciseis bytes por enemigo
 	jr z,L_A53D		;a50b
-	inc e			;a50d
+	inc e			;a50d   ; el segundo byte es la clase
 	ld a,(de)			;a50e
 	cp 006h		;a50f   ; las clases 6 a 9 son las que chocan
-	ld a,00fh		;a511
+	ld a,00fh		;a511   ; quince: ya se avanzo uno
 	jr c,L_A53D		;a513
 	ld a,(de)			;a515
 	cp 00ah		;a516
 	ld a,00fh		;a518
 	jr nc,L_A53D		;a51a
 	ld a,(de)			;a51c   ; la clase, a salvo
-	ld b,a			;a51d
+	ld b,a			;a51d   ; la clase, a B
 	ld a,004h		;a51e   ; cuatro bytes mas alla: la posicion
 	add a,e			;a520
 	ld e,a			;a521
-	ld a,(de)			;a522
-	inc e			;a523
+	ld a,(de)			;a522   ; la horizontal
+	inc e			;a523   ; y luego la vertical
 	add a,00fh		;a524   ; el marco: 0x1F en las dos
-	sub l			;a526
-	cp 01fh		;a527
+	sub l			;a526   ; contra la del disparo
+	cp 01fh		;a527   ; fuera del marco, no le da
 	jr nc,L_A53B		;a529
 	ld a,(de)			;a52b
-	add a,00fh		;a52c
+	add a,00fh		;a52c   ; el mismo marco en vertical
 	sub h			;a52e
 	cp 01fh		;a52f
 	jr nc,L_A53B		;a531
-	ld a,b			;a533
+	ld a,b			;a533   ; con la clase en A
 	push hl			;a534
 	push de			;a535
 	call reparte_el_choque		;a536   ; y se reparte el choque
@@ -7158,7 +7158,7 @@ L_A506:
 L_A53B:
 	ld a,00ah		;a53b   ; diez bytes hasta el siguiente
 L_A53D:
-	add a,e			;a53d
+	add a,e			;a53d   ; se avanza al hueco que toque
 	ld e,a			;a53e
 	pop bc			;a53f
 	djnz L_A506		;a540
@@ -7170,65 +7170,65 @@ reparte_el_choque:
 	jr z,revienta_al_jefe		;a548
 	dec a			;a54a   ; y la 9, la vida extra
 	jr z,recoge_una_vida		;a54b
-	ex de,hl			;a54d
+	ex de,hl			;a54d   ; el hueco del grande
 	ld a,l			;a54e
-	sub 005h		;a54f
+	sub 005h		;a54f   ; cinco bytes atras: su clase
 	ld l,a			;a551
-	ld e,c			;a552
+	ld e,c			;a552   ; quien le dio
 	ld a,(0e003h)		;a553   ; y las demas revientan, alternando dibujo
-	and 003h		;a556
-	ld (hl),00bh		;a558
-	ld bc,00005h		;a55a
+	and 003h		;a556   ; dos bits del contador de cuadros
+	ld (hl),00bh		;a558   ; con el primer dibujo de explosion
+	ld bc,00005h		;a55a   ; y 5 puntos
 	jr z,L_A563		;a55d
-	ld (hl),00ah		;a55f
-	ld c,001h		;a561
+	ld (hl),00ah		;a55f   ; o el segundo
+	ld c,001h		;a561   ; y 1 punto
 L_A563:
 	ld a,006h		;a563
 	add a,l			;a565
 	ld l,a			;a566
-	ld (hl),020h		;a567
+	ld (hl),020h		;a567   ; con 0x20 cuadros de explosion
 	dec e			;a569   ; y dan puntos al que le dio
 	jr nz,L_A571		;a56a
-	call suma_al_primero		;a56c
+	call suma_al_primero		;a56c   ; al primero
 	jr L_A574		;a56f
 L_A571:
-	call suma_al_segundo		;a571
+	call suma_al_segundo		;a571   ; o al segundo
 L_A574:
 	ld a,08ah		;a574   ; con su ruido
 	jp pide_un_sonido_si_se_juega		;a576
 recoge_el_arma_del_suelo:
 	ex de,hl			;a579
-	ld a,l			;a57a
+	ld a,l			;a57a   ; seis bytes atras
 	sub 006h		;a57b
 	ld l,a			;a57d
 	call borra_dieciseis		;a57e   ; el enemigo se borra
 	ld hl,0e083h		;a581
-	ld a,(hl)			;a584
+	ld a,(hl)			;a584   ; el estado de la nave
 	and 00ah		;a585   ; con doble disparo o brazo, no
 	jr nz,L_A592		;a587
 	res 0,(hl)		;a589   ; y si no, se pone el arma
-	ld a,008h		;a58b
+	ld a,008h		;a58b   ; y el bit 3: el arma
 	or (hl)			;a58d
 	ld (hl),a			;a58e
-	call cambia_la_musica		;a58f
+	call cambia_la_musica		;a58f   ; la musica cambia
 L_A592:
 	ret			;a592
 revienta_al_jefe:
 	ex de,hl			;a593
 	ld a,l			;a594
-	sub 006h		;a595
+	sub 006h		;a595   ; seis bytes atras
 	ld l,a			;a597
 	call borra_dieciseis		;a598   ; el jefe se borra
-	call apaga_todos_los_enemigos		;a59b
-	ld a,092h		;a59e
+	call apaga_todos_los_enemigos		;a59b   ; y con el se van todos sus enemigos
+	ld a,092h		;a59e   ; con su ruido
 	jp pide_un_sonido_si_se_juega		;a5a0
 recoge_una_vida:
 	ex de,hl			;a5a3
 	ld a,l			;a5a4
-	sub 006h		;a5a5
+	sub 006h		;a5a5   ; seis bytes atras
 	ld l,a			;a5a7
 	call borra_dieciseis		;a5a8   ; y la vida extra
-	dec c			;a5ab
+	dec c			;a5ab   ; a que jugador
 	ld hl,0e070h		;a5ac
 	jr z,L_A5B2		;a5af
 	inc l			;a5b1
@@ -7236,7 +7236,7 @@ L_A5B2:
 	ld a,(hl)			;a5b2
 	cp 099h		;a5b3   ; con 99 no caben mas
 	jr z,L_A5BB		;a5b5
-	add a,001h		;a5b7
+	add a,001h		;a5b7   ; una vida mas, en BCD
 	daa			;a5b9
 	ld (hl),a			;a5ba
 L_A5BB:
@@ -7248,15 +7248,15 @@ L_A5BB:
 ; ----------------------------------------------------------------------
 recupera_la_bomba:
 	ld a,(0e077h)		;a5bf
-	rra			;a5c2
+	rra			;a5c2   ; el bit 0: le queda partida
 	jr nc,L_A5F5		;a5c3
 	call el_uno_tiene_bomba		;a5c5   ; el primer jugador, vivo
 	jr nz,L_A5F5		;a5c8
-	call donde_esta_la_nave_uno		;a5ca
+	call donde_esta_la_nave_uno		;a5ca   ; donde esta su nave
 	ld a,(0e348h)		;a5cd   ; y su bomba, en el aire
 	and a			;a5d0
 	jr z,L_A5F5		;a5d1
-	ld de,(0e349h)		;a5d3
+	ld de,(0e349h)		;a5d3   ; y donde su bomba
 	ld a,e			;a5d7
 	add a,00fh		;a5d8   ; el marco: 0x1F en las dos
 	sub l			;a5da
@@ -7271,32 +7271,32 @@ recupera_la_bomba:
 	call apaga_la_bomba		;a5ea   ; la bomba se recoge
 	ld a,001h		;a5ed
 	ld (0e08dh),a		;a5ef   ; y vuelve a estar cargada
-	call suena_la_bomba		;a5f2
+	call suena_la_bomba		;a5f2   ; y su ruido
 L_A5F5:
 	call es_el_segundo_jugador		;a5f5   ; y lo mismo para el segundo
 	ret z			;a5f8
-	ld a,(0e077h)		;a5f9
-	rra			;a5fc
+	ld a,(0e077h)		;a5f9   ; los jugadores vivos
+	rra			;a5fc   ; el bit 1: el segundo
 	rra			;a5fd
 	ret nc			;a5fe
-	call el_dos_tiene_bomba		;a5ff
+	call el_dos_tiene_bomba		;a5ff   ; si le queda bomba
 	ret nz			;a602
-	call donde_esta_la_nave_dos		;a603
+	call donde_esta_la_nave_dos		;a603   ; y donde esta su nave, en HL
 	ld a,(0e340h)		;a606   ; la bomba del segundo
 	and a			;a609
 	ret z			;a60a
-	ld de,(0e341h)		;a60b
+	ld de,(0e341h)		;a60b   ; la posicion de la bomba
 	ld a,e			;a60f
 	add a,00fh		;a610   ; el mismo marco de 0x1F
-	sub l			;a612
-	cp 01fh		;a613
+	sub l			;a612   ; contra la de la nave
+	cp 01fh		;a613   ; fuera del marco, no le da
 	ret nc			;a615
 	ld a,d			;a616
-	add a,00fh		;a617
+	add a,00fh		;a617   ; el mismo marco en vertical
 	sub h			;a619
 	cp 01fh		;a61a
 	ret nc			;a61c
-	ld hl,0e340h		;a61d
+	ld hl,0e340h		;a61d   ; el hueco de la bomba del dos
 	call apaga_la_bomba		;a620   ; se recoge
 	ld a,001h		;a623
 	ld (0e08eh),a		;a625   ; y vuelve a estar cargada
@@ -7334,57 +7334,57 @@ recorre_los_disparos_del_enemigo:
 	ld b,007h		;a661
 L_A663:
 	push bc			;a663
-	ld a,(de)			;a664
+	ld a,(de)			;a664   ; el hueco del disparo
 	and a			;a665
 	ld a,020h		;a666   ; hueco vacio, se salta
 	jr nz,L_A693		;a668
 	inc e			;a66a
-	ld a,(de)			;a66b
+	ld a,(de)			;a66b   ; su clase
 	dec a			;a66c   ; y solo la clase 1 hace dano
 	ld a,01fh		;a66d
 	jr nz,L_A693		;a66f
-	ld a,006h		;a671
+	ld a,006h		;a671   ; seis bytes adelante: la posicion
 	add a,e			;a673
 	ld e,a			;a674
 	ld a,(de)			;a675
 	inc e			;a676
 	inc e			;a677
 	add a,003h		;a678   ; el marco: 0x13 en horizontal
-	sub l			;a67a
+	sub l			;a67a   ; menos la de la nave
 	cp 013h		;a67b
 	jr nc,L_A691		;a67d
-	ld a,(de)			;a67f
+	ld a,(de)			;a67f   ; la vertical
 	sub h			;a680
 	cp 00dh		;a681   ; y 0x0D en vertical, que es mas estrecho
 	jr nc,L_A691		;a683
-	push de			;a685
+	push de			;a685   ; el hueco y la nave, a salvo
 	push hl			;a686
 	call le_dan_a_la_nave		;a687
 	pop hl			;a68a
 	pop de			;a68b
-	dec a			;a68c
+	dec a			;a68c   ; si devuelve 1, la nave se murio
 	jr nz,L_A691		;a68d
 	pop bc			;a68f
 	ret			;a690
 L_A691:
-	ld a,017h		;a691
+	ld a,017h		;a691   ; 0x17 bytes hasta el siguiente
 L_A693:
-	call suma_a_a_de		;a693
+	call suma_a_a_de		;a693   ; y se avanza
 	pop bc			;a696
 	djnz L_A663		;a697
 	ret			;a699
 le_dan_a_la_nave:
 	ex de,hl			;a69a   ; el disparo se gasta
-	ld a,l			;a69b
+	ld a,l			;a69b   ; nueve bytes atras: el bloque entero
 	sub 009h		;a69c
 	ld l,a			;a69e
 	call apaga_ese_enemigo		;a69f
 	ld a,c			;a6a2   ; el jugador al que le dieron
 	dec a			;a6a3
-	ld hl,0e083h		;a6a4
-	ld de,0e08dh		;a6a7
+	ld hl,0e083h		;a6a4   ; su estado
+	ld de,0e08dh		;a6a7   ; y su marca de brazo
 	jr z,L_A6AE		;a6aa
-	inc l			;a6ac
+	inc l			;a6ac   ; el segundo, un byte mas alla
 	inc e			;a6ad
 L_A6AE:
 	ld a,(hl)			;a6ae   ; su estado
@@ -7397,7 +7397,7 @@ L_A6AE:
 	ld (de),a			;a6b8   ; solo se pierde el brazo
 	dec e			;a6b9
 	dec e			;a6ba
-	ld a,(de)			;a6bb
+	ld a,(de)			;a6bb   ; y el estado vuelve a uno si estaba a cero
 	and a			;a6bc
 	jr nz,L_A6C1		;a6bd
 	inc a			;a6bf
@@ -7406,7 +7406,7 @@ L_A6C1:
 	ld a,090h		;a6c1   ; con su ruido
 	call pide_un_sonido_si_se_juega		;a6c3
 L_A6C6:
-	xor a			;a6c6
+	xor a			;a6c6   ; y devuelve 0: la nave sigue viva
 	ret			;a6c7
 gasta_el_escudo:
 	ex de,hl			;a6c8   ; sus usos de arma
@@ -7417,112 +7417,112 @@ gasta_el_escudo:
 	inc l			;a6d0
 L_A6D1:
 	dec (hl)			;a6d1   ; y con arma, se gastan usos
-	jr z,L_A6D6		;a6d2
-	jr nc,L_A6C6		;a6d4
+	jr z,L_A6D6		;a6d2   ; al llegar a cero
+	jr nc,L_A6C6		;a6d4   ; o pasarse
 L_A6D6:
 	ld a,(de)			;a6d6
 	and 0fbh		;a6d7   ; hasta que se acaba
-	ld (de),a			;a6d9
+	ld (de),a			;a6d9   ; se apaga la marca del arma
 	jr L_A6C6		;a6da
 L_A6DC:
 	call se_muere_la_nave		;a6dc   ; y sin nada, la nave se estrella
-	ld a,001h		;a6df
+	ld a,001h		;a6df   ; y devuelve 1
 	ret			;a6e1
 mira_los_disparos_contra_los_enemigos:
-	call cuantos_disparos		;a6e2
+	call cuantos_disparos		;a6e2   ; cuatro disparos con uno, seis con dos
 	ld hl,0e100h		;a6e5   ; los disparos del primer jugador
-	ld a,001h		;a6e8
+	ld a,001h		;a6e8   ; con la marca del primer jugador
 	ld (0ebc0h),a		;a6ea
 	call recorre_los_disparos_3		;a6ed
 	call es_el_segundo_jugador		;a6f0
 	ret z			;a6f3
 	ld hl,0e110h		;a6f4   ; y los del segundo
-	ld b,002h		;a6f7
+	ld b,002h		;a6f7   ; dos vueltas
 	ld a,b			;a6f9
 	ld (0ebc0h),a		;a6fa
 recorre_los_disparos_3:
-	push hl			;a6fd
-	pop ix		;a6fe
+	push hl			;a6fd   ; el hueco, a IX
+	pop ix		;a6fe   ; en IX, que es como se lee comodo
 	ld a,(hl)			;a700   ; hueco de disparo vacio
 	and a			;a701
-	ld a,008h		;a702
+	ld a,008h		;a702   ; ocho bytes por disparo
 	jr z,L_A74F		;a704
-	inc l			;a706
+	inc l			;a706   ; el segundo byte es la clase
 	ld a,(hl)			;a707   ; la clase del disparo
 	exx			;a708
-	ld c,a			;a709
-	dec a			;a70a
-	add a,a			;a70b
+	ld c,a			;a709   ; la clase, a salvo en C
+	dec a			;a70a   ; la tabla arranca en la clase 1
+	add a,a			;a70b   ; dos bytes por entrada
 	ld hl,0a78eh		;a70c   ; el marco de esa clase de enemigo
-	call indexa_palabras		;a70f
+	call indexa_palabras		;a70f   ; el marco de la clase, a HL
 	push hl			;a712
-	pop iy		;a713
+	pop iy		;a713   ; y a IY, que se lee comodo
 	exx			;a715
 	inc l			;a716   ; y su posicion
 	inc l			;a717
 	inc l			;a718
-	ld a,(hl)			;a719
+	ld a,(hl)			;a719   ; la horizontal
 	inc l			;a71a
 	exx			;a71b
 	ld l,a			;a71c
 	exx			;a71d
-	ld a,(hl)			;a71e
+	ld a,(hl)			;a71e   ; y la vertical
 	exx			;a71f
 	ld h,a			;a720
 	ld de,0e176h		;a721   ; los catorce enemigos
 	ld b,00eh		;a724
 recorre_los_catorce:
-	ld a,(de)			;a726
-	and a			;a727
+	ld a,(de)			;a726   ; la clase del enemigo
+	and a			;a727   ; clase cero es hueco vacio
 	ld a,020h		;a728   ; hueco vacio, se salta
-	jr z,L_A747		;a72a
+	jr z,L_A747		;a72a   ; treinta y dos bytes por enemigo
 	ld a,e			;a72c   ; quince bytes atras: la posicion del enemigo
 	sub 00fh		;a72d
 	ld e,a			;a72f
-	ld a,(de)			;a730
+	ld a,(de)			;a730   ; su horizontal
 	inc e			;a731
 	call cabe_en_el_marco		;a732   ; el marco horizontal
 	jr nc,L_A745		;a735
 	call cabe_en_vertical		;a737   ; y el vertical
 	jr nc,L_A745		;a73a
 	ld a,(0ebc0h)		;a73c   ; que jugador disparo
-	ld b,a			;a73f
+	ld b,a			;a73f   ; en B, que es lo que espera la de abajo
 	call le_dan_al_enemigo		;a740
 	jr L_A74C		;a743
 L_A745:
 	ld a,02dh		;a745   ; 0x2D adelante: el siguiente enemigo
 L_A747:
 	call suma_a_a_de		;a747
-	djnz recorre_los_catorce		;a74a
+	djnz recorre_los_catorce		;a74a   ; el enemigo siguiente
 L_A74C:
 	exx			;a74c
-	ld a,003h		;a74d
+	ld a,003h		;a74d   ; tres bytes hasta el disparo siguiente
 L_A74F:
 	add a,l			;a74f
 	ld l,a			;a750
 	djnz recorre_los_disparos_3		;a751
 	ret			;a753
 le_dan_al_enemigo:
-	push de			;a754
+	push de			;a754   ; el hueco, a salvo
 	dec c			;a755   ; con las dos agarradas
 	dec c			;a756
 	dec c			;a757
 	ld a,b			;a758
-	ld bc,00001h		;a759
+	ld bc,00001h		;a759   ; el enemigo vale un punto
 	jr z,L_A766		;a75c
-	dec a			;a75e
+	dec a			;a75e   ; con C a 1
 	jr nz,L_A76B		;a75f
 	call suma_al_primero		;a761   ; los puntos van a los dos
 	jr L_A76E		;a764
 L_A766:
-	push bc			;a766
+	push bc			;a766   ; el punto, a salvo para el segundo reparto
 	call suma_al_primero		;a767
 	pop bc			;a76a
 L_A76B:
 	call suma_al_segundo		;a76b   ; o al que fuera
 L_A76E:
 	pop de			;a76e
-	ld a,e			;a76f
+	ld a,e			;a76f   ; nueve bytes atras
 	sub 009h		;a770
 	ld e,a			;a772
 	ld a,(de)			;a773   ; la clase del enemigo
@@ -7537,10 +7537,10 @@ L_A780:
 	ld a,c			;a780
 	call pide_un_sonido_si_se_juega		;a781
 	push ix		;a784
-	pop hl			;a786
+	pop hl			;a786   ; el hueco del disparo
 	call apaga_cuatro_sprites		;a787   ; y el enemigo se apaga
 	ex de,hl			;a78a
-	jp marca_para_apagar		;a78b
+	jp marca_para_apagar		;a78b   ; y el enemigo, marcado
 
 ; ----------------------------------------------------------------------
 ; DATOS marco_del_enemigo_grande: Lo mismo para los de 0xA70C, con el minimo a
@@ -7567,21 +7567,21 @@ DATA_marco_del_enemigo_grande:
 
 mira_las_naves_contra_los_enemigos:
 	ld a,(0e077h)		;a79a   ; el primer jugador
-	rra			;a79d
+	rra			;a79d   ; el bit 0: le queda partida
 	jr nc,L_A7B3		;a79e
-	call el_uno_tiene_bomba		;a7a0
+	call el_uno_tiene_bomba		;a7a0   ; y no puede estar muriendose
 	jr nz,L_A7B3		;a7a3
 	ld a,(0e097h)		;a7a5   ; con la nave recien nacida no cuenta
 	and a			;a7a8
 	jr nz,L_A7B3		;a7a9
-	call donde_esta_la_nave_uno		;a7ab
-	ld c,001h		;a7ae
+	call donde_esta_la_nave_uno		;a7ab   ; donde esta su nave
+	ld c,001h		;a7ae   ; con su marca
 	call recorre_los_catorce_2		;a7b0
 L_A7B3:
 	call es_el_segundo_jugador		;a7b3   ; con dos jugadores
 	ret z			;a7b6
 	ld a,(0e077h)		;a7b7
-	rra			;a7ba
+	rra			;a7ba   ; el bit 1: le queda partida al segundo
 	rra			;a7bb
 	ret nc			;a7bc
 	call el_dos_tiene_bomba		;a7bd
@@ -7596,25 +7596,25 @@ recorre_los_catorce_2:
 	ld b,00eh		;a7ce
 L_A7D0:
 	push bc			;a7d0
-	ld a,(de)			;a7d1
+	ld a,(de)			;a7d1   ; la clase del enemigo
 	and a			;a7d2
 	ld a,020h		;a7d3   ; hueco vacio, se salta
 	jr z,L_A810		;a7d5
-	ld a,016h		;a7d7
+	ld a,016h		;a7d7   ; 0x16 adelante: su marca de choque
 	add a,e			;a7d9
 	ld e,a			;a7da
 	ld a,(de)			;a7db   ; y los que no chocan tampoco
 	and a			;a7dc
-	ld a,00ah		;a7dd
+	ld a,00ah		;a7dd   ; 0x0A hasta el siguiente
 	jr z,L_A810		;a7df
-	ld a,e			;a7e1
+	ld a,e			;a7e1   ; quince atras: la posicion
 	sub 00fh		;a7e2
 	ld e,a			;a7e4
 	ld a,(de)			;a7e5
 	inc e			;a7e6
 	inc e			;a7e7
 	add a,00fh		;a7e8   ; el marco: 0x1F horizontal
-	sub l			;a7ea
+	sub l			;a7ea   ; menos la de la nave
 	cp 01fh		;a7eb
 	jr nc,L_A80E		;a7ed
 	ld a,(de)			;a7ef
@@ -7623,29 +7623,29 @@ L_A7D0:
 	cp 019h		;a7f3
 	jr nc,L_A80E		;a7f5
 	ld a,(0e078h)		;a7f7   ; y si esa nave ya se estaba muriendo, tampoco
-	and c			;a7fa
+	and c			;a7fa   ; el bit de esa nave
 	jr nz,L_A80E		;a7fb
-	push bc			;a7fd
+	push bc			;a7fd   ; el hueco, la posicion y la cuenta, a salvo
 	push de			;a7fe
 	push hl			;a7ff
 	call choca_con_el_enemigo		;a800
 	pop hl			;a803
 	pop de			;a804
 	pop bc			;a805
-	ld a,(0e078h)		;a806
+	ld a,(0e078h)		;a806   ; y si la nave acaba de morir
 	and c			;a809
 	jr z,L_A80E		;a80a
-	pop bc			;a80c
+	pop bc			;a80c   ; se sale sin mirar mas
 	ret			;a80d
 L_A80E:
-	ld a,017h		;a80e
+	ld a,017h		;a80e   ; 0x17 hasta el enemigo siguiente
 L_A810:
 	call suma_a_a_de		;a810
 	pop bc			;a813
 	djnz L_A7D0		;a814
 	ret			;a816
 choca_con_el_enemigo:
-	ld a,c			;a817
+	ld a,c			;a817   ; el jugador que choco
 	dec a			;a818
 	ld hl,0e083h		;a819
 	jr z,L_A81F		;a81c
@@ -7653,17 +7653,17 @@ choca_con_el_enemigo:
 L_A81F:
 	bit 2,(hl)		;a81f   ; el bit 2: lleva arma
 	jp z,se_muere_la_nave		;a821   ; sin ella, la nave se estrella
-	push de			;a824
+	push de			;a824   ; el estado, a salvo
 	ex de,hl			;a825
 	dec c			;a826
-	ld hl,0e095h		;a827
+	ld hl,0e095h		;a827   ; sus usos de arma
 	jr z,L_A82D		;a82a
 	inc l			;a82c
 L_A82D:
 	dec (hl)			;a82d   ; dos usos menos
 	dec (hl)			;a82e
-	jr z,L_A835		;a82f
-	bit 7,(hl)		;a831
+	jr z,L_A835		;a82f   ; al llegar a cero
+	bit 7,(hl)		;a831   ; o desbordar por debajo
 	jr z,L_A839		;a833
 L_A835:
 	ld a,(de)			;a835
@@ -7672,13 +7672,13 @@ L_A835:
 L_A839:
 	pop de			;a839
 	ex de,hl			;a83a
-	ld a,l			;a83b
+	ld a,l			;a83b   ; nueve bytes atras: el bloque del enemigo
 	sub 009h		;a83c
 	ld l,a			;a83e
-	push hl			;a83f
+	push hl			;a83f   ; y a salvo
 	call marca_para_apagar		;a840   ; el enemigo tambien revienta
 	pop hl			;a843
-	ld a,(hl)			;a844
+	ld a,(hl)			;a844   ; su clase
 	ld c,08bh		;a845
 	cp 007h		;a847   ; las clases de 7 a 0x0B suenan distinto
 	jr c,L_A84F		;a849
@@ -7693,17 +7693,17 @@ mira_los_disparos_contra_el_jefe:
 	ld a,(0e336h)		;a855   ; si no hay jefe, nada
 	and a			;a858
 	ret z			;a859
-	ld (0ebc0h),a		;a85a
+	ld (0ebc0h),a		;a85a   ; la marca del jefe
 	ld a,(0e327h)		;a85d   ; donde esta, menos 0x10
 	sub 010h		;a860
-	ld l,a			;a862
+	ld l,a			;a862   ; ese es el punto de comparacion
 	ld a,(0e329h)		;a863
 	sub 010h		;a866
 	ld h,a			;a868
-	ld de,0e100h		;a869
-	call cuantos_disparos		;a86c
+	ld de,0e100h		;a869   ; los disparos del primero
+	call cuantos_disparos		;a86c   ; cuatro con uno, seis con dos
 	ld a,(0e077h)		;a86f   ; los disparos del primero
-	rra			;a872
+	rra			;a872   ; el bit 0: le queda partida
 	jr nc,L_A87A		;a873
 	call recorre_los_disparos_del_jugador		;a875
 	and a			;a878
@@ -7730,14 +7730,14 @@ recorre_los_disparos_del_jugador:
 	ld a,(de)			;a897   ; su clase
 	ld c,a			;a898
 	dec a			;a899
-	add a,a			;a89a
+	add a,a			;a89a   ; por dos: la entrada de la tabla
 	push hl			;a89b
 	ld hl,0a906h		;a89c   ; el marco del jefe
-	call indexa_palabras		;a89f
+	call indexa_palabras		;a89f   ; la entrada que le toca
 	push hl			;a8a2
-	pop iy		;a8a3
+	pop iy		;a8a3   ; en IY
 	pop hl			;a8a5
-	inc e			;a8a6
+	inc e			;a8a6   ; tres bytes adelante: la posicion
 	inc e			;a8a7
 	inc e			;a8a8
 	ld a,(de)			;a8a9
@@ -7746,49 +7746,49 @@ recorre_los_disparos_del_jugador:
 	call cabe_en_vertical		;a8af   ; y el vertical
 	jr nc,L_A8C1		;a8b2
 	push bc			;a8b4
-	ld a,(0ebc0h)		;a8b5
+	ld a,(0ebc0h)		;a8b5   ; que jugador disparo
 	ld b,a			;a8b8
 	push hl			;a8b9
 	call le_dan_al_jefe		;a8ba
 	pop hl			;a8bd
 	pop bc			;a8be
-	and a			;a8bf
+	and a			;a8bf   ; si el jefe murio, se sale
 	ret nz			;a8c0
 L_A8C1:
-	ld a,003h		;a8c1
+	ld a,003h		;a8c1   ; tres bytes hasta el disparo siguiente
 L_A8C3:
 	add a,e			;a8c3
 	ld e,a			;a8c4
 	djnz recorre_los_disparos_del_jugador		;a8c5
-	xor a			;a8c7
+	xor a			;a8c7   ; y devuelve 0: el jefe sigue vivo
 	ret			;a8c8
 le_dan_al_jefe:
 	push ix		;a8c9
-	pop hl			;a8cb
+	pop hl			;a8cb   ; el hueco del disparo
 	call apaga_cuatro_sprites		;a8cc   ; el disparo se gasta
 	ld hl,0e335h		;a8cf   ; la vida del jefe
 	dec (hl)			;a8d2
 	jr z,L_A8DC		;a8d3   ; y al llegar a cero, se acabo
 	ld a,087h		;a8d5
 	call pide_un_sonido_si_se_juega		;a8d7
-	xor a			;a8da
+	xor a			;a8da   ; y devuelve 0
 	ret			;a8db
 L_A8DC:
-	push bc			;a8dc
+	push bc			;a8dc   ; quien disparo, a salvo
 	call marca_al_jefe_para_apagar		;a8dd   ; el jefe revienta
 	pop bc			;a8e0
-	dec c			;a8e1
+	dec c			;a8e1   ; con C a 3, van agarradas
 	dec c			;a8e2
 	dec c			;a8e3
 	ld a,b			;a8e4
 	ld bc,00100h		;a8e5   ; y da 100 puntos
 	jr z,L_A8F2		;a8e8
-	dec a			;a8ea
+	dec a			;a8ea   ; con C a 1
 	jr nz,L_A8F7		;a8eb
 	call suma_al_primero		;a8ed
 	jr L_A8FA		;a8f0
 L_A8F2:
-	push bc			;a8f2
+	push bc			;a8f2   ; los puntos, a salvo para el segundo reparto
 	call suma_al_primero		;a8f3
 	pop bc			;a8f6
 L_A8F7:
@@ -7798,7 +7798,7 @@ L_A8FA:
 	ld (0e05dh),a		;a8fb
 	ld a,02bh		;a8fe   ; con la del jefe muerto
 	call pide_un_sonido_si_se_juega		;a900
-	ld a,001h		;a903
+	ld a,001h		;a903   ; y devuelve 1
 	ret			;a905
 
 ; ----------------------------------------------------------------------
@@ -7830,7 +7830,7 @@ mira_las_naves_contra_el_jefe:
 	jr nc,L_A92B		;a916
 	call el_uno_tiene_bomba		;a918   ; y no puede estar muriendose
 	jr nz,L_A92B		;a91b
-	ld a,(0e097h)		;a91d
+	ld a,(0e097h)		;a91d   ; con la nave recien nacida no cuenta
 	and a			;a920
 	jr nz,L_A92B		;a921
 	call donde_esta_la_nave_uno		;a923
@@ -7855,17 +7855,17 @@ choca_con_el_jefe:
 	ld a,(de)			;a946
 	and a			;a947
 	ret z			;a948
-	ld a,e			;a949
+	ld a,e			;a949   ; quince bytes atras: la posicion del jefe
 	sub 00fh		;a94a
 	ld e,a			;a94c
-	ld a,(de)			;a94d
+	ld a,(de)			;a94d   ; su horizontal
 	inc e			;a94e
 	inc e			;a94f
 	add a,00fh		;a950   ; el marco: 0x1F horizontal
-	sub l			;a952
+	sub l			;a952   ; menos la de la nave
 	cp 01fh		;a953
 	ret nc			;a955
-	ld a,(de)			;a956
+	ld a,(de)			;a956   ; y su vertical
 	add a,009h		;a957   ; y 0x19 vertical
 	sub h			;a959
 	cp 019h		;a95a
@@ -7876,23 +7876,23 @@ choca_con_el_jefe:
 ; ----------------------------------------------------------------------
 se_muere_la_nave:
 	ld a,c			;a95d   ; el jugador que se muere
-	dec a			;a95e
+	dec a			;a95e   ; a que jugador
 	ld de,0e348h		;a95f   ; su bomba
 	ld hl,0e085h		;a962   ; y su cuenta de explosion
-	ld ix,0e08bh		;a965
+	ld ix,0e08bh		;a965   ; y su marca de bomba
 	jr z,L_A971		;a969
-	ld de,0e340h		;a96b
+	ld de,0e340h		;a96b   ; las del segundo, todas un byte mas alla
 	inc l			;a96e
 	inc ix		;a96f
 L_A971:
 	ld (hl),03ch		;a971   ; 0x3C cuadros de explosion
 	ex de,hl			;a973
 	call apaga_la_bomba		;a974   ; la bomba se pierde
-	ld (ix+000h),000h		;a977
+	ld (ix+000h),000h		;a977   ; y la marca de bomba, a cero
 	ld a,(0e078h)		;a97b   ; y se apunta que se esta muriendo
 	or c			;a97e
 	ld (0e078h),a		;a97f
-	ld a,c			;a982
+	ld a,c			;a982   ; solo el primer jugador
 	dec a			;a983
 	jr nz,L_A98A		;a984
 	xor a			;a986
@@ -7902,45 +7902,45 @@ L_A98A:
 	ld a,(hl)			;a98d
 	and 00fh		;a98e   ; se le quitan las armas
 	ld (hl),a			;a990
-	inc l			;a991
+	inc l			;a991   ; y las del otro tambien
 	ld a,(hl)			;a992
 	and 00fh		;a993
 	ld (hl),a			;a995
-	ld a,(0e077h)		;a996
+	ld a,(0e077h)		;a996   ; cuantos jugadores quedan
 	dec a			;a999   ; si queda algun jugador vivo
 	jr z,L_A9BB		;a99a
 	dec a			;a99c
 	jr z,L_A9BB		;a99d
 	ld a,(0e070h)		;a99f   ; o vidas
 	ld hl,0e073h		;a9a2
-	or (hl)			;a9a5
+	or (hl)			;a9a5   ; juntas
 	jr nz,L_A9B8		;a9a6
 	ld hl,0e078h		;a9a8
-	dec c			;a9ab
+	dec c			;a9ab   ; si murio el segundo
 	jr nz,L_A9B4		;a9ac
-	bit 1,(hl)		;a9ae
+	bit 1,(hl)		;a9ae   ; se mira el bit del primero
 	jr nz,L_A9BB		;a9b0
 	jr L_A9B8		;a9b2
 L_A9B4:
-	bit 0,(hl)		;a9b4
+	bit 0,(hl)		;a9b4   ; y al reves
 	jr nz,L_A9BB		;a9b6
 L_A9B8:
 	jp L_60A3		;a9b8   ; solo cambia la musica
 L_A9BB:
 	ld a,(0e070h)		;a9bb
-	ld hl,0e073h		;a9be
-	or (hl)			;a9c1
+	ld hl,0e073h		;a9be   ; las del otro
+	or (hl)			;a9c1   ; si queda alguna, sigue la partida
 	jr nz,L_A9B8		;a9c2
 	ld (0e05dh),a		;a9c4   ; y si no, se calla
 	ld a,031h		;a9c7   ; y suena el final
 	jp pide_un_sonido_si_se_juega		;a9c9
 mueve_los_grandes:
 	ld hl,0e3b0h		;a9cc   ; los cinco enemigos grandes
-	ld b,005h		;a9cf
+	ld b,005h		;a9cf   ; los cinco huecos
 L_A9D1:
 	push bc			;a9d1
 	push hl			;a9d2
-	ld a,(hl)			;a9d3
+	ld a,(hl)			;a9d3   ; la clase
 	and a			;a9d4   ; hueco vacio, se salta
 	jr z,L_AA12		;a9d5
 	inc l			;a9d7
@@ -7962,59 +7962,59 @@ L_A9D1:
 	jr c,L_AA0A		;a9f3
 	cp 007h		;a9f5   ; y las de 7 arriba
 	jr c,L_AA0F		;a9f7
-	jr L_AA12		;a9f9
+	jr L_AA12		;a9f9   ; y las demas no se mueven
 L_A9FB:
-	call el_grande_que_baja		;a9fb
+	call el_grande_que_baja		;a9fb   ; las tres primeras bajan y disparan
 	jr L_AA12		;a9fe
 L_AA00:
-	call el_grande_que_serpentea		;aa00
+	call el_grande_que_serpentea		;aa00   ; la 4 serpentea
 	jr L_AA12		;aa03
 L_AA05:
-	call el_grande_que_late		;aa05
+	call el_grande_que_late		;aa05   ; la 5 late
 	jr L_AA12		;aa08
 L_AA0A:
-	call el_grande_quieto		;aa0a
+	call el_grande_quieto		;aa0a   ; las 5 y 6 se quedan quietas
 	jr L_AA12		;aa0d
 L_AA0F:
-	call el_grande_que_se_apaga		;aa0f
+	call el_grande_que_se_apaga		;aa0f   ; y las de 7 arriba se estan apagando
 L_AA12:
 	pop hl			;aa12
 	pop bc			;aa13
 	ld de,00010h		;aa14   ; dieciseis bytes hasta el siguiente
 	add hl,de			;aa17
 	djnz L_A9D1		;aa18
-	ld de,0e3f0h		;aa1a
-	ld b,005h		;aa1d
+	ld de,0e3f0h		;aa1a   ; y ahora, a dibujarlos
+	ld b,005h		;aa1d   ; los cinco
 
 ; ----------------------------------------------------------------------
 ; LOS GRANDES SE DIBUJAN CON CASILLAS, NO CON SPRITES. Un enemigo grande no cabe en un sprite de 16x16, asi que se pinta escribiendo casillas en el buffer de la pantalla: 0xAA27 saca su guion de la tabla de 0xACCB, 0xAA41 convierte su fila en un desplazamiento -cinco `add hl,hl`, o sea por 32- y los cuatro `ldi` escriben dos casillas arriba y dos 0x1E mas alla, o sea justo debajo. Cuatro casillas por cuadro.
 ; ----------------------------------------------------------------------
 coloca_los_grandes:
-	ld a,(de)			;aa1f
+	ld a,(de)			;aa1f   ; la clase
 	dec a			;aa20   ; solo la clase 1 se dibuja asi
 	jr nz,L_AA61		;aa21
 	push de			;aa23
 	inc e			;aa24
-	ld a,(de)			;aa25
+	ld a,(de)			;aa25   ; el dibujo que le toca
 	dec a			;aa26
 	ld hl,0accbh		;aa27   ; la tabla de guiones
-	call indexa_palabras		;aa2a
-	ld a,(hl)			;aa2d
+	call indexa_palabras		;aa2a   ; la entrada de la tabla
+	ld a,(hl)			;aa2d   ; y el guion que sale de ella
 	inc hl			;aa2e
 	ld h,(hl)			;aa2f
 	ld l,a			;aa30
 	inc e			;aa31
 	inc e			;aa32
 	inc e			;aa33
-	ld a,(de)			;aa34
+	ld a,(de)			;aa34   ; el paso
 	dec a			;aa35
-	add a,a			;aa36
+	add a,a			;aa36   ; por dos
 	call indexa_palabras		;aa37   ; el paso dentro del guion
 	ex de,hl			;aa3a
-	dec l			;aa3b
+	dec l			;aa3b   ; la columna
 	ld c,(hl)			;aa3c
 	dec l			;aa3d
-	ld l,(hl)			;aa3e
+	ld l,(hl)			;aa3e   ; y la fila
 	ld h,000h		;aa3f
 	add hl,hl			;aa41   ; la fila, por 32
 	add hl,hl			;aa42
@@ -8026,9 +8026,9 @@ coloca_los_grandes:
 	add hl,de			;aa4a
 	pop de			;aa4b
 	ex de,hl			;aa4c
-	ld a,c			;aa4d
+	ld a,c			;aa4d   ; mas la columna
 	call suma_a_a_de		;aa4e
-	ld c,0ffh		;aa51
+	ld c,0ffh		;aa51   ; sin mascara
 	ldi		;aa53   ; dos casillas arriba
 	ldi		;aa55
 	ld a,01eh		;aa57   ; y una fila mas abajo
@@ -8038,43 +8038,43 @@ coloca_los_grandes:
 	pop de			;aa60
 L_AA61:
 	ld a,e			;aa61
-	sub 010h		;aa62
+	sub 010h		;aa62   ; 0x10 bytes atras: el grande anterior
 	ld e,a			;aa64
 	djnz coloca_los_grandes		;aa65
 	ret			;aa67
 saca_las_oleadas:
 	ld a,(0e3a1h)		;aa68   ; mientras no toque esperar
-	and a			;aa6b
+	and a			;aa6b   ; con espera pendiente, nada
 	ret nz			;aa6c
-	call saca_una_oleada		;aa6d
+	call saca_una_oleada		;aa6d   ; y mientras no haya, se sacan seguidas
 	jr saca_las_oleadas		;aa70
 saca_una_oleada:
 	ld hl,0e3a0h		;aa72   ; la oleada siguiente
-	inc (hl)			;aa75
+	inc (hl)			;aa75   ; uno mas
 	ld a,(hl)			;aa76
 	ld c,a			;aa77
 	ld hl,0abd3h		;aa78   ; lo que hay que esperar hasta la de despues
-	call suma_a_a_hl		;aa7b
+	call suma_a_a_hl		;aa7b   ; la tabla de esperas
 	ld a,(hl)			;aa7e
 	ld (0e3a1h),a		;aa7f
 	ld de,0ac47h		;aa82   ; y la formacion que toca
 	ld l,c			;aa85
 	ld h,000h		;aa86
-	add hl,de			;aa88
+	add hl,de			;aa88   ; la entrada que le toca
 	ld a,(hl)			;aa89
 	and a			;aa8a   ; con cero, no hay oleada
 	ret z			;aa8b
 	and 0f0h		;aa8c   ; el nibble alto: la clase
-	rra			;aa8e
+	rra			;aa8e   ; por dos, y luego se corre a la derecha
 	rra			;aa8f
 	rra			;aa90
-	inc a			;aa91
+	inc a			;aa91   ; mas uno: la clase de verdad
 	ld c,a			;aa92
-	ld a,(hl)			;aa93
+	ld a,(hl)			;aa93   ; el mismo byte otra vez
 	and 008h		;aa94   ; el bit 3 pide segunda vuelta
 	jr z,L_AA9E		;aa96
 	ld a,(0e076h)		;aa98   ; y en la primera no sale
-	and 0f0h		;aa9b
+	and 0f0h		;aa9b   ; el nibble alto del escenario dice la vuelta
 	ret z			;aa9d
 L_AA9E:
 	ld a,(hl)			;aa9e
@@ -8100,43 +8100,43 @@ L_AAB1:
 	ret			;aabb
 monta_el_grande:
 	ld b,c			;aabc   ; la clase, en B
-	ld c,0ffh		;aabd
-	ld a,001h		;aabf
+	ld c,0ffh		;aabd   ; sin recorrido todavia
+	ld a,001h		;aabf   ; el hueco, ocupado
 	ld (de),a			;aac1   ; y ahi nace
 	inc e			;aac2
 	ldi		;aac3   ; con su recorrido
-	xor a			;aac5
+	xor a			;aac5   ; sin paso
 	ld (de),a			;aac6
 	inc e			;aac7
 	ld a,b			;aac8
 	ld (de),a			;aac9   ; y su clase
 	inc e			;aaca
-	ld a,001h		;aacb
+	ld a,001h		;aacb   ; y en marcha
 	ld (de),a			;aacd
 	inc e			;aace
-	inc e			;aacf
-	ld a,b			;aad0
+	inc e			;aacf   ; dos bytes adelante
+	ld a,b			;aad0   ; la clase otra vez
 	rla			;aad1   ; por ocho: el dibujo
 	rla			;aad2
 	rla			;aad3
 	ld (de),a			;aad4
-	inc e			;aad5
+	inc e			;aad5   ; dos bytes adelante
 	inc e			;aad6
 	ldi		;aad7   ; y donde nace
-	ldi		;aad9
+	ldi		;aad9   ; la vertical
 	ret			;aadb
 el_grande_que_serpentea:
 	ld a,004h		;aadc   ; la posicion
-	add a,l			;aade
+	add a,l			;aade   ; cuatro bytes adelante
 	ld l,a			;aadf
 	ld a,(hl)			;aae0
 	add a,009h		;aae1   ; nueve pixeles a la derecha
-	ld e,a			;aae3
+	ld e,a			;aae3   ; la horizontal, en E
 	inc l			;aae4
 	ld a,(hl)			;aae5
 	add a,006h		;aae6   ; y seis mas abajo
-	ld d,a			;aae8
-	inc l			;aae9
+	ld d,a			;aae8   ; y la vertical, en D
+	inc l			;aae9   ; tres mas: la cuenta
 	inc l			;aaea
 	inc l			;aaeb
 	dec (hl)			;aaec   ; la cuenta del recorrido
@@ -8153,19 +8153,19 @@ el_grande_que_serpentea:
 	jr z,el_grande_que_dispara		;ab00
 	and a			;ab02
 	jr z,se_para_el_grande		;ab03   ; acabada la cuenta, se para
-	jr avanza_el_grande		;ab05
+	jr avanza_el_grande		;ab05   ; y si no, sigue como iba
 el_grande_que_baja:
 	ld a,004h		;ab07
-	add a,l			;ab09
+	add a,l			;ab09   ; cuatro bytes adelante
 	ld l,a			;ab0a
 	ld a,(hl)			;ab0b
 	add a,e			;ab0c   ; su velocidad
 	ld e,a			;ab0d
 	inc l			;ab0e
 	ld a,(hl)			;ab0f
-	add a,d			;ab10
+	add a,d			;ab10   ; y la vertical igual
 	ld d,a			;ab11
-	inc l			;ab12
+	inc l			;ab12   ; tres mas: la cuenta
 	inc l			;ab13
 	inc l			;ab14
 	dec (hl)			;ab15   ; y su cuenta
@@ -8175,25 +8175,25 @@ el_grande_que_baja:
 	jr z,el_grande_que_dispara		;ab1b
 avanza_el_grande:
 	ld a,l			;ab1d
-	sub 007h		;ab1e
+	sub 007h		;ab1e   ; siete bytes atras: el bloque
 	ld l,a			;ab20
 	jp pon_el_dibujo_del_grande		;ab21
 se_para_el_grande:
 	dec l			;ab24   ; la clase vuelve a su valor de reposo
-	ld a,(hl)			;ab25
+	ld a,(hl)			;ab25   ; la clase original
 	inc l			;ab26
-	ld (hl),a			;ab27
+	ld (hl),a			;ab27   ; al byte del paso
 el_grande_de_paso_uno:
 	ld a,l			;ab28
-	sub 005h		;ab29
+	sub 005h		;ab29   ; cinco bytes atras
 	ld l,a			;ab2b
 	ld (hl),001h		;ab2c   ; paso uno
-	dec l			;ab2e
+	dec l			;ab2e   ; dos atras: la posicion
 	dec l			;ab2f
 	jr pon_el_dibujo_del_grande		;ab30
 el_grande_que_dispara:
 	ld a,l			;ab32
-	sub 005h		;ab33
+	sub 005h		;ab33   ; cinco bytes atras
 	ld l,a			;ab35
 	ld (hl),002h		;ab36   ; paso dos
 	dec l			;ab38
@@ -8201,14 +8201,14 @@ el_grande_que_dispara:
 	call pon_el_dibujo_del_grande		;ab3a
 	jp busca_hueco_de_disparo		;ab3d   ; y suelta un disparo
 el_grande_que_late:
-	inc l			;ab40
+	inc l			;ab40   ; tres bytes adelante
 	inc l			;ab41
 	inc l			;ab42
 	ld c,(hl)			;ab43   ; la clase
-	inc l			;ab44
+	inc l			;ab44   ; tres mas: la cuenta
 	inc l			;ab45
 	inc l			;ab46
-	dec c			;ab47
+	dec c			;ab47   ; solo la clase 1 late
 	jr nz,L_AB53		;ab48
 	dec (hl)			;ab4a   ; su cuenta
 	ret nz			;ab4b
@@ -8216,13 +8216,13 @@ el_grande_que_late:
 	call pide_un_sonido_si_se_juega		;ab4e
 	ld (hl),011h		;ab51   ; y 0x11 cuadros de latido
 L_AB53:
-	dec (hl)			;ab53
+	dec (hl)			;ab53   ; la cuenta del latido
 	jr z,L_AB66		;ab54
 	ld a,(hl)			;ab56
 	and 004h		;ab57   ; el bit 2: alterna los dos dibujos
-	ld c,002h		;ab59
+	ld c,002h		;ab59   ; con el dibujo 2
 	jr nz,L_AB5E		;ab5b
-	inc c			;ab5d
+	inc c			;ab5d   ; o el 3
 L_AB5E:
 	dec l			;ab5e   ; el paso, tres bytes atras
 	dec l			;ab5f
@@ -8247,27 +8247,27 @@ L_AB66:
 	ld c,009h		;ab80
 L_AB82:
 	ld a,l			;ab82   ; seis bytes atras: la clase
-	sub 006h		;ab83
+	sub 006h		;ab83   ; seis bytes atras
 	ld l,a			;ab85
 	ld (hl),c			;ab86   ; se le cambia
-	inc l			;ab87
+	inc l			;ab87   ; tres bytes adelante
 	inc l			;ab88
 	inc l			;ab89
 	ld (hl),001h		;ab8a   ; y se le da un paso
 	ld a,l			;ab8c
-	add a,004h		;ab8d
+	add a,004h		;ab8d   ; cuatro mas: las velocidades
 	ld l,a			;ab8f
 	xor a			;ab90   ; con las dos velocidades a cero
 	ld (hl),a			;ab91
-	inc l			;ab92
+	inc l			;ab92   ; y la otra
 	ld (hl),a			;ab93
 	ld a,l			;ab94
-	sub 007h		;ab95
+	sub 007h		;ab95   ; siete atras: la clase
 	ld l,a			;ab97
 	jr pon_el_dibujo_del_grande		;ab98
 elige_el_grande_final:
 	call es_el_segundo_jugador		;ab9a   ; con dos jugadores
-	ld c,006h		;ab9d
+	ld c,006h		;ab9d   ; el grande 6
 	jr nz,L_AB82		;ab9f
 	ld a,(0e083h)		;aba1   ; o con armas puestas
 	and 00ah		;aba4
@@ -8693,30 +8693,30 @@ acaba_la_fase:
 	jr z,L_ADED		;adea
 	inc a			;adec
 L_ADED:
-	ld (ix+00ah),a		;aded
+	ld (ix+00ah),a		;aded   ; el dibujo que toca
 	dec (ix+014h)		;adf0   ; la cuenta del jefe
-	jr nz,L_AE31		;adf3
+	jr nz,L_AE31		;adf3   ; mientras dure, nada
 	ld hl,0e155h		;adf5   ; y al acabarse, la marca del jefe se apaga
-	xor a			;adf8
+	xor a			;adf8   ; se borra el estado
 	ld (hl),a			;adf9
-	ld de,0e156h		;adfa
-	ld c,00ah		;adfd
+	ld de,0e156h		;adfa   ; y de ahi arrastra el resto
+	ld c,00ah		;adfd   ; once bytes en total
 	ldir		;adff
-	ld (0e151h),a		;ae01
+	ld (0e151h),a		;ae01   ; la marca de jefe en pantalla
 	ld hl,0e321h		;ae04
-	ld (hl),a			;ae07
+	ld (hl),a			;ae07   ; su estado
 	inc l			;ae08
 	inc l			;ae09
-	ld (hl),a			;ae0a
+	ld (hl),a			;ae0a   ; su paso
 	inc l			;ae0b
 	ld (hl),a			;ae0c
 	inc l			;ae0d
 	call borra_cuatro		;ae0e   ; se limpian sus disparos
 	ld (ix+007h),0e0h		;ae11   ; y su sprite se aparta
-	inc a			;ae15
+	inc a			;ae15   ; uno
 	ld (0e07ch),a		;ae16   ; la cuenta del final de fase
 	ld a,(0e07dh)		;ae19   ; de la fase 0x10 en adelante
-	cp 010h		;ae1c
+	cp 010h		;ae1c   ; la mitad del recorrido
 	ld a,030h		;ae1e   ; la espera baja a la mitad
 	jr c,L_AE23		;ae20
 	rrca			;ae22
@@ -8733,42 +8733,42 @@ saca_los_disparos_del_jefe:
 	and 002h		;ae3a   ; el bit 1 del estado del jefe
 	ret z			;ae3c
 	ld de,0e158h		;ae3d   ; cuantos disparos lleva
-	ld b,007h		;ae40
+	ld b,007h		;ae40   ; siete huecos
 	ld a,(de)			;ae42
 	cp b			;ae43   ; con siete ya no caben mas
 	jr nc,mueve_los_disparos_del_jefe		;ae44
-	ld ix,0e160h		;ae46
-	ld hl,0e157h		;ae4a
+	ld ix,0e160h		;ae46   ; la tabla de disparos del jefe
+	ld hl,0e157h		;ae4a   ; la cuenta que decide cuando sale otro
 	inc (hl)			;ae4d   ; la cuenta del destello
 	push hl			;ae4e
-	call la_fase_de_uno_a_cinco		;ae4f
+	call la_fase_de_uno_a_cinco		;ae4f   ; la fase, de 1 a 5
 	ld hl,0ae89h		;ae52   ; y lo que dura cada uno
-	call suma_a_a_hl		;ae55
-	ld b,(hl)			;ae58
+	call suma_a_a_hl		;ae55   ; se indexa por fase
+	ld b,(hl)			;ae58   ; la espera de esta fase
 	pop hl			;ae59
 	ld a,(hl)			;ae5a
-	sub b			;ae5b
+	sub b			;ae5b   ; todavia no toca
 	jr nz,mueve_los_disparos_del_jefe		;ae5c
-	ld (hl),a			;ae5e
-	ld h,a			;ae5f
+	ld (hl),a			;ae5e   ; la cuenta vuelve a cero
+	ld h,a			;ae5f   ; y H tambien
 	ld a,(de)			;ae60   ; el hueco que toca, por 0x20
 	ld l,a			;ae61
-	add hl,hl			;ae62
-	add hl,hl			;ae63
-	add hl,hl			;ae64
-	add hl,hl			;ae65
-	add hl,hl			;ae66
+	add hl,hl			;ae62   ; por dos
+	add hl,hl			;ae63   ; por cuatro
+	add hl,hl			;ae64   ; por ocho
+	add hl,hl			;ae65   ; por dieciseis
+	add hl,hl			;ae66   ; por treinta y dos
 	ex de,hl			;ae67
-	add ix,de		;ae68
+	add ix,de		;ae68   ; al hueco que toca
 	ld (ix+001h),000h		;ae6a   ; y ahi nace
-	inc (hl)			;ae6e
+	inc (hl)			;ae6e   ; un disparo mas en el aire
 	call pon_la_espera_de_disparo		;ae6f
 mueve_los_disparos_del_jefe:
 	ld b,007h		;ae72   ; los siete disparos
 	ld ix,0e160h		;ae74
 L_AE78:
 	push bc			;ae78
-	ld a,(ix+001h)		;ae79
+	ld a,(ix+001h)		;ae79   ; el segundo byte dice si vuela
 	inc a			;ae7c   ; hueco vacio, se salta
 	call nz,mueve_un_disparo_del_jefe		;ae7d
 	ld de,00020h		;ae80
@@ -8892,19 +8892,19 @@ L_AF22:
 	ret			;af30
 L_AF31:
 	call apunta_a_la_nave		;af31   ; y se apunta
-	ld a,(ix+001h)		;af34
+	ld a,(ix+001h)		;af34   ; el segundo byte: si esta vivo
 	and a			;af37
 	ret nz			;af38
 	ld bc,06c0ah		;af39   ; con su dibujo
 	call pon_el_dibujo		;af3c
-	ld (ix+000h),a		;af3f
+	ld (ix+000h),a		;af3f   ; y el hueco queda ocupado
 	call apunta_y_avanza		;af42
 	call al_paso_siguiente		;af45
-	ld a,(0e076h)		;af48
+	ld a,(0e076h)		;af48   ; la fase
 	cp 003h		;af4b   ; en las fases 1 y 2
 	ret nc			;af4d
 	ld a,(ix+003h)		;af4e   ; los enemigos con el bit 7 se apagan al disparar
-	rla			;af51
+	rla			;af51   ; el bit 7 al acarreo
 	ret nc			;af52
 	jp apaga_el_enemigo		;af53
 apunta_a_la_nave:
@@ -9032,27 +9032,27 @@ al_paso_siguiente:		; Pone el contador a cero y sube (ix+1)
 	inc (ix+001h)		;b026   ; y al paso siguiente
 	ret			;b029
 comportamiento_11:
-	ld bc,0b008h		;b02a
+	ld bc,0b008h		;b02a   ; los dos codigos del dibujo
 	call pon_el_dibujo		;b02d   ; el dibujo
-	ld b,(ix+001h)		;b030
-	djnz L_B04B		;b033
+	ld b,(ix+001h)		;b030   ; el paso
+	djnz L_B04B		;b033   ; paso 2 para abajo
 	ld a,(ix+011h)		;b035   ; el bit 0 de sus banderas
 	rra			;b038
-	ld b,008h		;b039
-	call nc,niega_bc		;b03b
+	ld b,008h		;b039   ; ocho pixeles a un lado
+	call nc,niega_bc		;b03b   ; o al otro
 	ld a,(ix+013h)		;b03e   ; lo que le falta para la nave
-	add a,b			;b041
+	add a,b			;b041   ; con ese desvio
 	sub (ix+009h)		;b042
 	cp 004h		;b045   ; con cuatro pixeles de margen
-	ret nc			;b047
-	jp L_B5C8		;b048
+	ret nc			;b047   ; fuera del margen, todavia no
+	jp L_B5C8		;b048   ; y dentro, dispara
 L_B04B:
-	djnz L_B067		;b04b
+	djnz L_B067		;b04b   ; paso 3 para abajo
 	ld a,(ix+011h)		;b04d   ; el bit 0 de sus banderas
 	and a			;b050
 	ld b,0fdh		;b051   ; y va a un lado o al otro
 	call nz,niega_bc		;b053
-	ld (ix+005h),b		;b056
+	ld (ix+005h),b		;b056   ; esa es su velocidad horizontal
 	xor a			;b059   ; sin velocidad vertical: se queda a esa altura
 	ld h,a			;b05a
 	ld l,a			;b05b
@@ -9062,7 +9062,7 @@ L_B04B:
 	ret nz			;b064
 	jr al_paso_siguiente		;b065
 L_B067:
-	dec b			;b067
+	dec b			;b067   ; paso 3
 	ret nz			;b068
 	call baja_veinte		;b069   ; se lanza
 	ld a,(ix+010h)		;b06c
@@ -9071,53 +9071,53 @@ L_B067:
 L_B072:
 	jr al_paso_siguiente		;b072
 comportamiento_13:
-	ld bc,0c0c4h		;b074
+	ld bc,0c0c4h		;b074   ; los dos dibujos, alternando cada ocho
 	ld e,00dh		;b077
 	call alterna_cada_ocho		;b079
 L_B07C:
 	ld b,(ix+001h)		;b07c   ; el paso
-	djnz L_B08D		;b07f
+	djnz L_B08D		;b07f   ; paso 2 para abajo
 	ld a,(ix+007h)		;b081   ; y a la altura que le toca
-	add a,028h		;b084
-	sub (ix+012h)		;b086
-	ret c			;b089
-	jp L_B5C8		;b08a
+	add a,028h		;b084   ; 0x28 pixeles de adelanto
+	sub (ix+012h)		;b086   ; contra la altura de destino
+	ret c			;b089   ; antes de llegar, nada
+	jp L_B5C8		;b08a   ; y al llegar, dispara
 L_B08D:
 	dec b			;b08d   ; segundo paso
 	ret nz			;b08e
 	ld de,00030h		;b08f   ; baja 0x30
 	call baja_lo_que_diga_de		;b092
-	ld a,(ix+010h)		;b095
-	cp 030h		;b098
+	ld a,(ix+010h)		;b095   ; su contador
+	cp 030h		;b098   ; y en el cuadro 0x30, al paso siguiente
 	ret nz			;b09a
 	jr L_B072		;b09b
 comportamiento_14:
 	ld bc,0bc03h		;b09d   ; el dibujo
 	call pon_el_dibujo		;b0a0
-	ld b,(ix+001h)		;b0a3
-	djnz L_B0B9		;b0a6
+	ld b,(ix+001h)		;b0a3   ; el paso
+	djnz L_B0B9		;b0a6   ; paso 2 para abajo
 	ld a,(ix+007h)		;b0a8   ; por debajo de la fila 0x30
-	cp 030h		;b0ab
+	cp 030h		;b0ab   ; antes de la fila 0x30 no hace nada
 	ret c			;b0ad
 	ld a,(ix+013h)		;b0ae   ; y con la nave a menos de ocho pixeles
-	sub (ix+009h)		;b0b1
+	sub (ix+009h)		;b0b1   ; menos donde esta
 	cp 008h		;b0b4
-	ret nc			;b0b6
+	ret nc			;b0b6   ; fuera de esos ocho, tampoco
 L_B0B7:
 	jr L_B072		;b0b7
 L_B0B9:
 	dec b			;b0b9   ; segundo paso
 	ret nz			;b0ba
 	ld a,(ix+012h)		;b0bb   ; el bit 0 de sus banderas
-	rra			;b0be
-	ld bc,00030h		;b0bf
+	rra			;b0be   ; el bit 0 de su segunda bandera
+	ld bc,00030h		;b0bf   ; 0x30 de paso
 	jr nc,L_B0C9		;b0c2
-	call va_a_la_derecha_deprisa		;b0c4
+	call va_a_la_derecha_deprisa		;b0c4   ; a la derecha, deprisa
 	jr L_B0CE		;b0c7
 L_B0C9:
 	ld e,c			;b0c9
 	ld d,b			;b0ca
-	call va_a_la_izquierda		;b0cb
+	call va_a_la_izquierda		;b0cb   ; o a la izquierda
 L_B0CE:
 	ld de,00030h		;b0ce   ; baja 0x30
 	call baja_lo_que_diga_de		;b0d1
@@ -9128,18 +9128,18 @@ L_B0CE:
 comportamiento_29:
 	ld bc,0c803h		;b0dc
 	call pon_el_dibujo		;b0df   ; el dibujo
-	ld b,(ix+001h)		;b0e2
-	djnz L_B105		;b0e5
+	ld b,(ix+001h)		;b0e2   ; el paso
+	djnz L_B105		;b0e5   ; paso 2 para abajo
 	call acerca_en_horizontal		;b0e7   ; se acerca en horizontal
 	ld a,(ix+007h)		;b0ea   ; por debajo del borde
-	cp 0e0h		;b0ed
+	cp 0e0h		;b0ed   ; por debajo de 0xE0 no cuenta
 	ret nc			;b0ef
 	cp 038h		;b0f0   ; o por encima de la fila 0x38
 	ret c			;b0f2
 	ld de,00140h		;b0f3   ; sale hacia abajo
-	ld bc,00400h		;b0f6
+	ld bc,00400h		;b0f6   ; con velocidad 0x0140 y 0x0400
 	ld a,(ix+009h)		;b0f9   ; por el lado que le toque
-	rla			;b0fc
+	rla			;b0fc   ; el bit 7 dice de que lado esta
 	call c,niega_bc		;b0fd
 	call pon_las_dos_velocidades		;b100
 L_B103:
@@ -9148,120 +9148,120 @@ L_B105:
 	jp acerca_en_horizontal		;b105   ; y en el segundo paso, solo persigue
 jefe_de_la_fase_1:
 	ld b,(ix+001h)		;b108
-	djnz L_B11B		;b10b
+	djnz L_B11B		;b10b   ; paso 2 para abajo
 L_B10D:
-	inc (ix+007h)		;b10d
+	inc (ix+007h)		;b10d   ; el jefe baja un pixel por cuadro
 	ld a,(ix+007h)		;b110
-	cp 024h		;b113
-	call z,al_paso_siguiente		;b115
-	jp coloca_al_jefe		;b118
+	cp 024h		;b113   ; hasta la fila 0x24
+	call z,al_paso_siguiente		;b115   ; y ahi pasa al paso siguiente
+	jp coloca_al_jefe		;b118   ; y se dibuja
 L_B11B:
-	djnz L_B13A		;b11b
-	ld de,00018h		;b11d
+	djnz L_B13A		;b11b   ; paso 3 para abajo
+	ld de,00018h		;b11d   ; velocidad de entrada 0x0018 y 0x0300
 	ld bc,00300h		;b120
 	call pon_las_dos_velocidades		;b123
 L_B126:
-	ld de,03480h		;b126
+	ld de,03480h		;b126   ; y su destino, la fila 0x34 columna 0x80
 pon_el_destino_del_jefe:
 	ld (ix+00ch),d		;b129   ; a donde va el jefe
-	ld (ix+00dh),e		;b12c
+	ld (ix+00dh),e		;b12c   ; el destino horizontal
 	ld hl,0e155h		;b12f   ; y la marca de que dispara
 	set 1,(hl)		;b132
-	ld (ix+016h),001h		;b134
+	ld (ix+016h),001h		;b134   ; y se pone a repartir disparos
 	jr L_B103		;b138
 L_B13A:
-	djnz L_B14D		;b13a
+	djnz L_B14D		;b13a   ; paso 3 para abajo
 	call acerca_en_horizontal		;b13c
-	ld c,002h		;b13f
+	ld c,002h		;b13f   ; con la vertical dividida entre cuatro: mas suave
 	call acerca_en_vertical		;b141
 L_B144:
-	call mueve_uno		;b144
-	call coloca_al_jefe		;b147
-	jp saca_los_disparos_del_jefe		;b14a
+	call mueve_uno		;b144   ; se mueve
+	call coloca_al_jefe		;b147   ; se dibuja
+	jp saca_los_disparos_del_jefe		;b14a   ; y suelta sus disparos
 L_B14D:
-	ld bc,0e080h		;b14d
+	ld bc,0e080h		;b14d   ; en el ultimo paso se aparta a la esquina
 	call pon_la_posicion		;b150
 L_B153:
 	jr L_B103		;b153
 comportamiento_12:
-	ld bc,0b4b8h		;b155
+	ld bc,0b4b8h		;b155   ; los dos dibujos, alternando cada cuatro
 	ld e,00fh		;b158
 	jp alterna_cada_cuatro		;b15a
 comportamiento_8:		; Tambien es disparo del jefe de la fase 1
 	ld (ix+000h),009h		;b15d
-	ld b,(ix+001h)		;b161
-	djnz L_B19D		;b164
+	ld b,(ix+001h)		;b161   ; el paso
+	djnz L_B19D		;b164   ; paso 2 para abajo
 apunta_al_jefe:
 	ld a,(0e327h)		;b166   ; donde esta el jefe
 	sub 008h		;b169   ; ocho pixeles arriba
-	ld (ix+00ch),a		;b16b
+	ld (ix+00ch),a		;b16b   ; el destino vertical
 	ld a,(0e329h)		;b16e
-	sub 008h		;b171
+	sub 008h		;b171   ; y ocho a la izquierda
 	ld (ix+00dh),a		;b173
 	ld (ix+00bh),00fh		;b176   ; el disparo, en blanco
-	ld (ix+016h),001h		;b17a
+	ld (ix+016h),001h		;b17a   ; y se pone a moverse
 	ld de,00a03h		;b17e   ; con velocidad 0x0A03
-	call velocidad_por_el_angulo		;b181
-	ld a,(0e07eh)		;b184
+	call velocidad_por_el_angulo		;b181   ; el rumbo se convierte en posicion
+	ld a,(0e07eh)		;b184   ; la vuelta
 	and a			;b187
 	ld b,01fh		;b188
 	jr z,L_B18E		;b18a
-	ld b,00fh		;b18c
+	ld b,00fh		;b18c   ; en la segunda y siguientes, el doble de a menudo
 L_B18E:
 	inc (ix+00fh)		;b18e   ; la cuenta del disparo
-	ld a,(ix+00fh)		;b191
+	ld a,(ix+00fh)		;b191   ; la cuenta
 	and b			;b194   ; y cada 0x1F -o 0x0F- cuadros, uno
-	push ix		;b195
+	push ix		;b195   ; el bloque, a salvo del `call`
 	call z,dispara_el_enemigo		;b197
 	pop ix		;b19a
 	ret			;b19c
 L_B19D:
-	ld (ix+00ah),0e0h		;b19d
+	ld (ix+00ah),0e0h		;b19d   ; y en el ultimo paso, el sprite fuera
 	jr L_B153		;b1a1
 comportamiento_16:
 	ld bc,0d0d4h		;b1a3   ; el dibujo, alternando cada cuatro
 	ld e,00fh		;b1a6
-	call pon_el_dibujo_y_el_paso		;b1a8
-	djnz L_B1B8		;b1ab
-	ld a,(ix+007h)		;b1ad
-	sub 020h		;b1b0
+	call pon_el_dibujo_y_el_paso		;b1a8   ; y el paso, en B
+	djnz L_B1B8		;b1ab   ; paso 2 para abajo
+	ld a,(ix+007h)		;b1ad   ; la vertical
+	sub 020h		;b1b0   ; contra la fila 0x20
 	cp 008h		;b1b2
-	ret nc			;b1b4
+	ret nc			;b1b4   ; fuera de esos ocho pixeles, nada
 	jp L_B5C8		;b1b5
 L_B1B8:
-	djnz L_B1C8		;b1b8
+	djnz L_B1C8		;b1b8   ; paso 3 para abajo
 cambia_el_sentido_vertical:
 	ld l,(ix+002h)		;b1ba
-	ld h,(ix+003h)		;b1bd
-	call niega_hl		;b1c0
+	ld h,(ix+003h)		;b1bd   ; la velocidad vertical
+	call niega_hl		;b1c0   ; cambiada de signo: sube
 	call pon_la_vertical		;b1c3
 	jr L_B1E3		;b1c6
 L_B1C8:
 	dec b			;b1c8   ; tercer paso: baja 0x68
 	ret nz			;b1c9
 	ld de,00068h		;b1ca
-	call suma_a_la_vertical		;b1cd
+	call suma_a_la_vertical		;b1cd   ; se le suma de golpe
 	ld bc,0000ch		;b1d0   ; y se va de lado
 	ld a,(ix+011h)		;b1d3
-	rra			;b1d6
+	rra			;b1d6   ; al lado que le toque
 	call c,niega_bc		;b1d7
 	call suma_a_la_horizontal		;b1da
-	ld a,(ix+010h)		;b1dd
-	cp 018h		;b1e0
+	ld a,(ix+010h)		;b1dd   ; su contador
+	cp 018h		;b1e0   ; y a los 0x18 cuadros, al paso siguiente
 	ret c			;b1e2
 L_B1E3:
 	jp al_paso_siguiente		;b1e3
 comportamiento_25:
-	ld bc,0bc07h		;b1e6
+	ld bc,0bc07h		;b1e6   ; los dos dibujos
 	ld a,(ix+001h)		;b1e9
-	cp 002h		;b1ec
+	cp 002h		;b1ec   ; en el paso 2
 	jr nz,L_B1F3		;b1ee
-	ld bc,0c00fh		;b1f0
+	ld bc,0c00fh		;b1f0   ; cambia a otro par
 L_B1F3:
 	call pon_el_dibujo		;b1f3
 L_B1F6:
 	ld b,(ix+001h)		;b1f6
-	dec b			;b1f9
+	dec b			;b1f9   ; solo hace algo en el paso 1
 	ret nz			;b1fa
 L_B1FB:
 	ld a,(ix+012h)		;b1fb   ; donde quiere estar
@@ -9269,115 +9269,115 @@ L_B1FB:
 	sub b			;b201
 	cp 008h		;b202   ; con ocho pixeles de margen
 	ret nc			;b204
-	xor a			;b205
+	xor a			;b205   ; se para en seco
 	ld h,a			;b206
 	ld l,a			;b207
 	call pon_la_horizontal		;b208
-	call cambia_el_sentido_vertical		;b20b
+	call cambia_el_sentido_vertical		;b20b   ; da la vuelta en vertical
 	jp dispara_el_enemigo		;b20e
 comportamiento_18:
 	ld bc,0b4b8h		;b211   ; el dibujo, alternando cada cuatro
 	ld e,003h		;b214
-	call pon_el_dibujo_y_el_paso		;b216
-	djnz L_B22B		;b219
+	call pon_el_dibujo_y_el_paso		;b216   ; el dibujo y el paso
+	djnz L_B22B		;b219   ; paso 2 para abajo
 	ld a,(ix+009h)		;b21b
-	sub (ix+013h)		;b21e
-	cp 008h		;b221
+	sub (ix+013h)		;b21e   ; menos el destino
+	cp 008h		;b221   ; con ocho pixeles de margen, se para
 	jr c,L_B1E3		;b223
-	ld de,0ffd0h		;b225
-	jp suma_a_la_vertical		;b228
+	ld de,0ffd0h		;b225   ; y si no, sube 0x30
+	jp suma_a_la_vertical		;b228   ; de golpe
 L_B22B:
-	djnz L_B238		;b22b
-	ld de,00000h		;b22d
+	djnz L_B238		;b22b   ; paso 3 para abajo
+	ld de,00000h		;b22d   ; se para en vertical
 	ld bc,00300h		;b230
-	call pon_las_dos_velocidades		;b233
+	call pon_las_dos_velocidades		;b233   ; y se va de lado
 L_B236:
 	jr L_B1E3		;b236
 L_B238:
-	ld de,00040h		;b238
-	call suma_a_la_vertical		;b23b
-	ld bc,0ffd0h		;b23e
+	ld de,00040h		;b238   ; luego baja 0x40
+	call suma_a_la_vertical		;b23b   ; de golpe
+	ld bc,0ffd0h		;b23e   ; y se va hacia la izquierda
 	jp suma_a_la_horizontal		;b241
 comportamiento_3:
 	ld bc,0c4c8h		;b244   ; el dibujo, alternando cada cuatro
 	ld e,00fh		;b247
 	call alterna_cada_cuatro		;b249
-	ld b,(ix+001h)		;b24c
-	djnz L_B25B		;b24f
-	ld a,(ix+007h)		;b251
-	sub 030h		;b254
+	ld b,(ix+001h)		;b24c   ; el paso
+	djnz L_B25B		;b24f   ; paso 2 para abajo
+	ld a,(ix+007h)		;b251   ; la vertical
+	sub 030h		;b254   ; contra la fila 0x30
 	cp 010h		;b256
-	ret nc			;b258
+	ret nc			;b258   ; fuera de esos 0x10 pixeles, nada
 	jr L_B236		;b259
 L_B25B:
-	dec b			;b25b
+	dec b			;b25b   ; paso 2
 	ret nz			;b25c
 	push ix		;b25d   ; dispara
 	call dispara_el_enemigo		;b25f
-	pop ix		;b262
+	pop ix		;b262   ; el bloque, de vuelta
 	call al_paso_siguiente		;b264   ; y al paso siguiente
 	call cuenta_de_enemigo		;b267   ; el dado barato
-	and 003h		;b26a
+	and 003h		;b26a   ; dos bits: cuatro salidas
 	ld l,(ix+004h)		;b26c   ; la velocidad horizontal
 	ld h,(ix+005h)		;b26f
-	jr z,L_B27E		;b272
+	jr z,L_B27E		;b272   ; con 0, a la mitad de velocidad
 	dec a			;b274
-	jr z,L_B285		;b275
+	jr z,L_B285		;b275   ; con 1, se frena en vertical
 	dec a			;b277
-	ret z			;b278
-	call niega_hl		;b279
+	ret z			;b278   ; con 2, no cambia nada
+	call niega_hl		;b279   ; y con 3 da la vuelta
 	jr L_B282		;b27c
 L_B27E:
-	sra h		;b27e
+	sra h		;b27e   ; `sra` conserva el signo
 	rr l		;b280
 L_B282:
 	jp pon_la_horizontal		;b282
 L_B285:
-	ld l,(ix+002h)		;b285
+	ld l,(ix+002h)		;b285   ; la velocidad vertical
 	ld h,(ix+003h)		;b288
-	sra h		;b28b
+	sra h		;b28b   ; a la mitad
 	rr l		;b28d
 	jp pon_la_vertical		;b28f
 comportamiento_6:		; Tambien es disparo del jefe de la fase 2
 	ld (ix+000h),007h		;b292   ; el dibujo del disparo
-	ld b,(ix+001h)		;b296
-	djnz L_B2B5		;b299
-	ld bc,0e003h		;b29b
+	ld b,(ix+001h)		;b296   ; el paso
+	djnz L_B2B5		;b299   ; paso 2 para abajo
+	ld bc,0e003h		;b29b   ; con su dibujo
 	call pon_el_dibujo		;b29e
 	call cuanto_tarda_en_saltar		;b2a1
-	cp b			;b2a4
+	cp b			;b2a4   ; antes de la cuenta, nada
 	ret c			;b2a5
 L_B2A6:
 	jr L_B236		;b2a6
 cuanto_tarda_en_saltar:
 	ld a,(0e07eh)		;b2a8   ; la vuelta
-	and a			;b2ab
-	ld a,(ix+010h)		;b2ac
+	and a			;b2ab   ; en la primera vuelta tarda 0x10 cuadros
+	ld a,(ix+010h)		;b2ac   ; su contador
 	ld b,010h		;b2af
 	ret z			;b2b1
-	ld b,00ah		;b2b2
+	ld b,00ah		;b2b2   ; y en las siguientes, 0x0A
 	ret			;b2b4
 L_B2B5:
 	djnz L_B2C6		;b2b5   ; paso 2
 	ld (ix+00ah),0e4h		;b2b7   ; con su dibujo
 	call cuanto_tarda_en_saltar		;b2bb
-	cp b			;b2be
+	cp b			;b2be   ; contra la cuenta que toque
 	ret c			;b2bf
-	ld (ix+016h),001h		;b2c0
+	ld (ix+016h),001h		;b2c0   ; y se pone a moverse
 	jr L_B2A6		;b2c4
 L_B2C6:
-	djnz L_B2CE		;b2c6
-	ld bc,0e80fh		;b2c8
+	djnz L_B2CE		;b2c6   ; paso 3 para abajo
+	ld bc,0e80fh		;b2c8   ; con el tercer dibujo
 	jp pon_el_dibujo		;b2cb
 L_B2CE:
 	ld a,r		;b2ce   ; el refresco del Z80, de dado
 	ld (ix+007h),a		;b2d0   ; y con el sale a una altura al azar
-	and 007h		;b2d3
+	and 007h		;b2d3   ; tres bits: ocho rumbos
 	ld hl,0b2e4h		;b2d5
-	call suma_a_a_hl		;b2d8
+	call suma_a_a_hl		;b2d8   ; la tabla de rumbos
 	ld a,(hl)			;b2db
-	ld (ix+009h),a		;b2dc
-	call apunta_y_arranca		;b2df
+	ld (ix+009h),a		;b2dc   ; y ese es su angulo de salida
+	call apunta_y_arranca		;b2df   ; apunta y arranca
 	jr L_B2A6		;b2e2
 
 ; ----------------------------------------------------------------------
@@ -9427,52 +9427,52 @@ comportamiento_15:
 	call pon_el_dibujo		;b323
 	jp L_B07C		;b326
 comportamiento_17:
-	ld bc,0cc0ah		;b329
+	ld bc,0cc0ah		;b329   ; los dos, alternando cada ocho
 	call pon_el_dibujo		;b32c
 	ld a,(ix+009h)		;b32f   ; pasado el borde
-	sub 008h		;b332
+	sub 008h		;b332   ; ocho pixeles de margen
 	cp 0e0h		;b334
 	ret c			;b336
 L_B337:
 	ld a,(ix+005h)		;b337   ; la velocidad horizontal cambia de signo: rebota
-	neg		;b33a
+	neg		;b33a   ; cambiado de signo
 	ld (ix+005h),a		;b33c
 	ret			;b33f
 comportamiento_19:
-	ld bc,0b0d8h		;b340
+	ld bc,0b0d8h		;b340   ; los dos dibujos
 	ld e,00ah		;b343
-	call pon_el_dibujo_y_el_paso		;b345
-	djnz L_B35C		;b348
+	call pon_el_dibujo_y_el_paso		;b345   ; y el paso, en B
+	djnz L_B35C		;b348   ; paso 2 para abajo
 	ld a,(ix+007h)		;b34a   ; por debajo de la fila 0x10
-	sub 010h		;b34d
+	sub 010h		;b34d   ; contra la fila 0x10
 	cp 008h		;b34f
 	ret nc			;b351
 	ld de,00500h		;b352   ; se para y baja despacio
-	ld b,e			;b355
+	ld b,e			;b355   ; y sin horizontal
 	ld c,e			;b356
 	call pon_las_dos_velocidades		;b357
 	jr L_B38F		;b35a
 L_B35C:
-	dec b			;b35c
+	dec b			;b35c   ; paso 2
 	jp z,L_B686		;b35d
-	dec b			;b360
+	dec b			;b360   ; paso 3
 	ret nz			;b361
 	call apunta_y_arranca		;b362   ; y luego dispara
 	jp L_B5C8		;b365
 comportamiento_21:
 	ld bc,0bcc0h		;b368
 	ld e,00eh		;b36b
-	call pon_el_dibujo_y_el_paso		;b36d
-	dec b			;b370
+	call pon_el_dibujo_y_el_paso		;b36d   ; el dibujo y el paso
+	dec b			;b370   ; solo hace algo en el paso 1
 	ret nz			;b371
 	call elige_a_quien_apuntar		;b372   ; apunta a la nave
 	ld a,(ix+007h)		;b375   ; hasta la altura que le toca
-	sub (ix+012h)		;b378
-	sub 008h		;b37b
+	sub (ix+012h)		;b378   ; menos su destino
+	sub 008h		;b37b   ; ocho pixeles de margen
 	cp 008h		;b37d
 	ret nc			;b37f
-	ld bc,00400h		;b380
-	ld e,c			;b383
+	ld bc,00400h		;b380   ; velocidad 0x0400
+	ld e,c			;b383   ; y sin vertical
 	ld d,c			;b384
 	ld a,(ix+011h)		;b385   ; y sale a un lado o a otro
 	rra			;b388
@@ -9483,41 +9483,41 @@ L_B38F:
 comportamiento_4:
 	ld bc,0c4c8h		;b391
 	ld e,00fh		;b394
-	call pon_el_dibujo_y_el_paso		;b396
-	djnz L_B3B8		;b399
+	call pon_el_dibujo_y_el_paso		;b396   ; el dibujo y el paso
+	djnz L_B3B8		;b399   ; paso 2 para abajo
 	ld a,(ix+007h)		;b39b   ; por debajo de la fila 0x60
-	sub 060h		;b39e
+	sub 060h		;b39e   ; contra la fila 0x60
 	cp 008h		;b3a0
 	ret nc			;b3a2
 	call apunta_y_arranca		;b3a3   ; dispara
 	ld a,(ix+009h)		;b3a6
 	cp 078h		;b3a9   ; y en la mitad derecha da la vuelta
-	ld b,000h		;b3ab
+	ld b,000h		;b3ab   ; con la marca a cero
 	jr c,L_B3B1		;b3ad
-	ld b,008h		;b3af
+	ld b,008h		;b3af   ; o a ocho
 L_B3B1:
-	ld (ix+010h),b		;b3b1
-	inc (ix+001h)		;b3b4
+	ld (ix+010h),b		;b3b1   ; y esa es su cuenta de partida
+	inc (ix+001h)		;b3b4   ; al paso siguiente
 	ret			;b3b7
 L_B3B8:
-	ld a,(ix+010h)		;b3b8
-	and 008h		;b3bb
+	ld a,(ix+010h)		;b3b8   ; su contador
+	and 008h		;b3bb   ; el bit 3 dice el sentido
 	jp L_B43A		;b3bd
 comportamiento_7:		; Tambien es disparo del jefe de la fase 3
 	ld bc,0e0e4h		;b3c0
 	ld e,003h		;b3c3
-	call pon_el_dibujo_y_el_paso		;b3c5
+	call pon_el_dibujo_y_el_paso		;b3c5   ; el dibujo y el paso
 	ld (ix+000h),008h		;b3c8   ; el dibujo del disparo
-	djnz L_B3DC		;b3cc
+	djnz L_B3DC		;b3cc   ; paso 2 para abajo
 	ld a,(ix+007h)		;b3ce   ; por debajo de la fila 0x40
-	sub 040h		;b3d1
+	sub 040h		;b3d1   ; contra la fila 0x40
 	cp 008h		;b3d3
 	ret nc			;b3d5
 	call apunta_y_arranca		;b3d6   ; dispara
 L_B3D9:
 	jp al_paso_siguiente		;b3d9
 L_B3DC:
-	dec b			;b3dc
+	dec b			;b3dc   ; paso 2
 	jp z,L_B435		;b3dd
 	call rumbo_al_azar		;b3e0   ; y luego persigue
 	ld (ix+016h),001h		;b3e3
@@ -9648,32 +9648,32 @@ L_B4E4:
 L_B4E7:
 	jp L_B144		;b4e7
 comportamiento_27:
-	ld bc,0b0b4h		;b4ea
-	ld e,00fh		;b4ed
+	ld bc,0b0b4h		;b4ea   ; los dibujos 0xB0 y 0xB4
+	ld e,00fh		;b4ed   ; cada quince cuadros
 	call pon_el_dibujo_y_el_paso		;b4ef   ; el dibujo, alternando
-	dec b			;b4f2
+	dec b			;b4f2   ; el paso 1
 	jp z,L_B1FB		;b4f3
-	dec b			;b4f6
+	dec b			;b4f6   ; y el paso 2
 	ret nz			;b4f7
 	ld bc,00300h		;b4f8   ; sale hacia el lado por el que este
-	ld e,c			;b4fb
+	ld e,c			;b4fb   ; sin vertical
 	ld d,c			;b4fc
-	ld a,(ix+009h)		;b4fd
+	ld a,(ix+009h)		;b4fd   ; el bit 7 de la horizontal dice el lado
 	rla			;b500
 	call nc,niega_bc		;b501
 	call pon_las_dos_velocidades		;b504
 L_B507:
 	jr L_B4BE		;b507
 comportamiento_33:
-	ld bc,0b8bch		;b509
-	ld e,007h		;b50c
+	ld bc,0b8bch		;b509   ; los dibujos 0xB8 y 0xBC
+	ld e,007h		;b50c   ; cada siete cuadros
 	call alterna_cada_ocho		;b50e
 	ld a,(ix+010h)		;b511   ; la cuenta del salto
-	sub 00eh		;b514
+	sub 00eh		;b514   ; catorce pasos de subida
 	jr nc,L_B521		;b516
 	ld (ix+010h),a		;b518   ; mientras dure, sube
 	ld l,a			;b51b
-	ld h,0fch		;b51c
+	ld h,0fch		;b51c   ; hacia arriba
 	jp pon_la_vertical		;b51e
 L_B521:
 	ld de,00080h		;b521   ; y luego baja
@@ -9782,9 +9782,9 @@ L_B5C8:
 	jp dispara_el_enemigo		;b5cb
 comportamiento_22:
 	ld bc,0b0b4h		;b5ce
-	ld e,003h		;b5d1
+	ld e,003h		;b5d1   ; cada tres cuadros
 	call pon_el_dibujo_y_el_paso		;b5d3
-	djnz L_B60E		;b5d6
+	djnz L_B60E		;b5d6   ; solo en el paso 0
 	ld a,(ix+010h)		;b5d8   ; en el cuadro 0x78
 	cp 078h		;b5db
 	jp z,L_B603		;b5dd
@@ -9792,17 +9792,17 @@ comportamiento_22:
 	jr nz,L_B5F3		;b5e2
 	ld a,(ix+01ch)		;b5e4   ; cambia de sentido
 	dec a			;b5e7
-	ld bc,0fb00h		;b5e8
+	ld bc,0fb00h		;b5e8   ; cinco pixeles por cuadro
 	call nz,niega_bc		;b5eb
-	ld d,c			;b5ee
+	ld d,c			;b5ee   ; sin fraccion
 	ld e,c			;b5ef
 	call pon_las_dos_velocidades		;b5f0
 L_B5F3:
 	ld hl,0b662h		;b5f3   ; con la tabla de velocidades
 	call saca_dos_velocidades		;b5f6
-	ld a,h			;b5f9
+	ld a,h			;b5f9   ; el byte alto
 	call suma_a_la_vertical		;b5fa
-	ld hl,0b66ah		;b5fd
+	ld hl,0b66ah		;b5fd   ; y la tabla vertical
 	jp L_B62D		;b600
 L_B603:
 	ld de,0fb00h		;b603   ; y al final se va hacia arriba
@@ -9963,20 +9963,20 @@ L_B713:
 	ld de,00040h		;b71c   ; y si no, baja
 	call suma_a_la_vertical		;b71f
 	and 018h		;b722   ; los bits 3 y 4: cuatro tramos
-	rra			;b724
+	rra			;b724   ; se baja al bit 0
 	rra			;b725
 	rra			;b726
 	ld hl,0b77ch		;b727   ; la tabla de pasos
-	call suma_a_a_hl		;b72a
-	ld c,(hl)			;b72d
-	ld b,000h		;b72e
+	call suma_a_a_hl		;b72a   ; la tabla de pasos
+	ld c,(hl)			;b72d   ; el paso de este tramo
+	ld b,000h		;b72e   ; sin fraccion
 	ld a,(ix+01ch)		;b730   ; con el signo del lado
 	dec a			;b733
 	call nz,niega_bc		;b734
 	jp suma_a_la_horizontal		;b737
 L_B73A:
 	ld de,00500h		;b73a   ; y al final se va hacia abajo
-	ld a,(ix+01ch)		;b73d
+	ld a,(ix+01ch)		;b73d   ; otra vez el lado
 	dec a			;b740
 	ld bc,00300h		;b741
 	call nz,niega_bc		;b744
@@ -9986,22 +9986,22 @@ L_B73A:
 L_B752:
 	jp L_B6B4		;b752
 L_B755:
-	dec b			;b755
+	dec b			;b755   ; un paso menos
 	ret z			;b756
 	ld a,r		;b757   ; el refresco del Z80, de dado
-	rla			;b759
-	ld c,a			;b75a
+	rla			;b759   ; se descarta el bit 7
+	ld c,a			;b75a   ; el dado, a salvo
 	and 003h		;b75b   ; dos bits: cuatro rumbos
 	ld hl,0b778h		;b75d
-	call suma_a_a_hl		;b760
-	ld a,(hl)			;b763
+	call suma_a_a_hl		;b760   ; la tabla de rumbos
+	ld a,(hl)			;b763   ; el angulo
 	ld b,a			;b764
 	call pon_la_posicion		;b765   ; y sale con el
-	ld de,0fb00h		;b768
+	ld de,0fb00h		;b768   ; y su paso
 	ld b,e			;b76b
 	ld c,e			;b76c
 	call pon_las_dos_velocidades		;b76d
-	ld bc,0e00ah		;b770
+	ld bc,0e00ah		;b770   ; el dibujo 0xE0
 	call pon_el_dibujo		;b773
 	jr L_B752		;b776
 
@@ -10084,104 +10084,104 @@ comportamiento_30:
 	call alterna_cada_ocho		;b7ef
 	jr L_B7CF		;b7f2
 comportamiento_2:
-	ld bc,0c8cch		;b7f4
+	ld bc,0c8cch		;b7f4   ; los dos dibujos, alternando cada ocho cuadros
 	ld e,00fh		;b7f7
 	call alterna_cada_ocho		;b7f9
 	ld a,(ix+00ah)		;b7fc   ; el dibujo que lleve
-	cp 0c8h		;b7ff
-	ld a,001h		;b801
+	cp 0c8h		;b7ff   ; con el primero de los dos
+	ld a,001h		;b801   ; la marca de "este dispara" se enciende
 	jr z,L_B806		;b803
 	dec a			;b805
 L_B806:
-	ld (ix+016h),a		;b806
+	ld (ix+016h),a		;b806   ; y con el otro se apaga
 	ld a,(ix+007h)		;b809   ; llegado al borde de abajo
-	sub 0afh		;b80c
+	sub 0afh		;b80c   ; 0x10 pixeles de margen contra el borde
 	cp 010h		;b80e
 	jr c,L_B81A		;b810
 	ld a,(ix+009h)		;b812   ; o al de la derecha
-	sub 008h		;b815
+	sub 008h		;b815   ; y ocho contra el de la derecha
 	cp 0e0h		;b817
 	ret c			;b819
 L_B81A:
 	jp apunta_y_arranca		;b81a   ; dispara
 comportamiento_24:
-	ld bc,0b8bch		;b81d
+	ld bc,0b8bch		;b81d   ; los dos dibujos, alternando cada ocho
 	ld e,002h		;b820
-	call pon_el_dibujo_y_el_paso		;b822
-	djnz L_B838		;b825
+	call pon_el_dibujo_y_el_paso		;b822   ; y el paso, en B
+	djnz L_B838		;b825   ; paso 2 para abajo
 	ld a,(ix+007h)		;b827   ; llegado abajo
-	sub 0afh		;b82a
+	sub 0afh		;b82a   ; 0x10 pixeles de margen
 	cp 010h		;b82c
 	ret nc			;b82e
 	call velocidad_al_reves		;b82f   ; da la vuelta
-	call pon_la_horizontal		;b832
-	jp cambia_el_sentido_vertical		;b835
+	call pon_la_horizontal		;b832   ; la horizontal, cambiada de signo
+	jp cambia_el_sentido_vertical		;b835   ; y tambien la vertical: rebota en la esquina
 L_B838:
-	dec b			;b838
+	dec b			;b838   ; paso 2
 	ret nz			;b839
-	ld a,(ix+010h)		;b83a
-	cp 018h		;b83d
+	ld a,(ix+010h)		;b83a   ; su contador
+	cp 018h		;b83d   ; y en el cuadro 0x18
 	ret nz			;b83f
 da_la_vuelta_deprisa:
 	call velocidad_al_reves		;b840
 	add hl,hl			;b843   ; y al doble de velocidad
 	jp pon_la_horizontal		;b844
 velocidad_al_reves:
-	ld l,(ix+004h)		;b847
+	ld l,(ix+004h)		;b847   ; la velocidad horizontal
 	ld h,(ix+005h)		;b84a
-	jp niega_hl		;b84d
+	jp niega_hl		;b84d   ; del reves
 angulo_hacia_la_nave:
 	ld l,(ix+012h)		;b850   ; donde quiere estar
-	ld a,(ix+000h)		;b853
+	ld a,(ix+000h)		;b853   ; la clase del enemigo
 	cp 009h		;b856   ; las clases de 9 arriba apuntan a la nave
 	jr nc,L_B86A		;b858
-	and a			;b85a
+	and a			;b85a   ; la clase 0 apunta al sitio fijo
 	ld h,000h		;b85b
 	jr z,L_B86C		;b85d
-	dec a			;b85f
+	dec a			;b85f   ; y las clases 1 a 4
 	cp 004h		;b860
 	jr nc,L_B86C		;b862
-	ld a,(ix+001h)		;b864
+	ld a,(ix+001h)		;b864   ; solo si estan en su primer paso
 	and a			;b867
 	jr nz,L_B86C		;b868
 L_B86A:
-	ld h,001h		;b86a
+	ld h,001h		;b86a   ; las demas apuntan a donde este la nave
 L_B86C:
 	ld d,001h		;b86c   ; el signo de la diferencia
 	push de			;b86e
 	ld de,00008h		;b86f   ; ocho pixeles de margen
-	add hl,de			;b872
+	add hl,de			;b872   ; la altura de destino, con su margen
 	ld e,(ix+007h)		;b873
-	or a			;b876
+	or a			;b876   ; menos donde esta
 	sbc hl,de		;b877   ; lo que le falta en vertical
-	ld a,l			;b879
+	ld a,l			;b879   ; la diferencia, sin signo
 	ld b,000h		;b87a
 	pop de			;b87c
-	jr z,L_B886		;b87d
+	jr z,L_B886		;b87d   ; si es cero, no hay que girar
 	ld b,a			;b87f
-	jr nc,L_B886		;b880
-	dec d			;b882
-	neg		;b883
+	jr nc,L_B886		;b880   ; con acarreo, la diferencia es negativa
+	dec d			;b882   ; se apunta el signo
+	neg		;b883   ; y se pasa a valor absoluto
 	ld b,a			;b885
 L_B886:
 	ld h,(ix+013h)		;b886   ; y lo que le falta en horizontal
-	ld a,h			;b889
+	ld a,h			;b889   ; igual con la horizontal
 	add a,008h		;b88a   ; ocho pixeles de margen
 	sub (ix+009h)		;b88c
 	ld e,000h		;b88f
 	ld c,e			;b891
 	jr z,L_B89B		;b892
-	ld c,a			;b894
+	ld c,a			;b894   ; el valor
 	jr nc,L_B89B		;b895
-	inc e			;b897
+	inc e			;b897   ; y su signo
 	neg		;b898
 	ld c,a			;b89a
 L_B89B:
 	ld a,d			;b89b   ; los dos signos dicen el cuadrante
 	add a,e			;b89c
-	cp 001h		;b89d
+	cp 001h		;b89d   ; con los dos signos a uno
 	jr nz,L_B8A6		;b89f   ; con uno solo
-	dec d			;b8a1
+	dec d			;b8a1   ; o los dos a cero
 	jr nz,L_B8A6		;b8a2
 	ld a,003h		;b8a4   ; es el tercero
 L_B8A6:
@@ -10190,60 +10190,60 @@ L_B8A6:
 	ld h,000h		;b8a8
 	ld b,c			;b8aa
 	push de			;b8ab
-	call divide_con_fraccion		;b8ac
-	ld hl,0b991h		;b8af
-	ld b,040h		;b8b2
+	call divide_con_fraccion		;b8ac   ; el cociente dy/dx, con ocho bits de fraccion
+	ld hl,0b991h		;b8af   ; la tabla de ocho tangentes
+	ld b,040h		;b8b2   ; se arranca en el grado 0x40
 L_B8B4:
 	ld a,(hl)			;b8b4   ; la tangente que toca
-	inc hl			;b8b5
+	inc hl			;b8b5   ; la palabra siguiente
 	push hl			;b8b6
 	ld h,(hl)			;b8b7
 	ld l,a			;b8b8
 	rst 20h			;b8b9   ; se compara con el cociente
 	pop hl			;b8ba
-	jr c,L_B8C4		;b8bb
-	inc hl			;b8bd
+	jr c,L_B8C4		;b8bb   ; en cuanto una es menor, ese es el angulo
+	inc hl			;b8bd   ; la siguiente tangente
 	ld a,b			;b8be
 	sub 008h		;b8bf   ; y ocho grados menos por cada una que no pasa
 	ld b,a			;b8c1
 	jr nz,L_B8B4		;b8c2
 L_B8C4:
 	pop de			;b8c4   ; el cuadrante
-	dec d			;b8c5
+	dec d			;b8c5   ; el primer cuadrante se devuelve tal cual
 	jr nz,L_B8CC		;b8c6
-	ld a,080h		;b8c8
+	ld a,080h		;b8c8   ; y el segundo, restado de 0x80
 	sub b			;b8ca
 	ret			;b8cb
 L_B8CC:
-	dec d			;b8cc
+	dec d			;b8cc   ; el tercero, sumado a 0x80
 	jr nz,L_B8D3		;b8cd
 	ld a,080h		;b8cf
 	add a,b			;b8d1
 	ret			;b8d2
 L_B8D3:
-	ld a,b			;b8d3
+	ld a,b			;b8d3   ; y el cuarto, cambiado de signo
 	dec d			;b8d4
 	ret nz			;b8d5
 	neg		;b8d6
 	ret			;b8d8
 divide_hl_entre_b:		; Ocho vueltas de restar y desplazar: el cociente sale en L y el resto en H
-	ld c,008h		;b8d9
+	ld c,008h		;b8d9   ; ocho bits de cociente
 	xor a			;b8db
 L_B8DC:
-	adc hl,hl		;b8dc
-	ld a,h			;b8de
+	adc hl,hl		;b8dc   ; el dividendo se dobla
+	ld a,h			;b8de   ; la mitad alta
 	jr c,L_B8E4		;b8df
-	cp b			;b8e1
+	cp b			;b8e1   ; y si cabe el divisor
 	jr c,L_B8E7		;b8e2
 L_B8E4:
-	sub b			;b8e4
+	sub b			;b8e4   ; se resta
 	ld h,a			;b8e5
 	xor a			;b8e6
 L_B8E7:
-	ccf			;b8e7
-	dec c			;b8e8
+	ccf			;b8e7   ; el bit del cociente, invertido por el `ccf`
+	dec c			;b8e8   ; una vuelta menos
 	jr nz,L_B8DC		;b8e9
-	rl l		;b8eb
+	rl l		;b8eb   ; y el ultimo bit entra a empujones
 	ret			;b8ed
 divide_con_fraccion:
 	ld a,b			;b8ee   ; con divisor cero
@@ -10251,67 +10251,67 @@ divide_con_fraccion:
 	jr z,L_B900		;b8f0
 	ld de,00000h		;b8f2   ; la parte entera
 	call divide_hl_entre_b		;b8f5
-	ld d,l			;b8f8
-	ld l,000h		;b8f9
+	ld d,l			;b8f8   ; el cociente, a la parte entera
+	ld l,000h		;b8f9   ; y el resto se dobla ocho veces mas
 	call divide_hl_entre_b		;b8fb   ; y con el resto, otra vuelta: la fraccion
-	ld e,l			;b8fe
+	ld e,l			;b8fe   ; para sacar los ocho bits de fraccion
 	ret			;b8ff
 L_B900:
 	dec a			;b900   ; 0xFFFF: lo mas grande que hay
-	ld d,a			;b901
+	ld d,a			;b901   ; 0xFF en las dos mitades
 	ld e,a			;b902
 	ret			;b903
 seno_y_coseno_del_contador:
 	ld b,a			;b904   ; el angulo
-	ld c,000h		;b905
+	ld c,000h		;b905   ; y el cuadrante, en C
 	cp 041h		;b907   ; primer cuadrante
 	jr c,seno_y_coseno		;b909
-	inc c			;b90b
+	inc c			;b90b   ; cuadrante 1
 	cp 080h		;b90c   ; segundo: 0x80 - a
 	jr nc,L_B915		;b90e
 	ld a,080h		;b910
 	sub b			;b912
 	jr seno_y_coseno		;b913
 L_B915:
-	inc c			;b915
+	inc c			;b915   ; cuadrante 2
 	cp 0c0h		;b916   ; tercero
 	jr nc,L_B91E		;b918
-	sub 080h		;b91a
+	sub 080h		;b91a   ; el angulo, menos 0x80
 	jr seno_y_coseno		;b91c
 L_B91E:
-	inc c			;b91e
-	neg		;b91f
+	inc c			;b91e   ; cuadrante 3
+	neg		;b91f   ; y 0x100 - a
 seno_y_coseno:
 	ld b,a			;b921
-	ex af,af'			;b922
+	ex af,af'			;b922   ; el angulo, a salvo en el juego de repuesto
 	ld a,b			;b923
 	ex af,af'			;b924
 	ld hl,0b950h		;b925   ; la tabla del coseno
-	call suma_a_a_hl		;b928
+	call suma_a_a_hl		;b928   ; HL apunta a su entrada
 	ld d,000h		;b92b
-	ld e,(hl)			;b92d
+	ld e,(hl)			;b92d   ; el coseno de ese angulo
 	ld a,c			;b92e   ; los cuadrantes 1 y 2
-	sub 001h		;b92f
+	sub 001h		;b92f   ; o sea C igual a 1 o a 2
 	cp 002h		;b931
 	ld a,e			;b933
 	jr nc,L_B939		;b934
-	dec d			;b936
+	dec d			;b936   ; con D a 0xFF, que es el signo
 	neg		;b937   ; llevan el coseno cambiado de signo
 L_B939:
 	ld e,a			;b939
 	ld hl,0b950h		;b93a   ; y el seno sale de la MISMA tabla
 	ld a,040h		;b93d   ; entrando por 0x40 - k
-	sub b			;b93f
+	sub b			;b93f   ; 0x40 - k es el complemento del angulo
 	call suma_a_a_hl		;b940
 	ld b,000h		;b943
 	ld a,c			;b945
-	cp 002h		;b946
+	cp 002h		;b946   ; los cuadrantes 2 y 3
 	ld a,(hl)			;b948
 	jr nc,L_B94E		;b949
-	dec b			;b94b
+	dec b			;b94b   ; llevan el seno cambiado de signo
 	neg		;b94c
 L_B94E:
-	ld c,a			;b94e
+	ld c,a			;b94e   ; y sale en BC
 	ret			;b94f
 
 ; ----------------------------------------------------------------------
@@ -10405,73 +10405,73 @@ DATA_tangentes_del_arcotangente:
 
 acerca_en_horizontal:
 	ld c,000h		;b9a1   ; sin dividir: se acerca a saco
-	ld a,(ix+009h)		;b9a3
-	sub (ix+00dh)		;b9a6
-	call divide_con_signo		;b9a9
-	ld b,d			;b9ac
+	ld a,(ix+009h)		;b9a3   ; donde esta en horizontal
+	sub (ix+00dh)		;b9a6   ; menos donde quiere estar
+	call divide_con_signo		;b9a9   ; partido entre lo que diga C
+	ld b,d			;b9ac   ; y eso es lo que se le suma
 	ld c,e			;b9ad
 	jp suma_a_la_horizontal		;b9ae
 acerca_en_vertical_lento:
-	ld c,000h		;b9b1
+	ld c,000h		;b9b1   ; sin dividir tampoco
 acerca_en_vertical:
-	ld a,(ix+007h)		;b9b3
-	sub (ix+00ch)		;b9b6
+	ld a,(ix+007h)		;b9b3   ; donde esta en vertical
+	sub (ix+00ch)		;b9b6   ; menos su destino
 	call divide_con_signo		;b9b9
 	jp suma_a_la_vertical		;b9bc
 divide_con_signo:
-	ld e,a			;b9bf
-	ld d,000h		;b9c0
-	add a,a			;b9c2
+	ld e,a			;b9bf   ; la diferencia, en la mitad baja
+	ld d,000h		;b9c0   ; y la alta a cero
+	add a,a			;b9c2   ; el bit 7 dice si es negativa
 	jr nc,L_B9C6		;b9c3
-	dec d			;b9c5
+	dec d			;b9c5   ; y entonces la alta va a 0xFF
 L_B9C6:
-	ld a,c			;b9c6
+	ld a,c			;b9c6   ; C es cuantas veces se parte
 	and a			;b9c7
-	jr z,L_B9CF		;b9c8
+	jr z,L_B9CF		;b9c8   ; con cero, se deja como esta
 L_B9CA:
-	sra e		;b9ca
+	sra e		;b9ca   ; `sra` conserva el signo al dividir
 	dec a			;b9cc
 	jr nz,L_B9CA		;b9cd
 L_B9CF:
-	jp niega_de		;b9cf
+	jp niega_de		;b9cf   ; y sale con el signo puesto
 sale_por_el_lado_contrario:
 	ld a,(ix+013h)		;b9d2   ; el rumbo
 	ld b,010h		;b9d5   ; mirando a la derecha, sale por la izquierda
 	ld c,000h		;b9d7
-	cp 080h		;b9d9
+	cp 080h		;b9d9   ; con el rumbo por debajo de 0x80
 	jr nc,L_B9E0		;b9db
 	ld b,0e0h		;b9dd   ; y al reves
 	inc c			;b9df
 L_B9E0:
-	ld (ix+009h),b		;b9e0
-	ld (ix+011h),c		;b9e3
+	ld (ix+009h),b		;b9e0   ; la posicion horizontal
+	ld (ix+011h),c		;b9e3   ; y la bandera del lado
 	ret			;b9e6
 velocidad_por_el_angulo:
 	ld a,(ix+010h)		;b9e7   ; el contador hace de angulo
-	ld hl,0b950h		;b9ea
+	ld hl,0b950h		;b9ea   ; la tabla del coseno
 	cp 040h		;b9ed   ; cada cuadrante entra en la tabla por su lado
-	ld c,001h		;b9ef
+	ld c,001h		;b9ef   ; el signo, positivo
 	jr c,L_BA0E		;b9f1
 	cp 080h		;b9f3
 	jr nc,L_B9FF		;b9f5
-	sub 080h		;b9f7
+	sub 080h		;b9f7   ; el segundo cuadrante entra por 0x80 - a
 	neg		;b9f9
-	ld c,000h		;b9fb
+	ld c,000h		;b9fb   ; y con el signo cambiado
 	jr L_BA0E		;b9fd
 L_B9FF:
 	cp 0c0h		;b9ff
 	jr nc,L_BA09		;ba01
 	ld c,000h		;ba03
-	sub 080h		;ba05
+	sub 080h		;ba05   ; el tercero, restando 0x80
 	jr L_BA0E		;ba07
 L_BA09:
-	ld c,001h		;ba09
+	ld c,001h		;ba09   ; y el cuarto, negado
 	ld b,a			;ba0b
 	xor a			;ba0c
 	sub b			;ba0d
 L_BA0E:
-	call pon_el_angulo_y_la_posicion		;ba0e
-	jr c,L_BA18		;ba11
+	call pon_el_angulo_y_la_posicion		;ba0e   ; el valor de la tabla, escalado
+	jr c,L_BA18		;ba11   ; y se suma o se resta al centro
 	add a,(ix+00dh)		;ba13
 	jr angulo_a_posicion		;ba16
 L_BA18:
@@ -10480,20 +10480,20 @@ L_BA18:
 	sub b			;ba1c
 angulo_a_posicion:
 	ld (ix+009h),a		;ba1d   ; la horizontal
-	ld a,(ix+010h)		;ba20
+	ld a,(ix+010h)		;ba20   ; ahora el otro eje
 	ld hl,0b950h		;ba23   ; la tabla del coseno
 	cp 040h		;ba26   ; y el cuadrante decide por donde
 	jr nc,L_BA32		;ba28
 	ld c,001h		;ba2a
 	ld b,a			;ba2c
-	ld a,040h		;ba2d
+	ld a,040h		;ba2d   ; el primer cuadrante entra por 0x40 - a
 	sub b			;ba2f
 	jr L_BA4C		;ba30
 L_BA32:
 	cp 080h		;ba32
 	jr nc,L_BA3C		;ba34
 	ld c,001h		;ba36
-	sub 040h		;ba38
+	sub 040h		;ba38   ; el segundo, restando 0x40
 	jr L_BA4C		;ba3a
 L_BA3C:
 	cp 0c0h		;ba3c   ; tercer cuadrante
@@ -10504,7 +10504,7 @@ L_BA3C:
 	sub b			;ba45
 	jr L_BA4C		;ba46
 L_BA48:
-	ld c,000h		;ba48
+	ld c,000h		;ba48   ; y el cuarto, restando 0xC0
 	sub 0c0h		;ba4a
 L_BA4C:
 	call pon_el_angulo_y_la_posicion		;ba4c
@@ -10516,19 +10516,19 @@ L_BA56:
 	ld a,(ix+00ch)		;ba57
 	sub b			;ba5a
 L_BA5B:
-	ld (ix+007h),a		;ba5b
-	ld a,(ix+010h)		;ba5e
+	ld (ix+007h),a		;ba5b   ; la vertical
+	ld a,(ix+010h)		;ba5e   ; y el angulo avanza
 	add a,d			;ba61
 	ld (ix+010h),a		;ba62
 	ret			;ba65
 pon_el_angulo_y_la_posicion:
-	call suma_a_a_hl		;ba66
+	call suma_a_a_hl		;ba66   ; la entrada de la tabla
 	ld a,(hl)			;ba69
 	ld b,e			;ba6a
 L_BA6B:
-	srl a		;ba6b
+	srl a		;ba6b   ; el radio: dividir el coseno entre 2^E
 	djnz L_BA6B		;ba6d
-	rr c		;ba6f
+	rr c		;ba6f   ; y el signo sale por el acarreo
 	ret			;ba71
 
 ; ----------------------------------------------------------------------
@@ -10536,38 +10536,38 @@ L_BA6B:
 ; ----------------------------------------------------------------------
 elige_a_quien_apuntar:
 	call donde_esta_la_nave_uno		;ba72   ; donde esta la nave 1
-	ex de,hl			;ba75
+	ex de,hl			;ba75   ; la posicion, a DE
 	ld a,(0e077h)		;ba76   ; con los dos vivos
-	dec a			;ba79
+	dec a			;ba79   ; con uno solo vivo
 	jr z,L_BA93		;ba7a
 	dec a			;ba7c
 	jr z,L_BA88		;ba7d
-	ld hl,0e150h		;ba7f
+	ld hl,0e150h		;ba7f   ; la marca del turno
 	ld a,(hl)			;ba82
 	xor 001h		;ba83   ; se turna: un cuadro a uno y otro al otro
-	ld (hl),a			;ba85
+	ld (hl),a			;ba85   ; y se guarda para el siguiente
 	jr nz,L_BA93		;ba86
 L_BA88:
 	call donde_esta_la_nave_dos		;ba88   ; y si no, a la que quede
-	ex de,hl			;ba8b
-	call el_dos_tiene_bomba		;ba8c
+	ex de,hl			;ba8b   ; su posicion
+	call el_dos_tiene_bomba		;ba8c   ; y si ese esta muriendose
 	jr nz,L_BA98		;ba8f
 	jr L_BA9B		;ba91
 L_BA93:
 	call el_uno_tiene_bomba		;ba93
 	jr z,L_BA9B		;ba96
 L_BA98:
-	ld de,08060h		;ba98
+	ld de,08060h		;ba98   ; se apunta a un sitio fijo fuera de la pantalla
 L_BA9B:
 	ld a,e			;ba9b
-	sub 010h		;ba9c
-	ld (ix+012h),a		;ba9e
-	ld (ix+013h),d		;baa1
+	sub 010h		;ba9c   ; 0x10 pixeles mas arriba
+	ld (ix+012h),a		;ba9e   ; el destino vertical
+	ld (ix+013h),d		;baa1   ; y el horizontal
 	ret			;baa4
 marca_para_apagar:
 	inc l			;baa5
-	ld (hl),0feh		;baa6
-	xor a			;baa8
+	ld (hl),0feh		;baa6   ; la clase pasa a 0xFE
+	xor a			;baa8   ; y el resto, a cero
 borra_cuatro:
 	inc l			;baa9   ; los cuatro bytes que quedan
 	ld (hl),a			;baaa
@@ -10580,7 +10580,7 @@ borra_cuatro:
 	ret			;bab1
 apaga_todos_los_enemigos:
 	ld hl,0e161h		;bab2
-	ld b,00eh		;bab5
+	ld b,00eh		;bab5   ; los catorce huecos
 L_BAB7:
 	push hl			;bab7
 	push bc			;bab8
@@ -10604,18 +10604,18 @@ L_BACA:
 	djnz L_BAB7		;bad0
 	ret			;bad2
 marca_al_jefe_para_apagar:
-	ld hl,0e320h		;bad3
+	ld hl,0e320h		;bad3   ; el hueco del jefe
 	jr marca_para_apagar		;bad6
 suma_a_la_vertical:
-	ld l,(ix+002h)		;bad8
+	ld l,(ix+002h)		;bad8   ; la velocidad vertical que lleva
 	ld h,(ix+003h)		;badb
-	add hl,de			;bade
+	add hl,de			;bade   ; mas lo que se le suma
 pon_la_vertical:
 	ld (ix+002h),l		;badf
 	ld (ix+003h),h		;bae2
 	ret			;bae5
 suma_a_la_horizontal:
-	ld l,(ix+004h)		;bae6
+	ld l,(ix+004h)		;bae6   ; y lo mismo con la horizontal
 	ld h,(ix+005h)		;bae9
 	add hl,bc			;baec
 pon_la_horizontal:
@@ -10624,7 +10624,7 @@ pon_la_horizontal:
 	ret			;baf3
 pon_las_dos_velocidades:		; DE la vertical y BC la horizontal
 	push ix		;baf4   ; DE la vertical y BC la horizontal
-	pop hl			;baf6
+	pop hl			;baf6   ; el bloque, en HL
 	inc l			;baf7   ; dos bytes: la velocidad vertical
 	inc l			;baf8
 	ld (hl),e			;baf9
@@ -10637,21 +10637,21 @@ pon_las_dos_velocidades:		; DE la vertical y BC la horizontal
 	ret			;bb00
 cuenta_de_enemigo:		; Un contador que no vuelve nunca a cero: el dado barato del cartucho
 	ld hl,0e152h		;bb01
-	inc (hl)			;bb04
+	inc (hl)			;bb04   ; uno mas, y da la vuelta sola en 256
 	ld a,(hl)			;bb05
 	ret			;bb06
 alterna_cada_ocho:
-	ld d,008h		;bb07
+	ld d,008h		;bb07   ; el bit 3 del contador de cuadros
 	jr L_BB0D		;bb09
 alterna_cada_cuatro:
-	ld d,004h		;bb0b
+	ld d,004h		;bb0b   ; o el bit 2, que alterna el doble de deprisa
 L_BB0D:
-	ld a,(0e003h)		;bb0d
+	ld a,(0e003h)		;bb0d   ; el contador
 	and d			;bb10
-	jr nz,L_BB14		;bb11
-	ld b,c			;bb13
+	jr nz,L_BB14		;bb11   ; con el bit puesto se queda B
+	ld b,c			;bb13   ; y sin el, C
 L_BB14:
-	ld c,e			;bb14
+	ld c,e			;bb14   ; el color va en E
 	jp pon_el_dibujo		;bb15
 
 ; ----------------------------------------------------------------------
@@ -10709,9 +10709,9 @@ DATA_codigo_al_que_no_llega_nadie_4:
 
 apunta_y_avanza:
 	call angulo_hacia_la_nave		;bb43   ; el rumbo, en seno y coseno
-	call seno_y_coseno_del_contador		;bb46
-	push de			;bb49
-	ld e,c			;bb4a
+	call seno_y_coseno_del_contador		;bb46   ; el seno y el coseno de ese rumbo
+	push de			;bb49   ; el seno, a salvo
+	ld e,c			;bb4a   ; y el coseno primero
 	ld d,b			;bb4b
 	call escala_la_velocidad		;bb4c   ; se escala
 	call pon_la_vertical		;bb4f   ; y se le pone a los dos ejes
@@ -10720,30 +10720,30 @@ apunta_y_avanza:
 	jp pon_la_horizontal		;bb56
 escala_la_velocidad:
 	bit 7,d		;bb59   ; el signo aparte
-	push af			;bb5b
-	call nz,niega_de		;bb5c
-	ld l,e			;bb5f
+	push af			;bb5b   ; el signo, a la pila
+	call nz,niega_de		;bb5c   ; y el valor, en positivo
+	ld l,e			;bb5f   ; la velocidad base
 	ld h,d			;bb60
-	add hl,hl			;bb61
-	ld a,(ix+000h)		;bb62
+	add hl,hl			;bb61   ; por dos
+	ld a,(ix+000h)		;bb62   ; la clase del enemigo
 	and a			;bb65
-	add hl,de			;bb66
+	add hl,de			;bb66   ; mas uno: van tres veces la base
 	jr z,L_BB75		;bb67
 	cp 007h		;bb69   ; la clase 7 no lleva el tercer sumando
 	jr z,L_BB6E		;bb6b
-	add hl,de			;bb6d
+	add hl,de			;bb6d   ; las demas llevan cuatro
 L_BB6E:
 	ld a,(0e07eh)		;bb6e   ; y de la fase 2 en adelante, uno mas: van mas deprisa
-	and a			;bb71
+	and a			;bb71   ; en la primera vuelta, no
 	jr z,L_BB75		;bb72
-	add hl,de			;bb74
+	add hl,de			;bb74   ; y en las siguientes, cinco
 L_BB75:
 	pop af			;bb75
 	call nz,niega_hl		;bb76   ; y se le devuelve el signo
 	ret			;bb79
 pon_el_dibujo_y_el_paso:
 	call alterna_cada_ocho		;bb7a   ; el dibujo y, de paso, el paso en B
-	ld b,(ix+001h)		;bb7d
+	ld b,(ix+001h)		;bb7d   ; y el paso, en B
 	ret			;bb80
 coloca_los_enemigos:
 	ld b,00eh		;bb81   ; los catorce
@@ -10766,7 +10766,7 @@ coloca_uno:
 	push hl			;bb9e
 	ld a,(hl)			;bb9f   ; la vertical
 	sub 0c0h		;bba0   ; fuera de la pantalla por abajo
-	cp 020h		;bba2
+	cp 020h		;bba2   ; 0x20 pixeles de margen por abajo
 	call c,apaga_el_enemigo		;bba4   ; y el enemigo se apaga
 	ld a,(ix+000h)		;bba7
 	cp 00ah		;bbaa   ; la clase 0x0A
@@ -10776,36 +10776,36 @@ coloca_uno:
 	jr z,L_BBBE		;bbb2
 L_BBB4:
 	ld a,(ix+009h)		;bbb4   ; y por la derecha, igual
-	sub 0f8h		;bbb7
+	sub 0f8h		;bbb7   ; ocho pixeles de margen por la derecha
 	cp 008h		;bbb9
 	call c,apaga_el_enemigo		;bbbb
 L_BBBE:
 	pop hl			;bbbe
 	ldi		;bbbf   ; los cuatro bytes del sprite
-	inc l			;bbc1
-	ldi		;bbc2
+	inc l			;bbc1   ; saltando el byte de en medio
+	ldi		;bbc2   ; la horizontal, el patron y el color
 	ldi		;bbc4
 	ldi		;bbc6
 	ret			;bbc8
 coloca_al_jefe:
 	ld hl,0bc18h		;bbc9   ; el guion de casillas del jefe
-	ld bc,0bc13h		;bbcc
-	ld de,0efb8h		;bbcf
+	ld bc,0bc13h		;bbcc   ; los codigos de casilla
+	ld de,0efb8h		;bbcf   ; y el bloque de sprites del jefe
 	ld a,(0e321h)		;bbd2   ; con 0xFE, el jefe se esta muriendo
 	cp 0feh		;bbd5
 	jr nz,L_BBE5		;bbd7
-	ld bc,0bc25h		;bbd9
-	ld a,(0e32ah)		;bbdc
+	ld bc,0bc25h		;bbd9   ; con el juego de casillas de "muriendose"
+	ld a,(0e32ah)		;bbdc   ; y si ademas lleva la marca
 	and a			;bbdf
 	jr z,L_BBE5		;bbe0
-	ld bc,0bc2ah		;bbe2
+	ld bc,0bc2ah		;bbe2   ; el tercero
 L_BBE5:
 	ld a,(0e327h)		;bbe5   ; la posicion, mas el desvio de cada casilla
-	add a,(hl)			;bbe8
-	ld (de),a			;bbe9
-	inc hl			;bbea
+	add a,(hl)			;bbe8   ; el desvio de esta casilla
+	ld (de),a			;bbe9   ; al bloque de sprites
+	inc hl			;bbea   ; a la siguiente
 	inc de			;bbeb
-	ld a,(0e329h)		;bbec
+	ld a,(0e329h)		;bbec   ; y la vertical igual
 	add a,(hl)			;bbef
 	ld (de),a			;bbf0
 	inc hl			;bbf1
@@ -10816,15 +10816,15 @@ L_BBE5:
 	inc de			;bbf6
 	push hl			;bbf7
 	ld hl,0bc20h		;bbf8   ; el color, que depende de la fase
-	call la_fase_de_uno_a_cinco		;bbfb
+	call la_fase_de_uno_a_cinco		;bbfb   ; la fase, de 1 a 5
 	call suma_a_a_hl		;bbfe
-	ld a,(0e321h)		;bc01
-	cp 0feh		;bc04
+	ld a,(0e321h)		;bc01   ; el estado del jefe
+	cp 0feh		;bc04   ; 0xFE es muriendose
 	ld a,(hl)			;bc06   ; y muriendose, blanco
 	jr nz,L_BC0B		;bc07
 	ld a,00fh		;bc09
 L_BC0B:
-	ld (de),a			;bc0b
+	ld (de),a			;bc0b   ; el color, al bloque
 	pop hl			;bc0c
 	inc de			;bc0d
 	ld a,(bc)			;bc0e
@@ -10873,92 +10873,92 @@ DATA_tres_juegos_de_casillas:
 
 
 saca_la_oleada_del_jefe:
-	ld a,(0e154h)		;bc2f
+	ld a,(0e154h)		;bc2f   ; la marca de que hay jefe
 	and a			;bc32   ; sin jefe, nada
 	ret z			;bc33
-	ld a,(0e151h)		;bc34
+	ld a,(0e151h)		;bc34   ; la marca de la tanda final
 	and a			;bc37
 	jp nz,la_tanda_del_final		;bc38
 	ld hl,0e15bh		;bc3b
 	ld a,(hl)			;bc3e   ; la espera hasta la oleada siguiente
 	and a			;bc3f
 	jr z,el_siguiente_paso_del_jefe		;bc40
-	dec (hl)			;bc42
+	dec (hl)			;bc42   ; uno menos
 L_BC43:
 	ld hl,0e15dh		;bc43   ; y la espera entre uno y otro
-	ld a,(hl)			;bc46
+	ld a,(hl)			;bc46   ; el reloj de entre enemigos
 	and a			;bc47
 	jr z,reparte_los_que_nacen		;bc48
-	dec (hl)			;bc4a
+	dec (hl)			;bc4a   ; uno menos
 	ret			;bc4b
 reparte_los_que_nacen:
 	call elige_cuantos_huecos		;bc4c
 recorre_los_catorce_3:
-	ld a,(ix+001h)		;bc4f
-	and a			;bc52
+	ld a,(ix+001h)		;bc4f   ; el paso del enemigo
+	and a			;bc52   ; solo los que estan a cero
 	jr nz,L_BC7C		;bc53
 	call al_paso_siguiente		;bc55   ; el enemigo arranca
 	ld a,(ix+000h)		;bc58
 	cp 017h		;bc5b   ; la clase 0x17
 	jr nz,L_BC6D		;bc5d
 	ld a,(ix+009h)		;bc5f   ; se apunta por que lado esta la nave
-	cp 078h		;bc62
-	ld (ix+01ch),000h		;bc64
+	cp 078h		;bc62   ; contra la mitad de la pantalla
+	ld (ix+01ch),000h		;bc64   ; con la marca a cero
 	jr c,L_BC6D		;bc68
-	inc (ix+01ch)		;bc6a
+	inc (ix+01ch)		;bc6a   ; o a uno
 L_BC6D:
-	ld a,(ix+000h)		;bc6d
+	ld a,(ix+000h)		;bc6d   ; su clase
 	cp 021h		;bc70   ; la clase 0x21 no gasta espera
 	jr z,L_BC7C		;bc72
-	ld a,(0e15ch)		;bc74
+	ld a,(0e15ch)		;bc74   ; y los demas recargan la espera
 	ld (0e15dh),a		;bc77
 	and a			;bc7a
 	ret nz			;bc7b
 L_BC7C:
-	ld de,00020h		;bc7c
+	ld de,00020h		;bc7c   ; 0x20 bytes hasta el siguiente
 	add ix,de		;bc7f
 	djnz recorre_los_catorce_3		;bc81
 	ret			;bc83
 el_siguiente_paso_del_jefe:
 	call la_fase_de_uno_a_cinco		;bc84   ; el guion del jefe de esta fase
-	ld hl,0bf11h		;bc87
+	ld hl,0bf11h		;bc87   ; la tabla de guiones
 	call palabra_de_tabla		;bc8a
 	ld a,(0e156h)		;bc8d   ; por donde va
-	call suma_a_a_de		;bc90
+	call suma_a_a_de		;bc90   ; se avanza hasta el paso
 	ld a,(de)			;bc93
 	inc a			;bc94   ; y al llegar al 0xFF, vuelta a empezar
 	jr nz,L_BC9D		;bc95
 	xor a			;bc97
-	ld (0e156h),a		;bc98
+	ld (0e156h),a		;bc98   ; el paso, a cero
 	jr el_siguiente_paso_del_jefe		;bc9b
 L_BC9D:
-	dec a			;bc9d
-	add a,a			;bc9e
-	ld de,0bfb1h		;bc9f
+	dec a			;bc9d   ; menos uno, por dos
+	add a,a			;bc9e   ; dos bytes por oleada
+	ld de,0bfb1h		;bc9f   ; la tabla de velocidades
 	call suma_a_a_de		;bca2
-	ld a,(de)			;bca5
+	ld a,(de)			;bca5   ; el primer byte
 	and 03fh		;bca6   ; los seis bits bajos: la clase
-	ld (0e15ah),a		;bca8
+	ld (0e15ah),a		;bca8   ; la clase que sale
 	ld a,(de)			;bcab
 	and 0c0h		;bcac   ; y los dos altos, rotados: cuantos vienen
-	rlca			;bcae
-	rlca			;bcaf
-	rlca			;bcb0
-	ld (0e159h),a		;bcb1
-	inc de			;bcb4
+	rlca			;bcae   ; una vuelta
+	rlca			;bcaf   ; dos vueltas
+	rlca			;bcb0   ; tres: ya son los bits 0 y 1
+	ld (0e159h),a		;bcb1   ; cuantos salen
+	inc de			;bcb4   ; y el byte siguiente
 	ld a,(de)			;bcb5   ; los cuatro bits bajos, por ocho: lo que se espera hasta la oleada siguiente
 	and 00fh		;bcb6
-	add a,a			;bcb8
-	add a,a			;bcb9
-	add a,a			;bcba
+	add a,a			;bcb8   ; por dos
+	add a,a			;bcb9   ; por cuatro
+	add a,a			;bcba   ; por ocho
 	ld (0e15bh),a		;bcbb
 	ld a,(de)			;bcbe
 	and 030h		;bcbf   ; y los bits 4 y 5: lo que se espera entre uno y otro
-	rrca			;bcc1
-	rrca			;bcc2
+	rrca			;bcc1   ; una vuelta
+	rrca			;bcc2   ; dos: ya son los bits 2 y 3
 	ld (0e15ch),a		;bcc3
-	ld (0e15dh),a		;bcc6
-	ld a,(de)			;bcc9
+	ld (0e15dh),a		;bcc6   ; y la cuenta arranca ahi
+	ld a,(de)			;bcc9   ; el mismo byte otra vez
 	rla			;bcca   ; el bit 7
 	jr nc,L_BCDB		;bccb
 	rla			;bccd   ; y el 6
@@ -10976,7 +10976,7 @@ L_BCDC:
 	ld hl,0e156h		;bcdf
 	inc (hl)			;bce2   ; un paso mas del guion
 	ld a,(hl)			;bce3
-	inc a			;bce4
+	inc a			;bce4   ; y si desborda, se queda arriba
 	jr nz,L_BCE8		;bce5
 	ld (hl),a			;bce7
 L_BCE8:
@@ -11016,36 +11016,36 @@ L_BD15:
 	ld a,(0e159h)		;bd1e   ; hasta colocarlos todos
 	and a			;bd21
 	ret z			;bd22
-	ld de,00020h		;bd23
+	ld de,00020h		;bd23   ; treinta y dos bytes por hueco
 	add ix,de		;bd26
 	djnz L_BD15		;bd28
 	ret			;bd2a
 la_tanda_del_final:
-	ld a,(0e15fh)		;bd2b
+	ld a,(0e15fh)		;bd2b   ; la espera entre tandas
 	and a			;bd2e
-	jr nz,L_BD56		;bd2f
+	jr nz,L_BD56		;bd2f   ; todavia no toca
 	ld a,021h		;bd31   ; la clase 0x21, uno cada vez
-	ld (0e15ah),a		;bd33
+	ld (0e15ah),a		;bd33   ; la clase que se va a sacar
 	ld a,001h		;bd36
-	ld (0e159h),a		;bd38
+	ld (0e159h),a		;bd38   ; uno solo
 	call saca_la_tanda		;bd3b
 	call reparte_los_que_nacen		;bd3e
-	ld a,008h		;bd41
+	ld a,008h		;bd41   ; y ocho cuadros de espera
 	ld (0e15fh),a		;bd43
 	ld hl,0e15eh		;bd46   ; dieciseis tandas
-	inc (hl)			;bd49
+	inc (hl)			;bd49   ; una tanda mas
 	ld a,(hl)			;bd4a
 	cp 010h		;bd4b   ; y se acaba
 	ret c			;bd4d
-	xor a			;bd4e
+	xor a			;bd4e   ; se reinicia la cuenta
 	ld (hl),a			;bd4f
-	inc l			;bd50
+	inc l			;bd50   ; y la espera tambien
 	ld (hl),a			;bd51
-	ld (0e151h),a		;bd52
+	ld (0e151h),a		;bd52   ; y se suelta la bandera del final
 	ret			;bd55
 L_BD56:
 	ld hl,0e15fh		;bd56
-	dec (hl)			;bd59
+	dec (hl)			;bd59   ; un cuadro menos de espera
 	ret			;bd5a
 pon_la_espera_de_disparo:
 	ld a,(0e07eh)		;bd5b   ; la fase manda la espera entre disparos
@@ -11089,15 +11089,15 @@ nace_el_enemigo:
 rumbo_al_azar:
 	call cuenta_de_enemigo		;bd97   ; el dado barato
 	and 003h		;bd9a   ; dos bits: cuatro rumbos
-	ld hl,0bdd9h		;bd9c
+	ld hl,0bdd9h		;bd9c   ; la tabla de rumbos
 	call suma_a_a_hl		;bd9f
-	ld a,(hl)			;bda2
-	ld (ix+00dh),a		;bda3
-	ld b,0e8h		;bda6
-	ld c,a			;bda8
+	ld a,(hl)			;bda2   ; el angulo
+	ld (ix+00dh),a		;bda3   ; apuntado en el enemigo
+	ld b,0e8h		;bda6   ; arriba del todo
+	ld c,a			;bda8   ; con ese rumbo
 	call pon_la_posicion		;bda9
 	ld a,(ix+000h)		;bdac   ; la clase 0x1E
-	cp 01eh		;bdaf
+	cp 01eh		;bdaf   ; la mariposa
 	jr z,L_BDC1		;bdb1
 	cp 008h		;bdb3   ; la 8
 	jp z,baja_despacio		;bdb5
@@ -11106,8 +11106,8 @@ rumbo_al_azar:
 	jr c,L_BDC9		;bdbc
 	jp apunta_y_avanza		;bdbe
 L_BDC1:
-	ld de,00060h		;bdc1
-	ld bc,00100h		;bdc4
+	ld de,00060h		;bdc1   ; la vertical
+	ld bc,00100h		;bdc4   ; y la horizontal
 	jr L_BDD6		;bdc7
 L_BDC9:
 	ld a,(ix+011h)		;bdc9   ; salen a un lado o al otro

@@ -116,7 +116,7 @@ src/twinbee.nocode    ranges that are data even though the tracer reaches
 src/twinbee.notes     the annotations
 src/twinbee.asm       the generated listing, 11,500 lines</code></pre>
 <h2 id="what-each-number-means">What each number means</h2>
-<p><code>make sanity</code> prints the budget: <b>14,406 bytes of code</b> and <b>18,362 bytes of data</b>, which add up to the 32,768 of the cartridge with <b>zero</b> left over. <code>make densidad</code> prints the other two: <b>1,000 named blocks</b> and <b>24.6 %</b> of the instructions carrying a line comment, with <b>no routine below 10 %</b>.</p>
+<p><code>make sanity</code> prints the budget: <b>14,406 bytes of code</b> and <b>18,362 bytes of data</b>, which add up to the 32,768 of the cartridge with <b>zero</b> left over. <code>make densidad</code> prints the other two: <b>1,000 named blocks</b> and <b>41.4 %</b> of the instructions carrying a line comment, with <b>no routine below 10 %</b>.</p>
 <p>None of those figures is typed in by hand anywhere: <code>tests/test_listado.py</code> recomputes them from the listing and fails if they drop.</p>
 <h2 id="checking-the-pictures">Checking the pictures</h2>
 <p><code>make imagenes</code> draws the scenery, the tile sheets and the sprites from the ROM bytes, running in Python the very same decompressor the Z80 runs. <code>make vram</code> boots the cartridge in openMSX five times -one per stage-, dumps the 16 KB of VRAM at the exact instant the scenery finishes loading and compares it byte for byte against what Python built. Today it comes out at zero.</p>

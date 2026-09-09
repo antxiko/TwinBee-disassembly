@@ -56,7 +56,7 @@ limite esta puesto a ojo.
 
 `make sanity` imprime el presupuesto: **14.406 bytes de codigo** y **18.362 de
 datos**, que suman los 32.768 del cartucho sin sobrar **nada**. `make densidad`
-imprime las otras dos: **1.000 bloques con nombre** y un **24,6 %** de las
+imprime las otras dos: **1.000 bloques con nombre** y un **41,4 %** de las
 instrucciones con comentario de linea, **sin una sola rutina por debajo del
 10 %**.
 

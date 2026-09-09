@@ -55,7 +55,7 @@ boundary is set by eye.
 
 `make sanity` prints the budget: **14,406 bytes of code** and **18,362 bytes of
 data**, which add up to the 32,768 of the cartridge with **zero** left over.
-`make densidad` prints the other two: **1,000 named blocks** and **24.6 %** of
+`make densidad` prints the other two: **1,000 named blocks** and **41.4 %** of
 the instructions carrying a line comment, with **no routine below 10 %**.
 
 None of those figures is typed in by hand anywhere: `tests/test_listado.py`

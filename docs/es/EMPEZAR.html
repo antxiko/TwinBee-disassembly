@@ -117,7 +117,7 @@ src/twinbee.nocode    rangos que son datos aunque el trazado los alcance.
 src/twinbee.notes     las anotaciones
 src/twinbee.asm       el listado generado, 11.500 lineas</code></pre>
 <h2 id="que-significa-cada-cifra">Que significa cada cifra</h2>
-<p><code>make sanity</code> imprime el presupuesto: <b>14.406 bytes de codigo</b> y <b>18.362 de datos</b>, que suman los 32.768 del cartucho sin sobrar <b>nada</b>. <code>make densidad</code> imprime las otras dos: <b>1.000 bloques con nombre</b> y un <b>24,6 %</b> de las instrucciones con comentario de linea, <b>sin una sola rutina por debajo del 10 %</b>.</p>
+<p><code>make sanity</code> imprime el presupuesto: <b>14.406 bytes de codigo</b> y <b>18.362 de datos</b>, que suman los 32.768 del cartucho sin sobrar <b>nada</b>. <code>make densidad</code> imprime las otras dos: <b>1.000 bloques con nombre</b> y un <b>41,4 %</b> de las instrucciones con comentario de linea, <b>sin una sola rutina por debajo del 10 %</b>.</p>
 <p>Ninguna de esas cifras esta escrita a mano en ningun sitio: <code>tests/test_listado.py</code> las vuelve a calcular sobre el listado y falla si bajan.</p>
 <h2 id="cotejar-las-imagenes">Cotejar las imagenes</h2>
 <p><code>make imagenes</code> dibuja el escenario, las hojas de casillas y los sprites desde los bytes de la ROM, ejecutando en Python el mismo descompresor que corre el Z80. <code>make vram</code> arranca el cartucho en openMSX cinco veces -una por fase-, vuelca los 16 KB de VRAM en el instante exacto en que acaba de cargar el decorado y los compara byte a byte con lo que monto Python. Hoy sale a cero.</p>

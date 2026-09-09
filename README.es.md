@@ -8,7 +8,7 @@ Desensamblado completo y comentado del **Twin Bee** de Konami para MSX
 listado reensambla a la ROM **byte a byte**.
 
     explicado             32.768 de 32.768   100 %
-    densidad de comentario 1.820 de 7.405    24,6 %
+    densidad de comentario 3.062 de 7.405    41,4 %
     bloques por debajo del 10 %   0 de 1.000
     destinos de call sin nombre   0
     tests                        21, en verde
