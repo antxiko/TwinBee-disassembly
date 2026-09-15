@@ -26,6 +26,27 @@ monotonia, y por eso nadie la vio, y cuatro unidades de menos en un angulo de
 64,7 grados no se notan jugando. Twin Bee es RC-740 y Knightmare RC-739: el
 arreglo viajo un cartucho adelante.
 
+## El cartucho se defiende: proteccion anticopia
+
+Dos instrucciones del arranque escriben dentro del propio cartucho:
+
+- **0x4028** deja un `pop hl` y un `ret` encima del `djnz` de 0x4195.
+  Carga `0xC9E1` en HL y lo suelta de golpe: en memoria esos dos bytes
+  son `E1 C9`, que se leen como `pop hl` y `ret`.
+- **0x4055** deja un cero en 0x41A1, que no es un dato: es el operando del `jp`
+  de 0x41A0. En memoria eso lo convierte en `jp 00000h`, un reinicio en seco.
+
+**Ninguna de las dos hace nada aqui.** El cartucho corre desde ROM, y la ROM no admite
+escritura: por eso parecen codigo muerto. No lo son. Un cartucho pirateado es una
+copia cargada en **RAM**, y ahi la escritura si cuela y rompe el juego. Que no
+haga nada en el original es justo la gracia.
+
+No es una idea suelta de este cartucho: el mismo par —una escritura sobre un
+`djnz` y otra sobre el operando de un `jp`— aparece en diez cartuchos de esta
+serie, siempre en las mismas dos rutinas del arranque. Las identifico **Manuel
+Pazos** en su desensamblado del RC-727, donde las llamo `ReadKeys_AC` y
+`VRAM_writeAC`.
+
 ## En la ROM solo esta media nave
 
 De cada patron de sprite, el cartucho guarda **la mitad izquierda**: dieciseis

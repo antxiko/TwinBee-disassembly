@@ -66,8 +66,8 @@ DATA_punteros_del_game_master:
 ; EL PARCHE QUE NO PARCHEA. Las escrituras de 0x4028, 0x4055 y 0x40FE apuntan a 0x4195, 0x41A1 y 0x47F7, que estan en la propia ROM del cartucho: el `ld` sale al bus y se pierde. De tener efecto, la primera dejaria un `pop hl / ret` donde hay un `djnz`, la segunda un `jp 00000h` -o sea un reinicio- y la tercera apagaria la pantalla tocando el byte de R1 de la tabla de registros. Las dos primeras estan IGUAL en Knightmare (RC-739) y en The Goonies (RC-734), en las mismas posiciones relativas, asi que vienen del armazon y no de este juego.
 ; ----------------------------------------------------------------------
 arranca_la_pantalla_del_titulo:		; Parchea 0x4195 -que esta en ROM, asi que el `ld` no llega a ninguna parte- y se va a montar el cartel
-	ld hl,0c9e1h		;4025   ; 0xC9E1 seria `pop hl / ret`
-	ld (04195h),hl		;4028   ; pero 0x4195 es ROM: no llega
+	ld hl,0c9e1h		;4025   ; 0xC9E1 son, puestos en memoria, los bytes E1 C9: `pop hl` / `ret`
+	ld (04195h),hl		;4028   ; PROTECCION ANTICOPIA: los bytes 0xE1 0xC9 son `pop hl` y `ret`, y van encima del `djnz` de 0x4195. Desde ROM la escritura NO llega -la ROM no admite escritura- y por eso parece codigo muerto; en una copia cargada en RAM si cuela, y la cadena de la presentacion se corta ahi. Manuel Pazos la identifico en el RC-727, donde esta escrita byte a byte, como ReadKeys_AC
 	jp monta_el_cartel		;402b   ; y a montar el cartel de la presentacion
 cada_cuadro:		; El gancho de H.KEYI: el juego ENTERO cuelga de aqui
 	call 0013eh		;402e   ; BIOS RDVDP - Reads VDP status register | limpia la peticion de interrupcion del VDP
@@ -90,8 +90,8 @@ remata_la_interrupcion:
 	ei			;4050
 	ret			;4051
 pon_registro_del_vdp:		; B el valor, C el numero de registro
-	ld hl,00000h		;4052   ; 0x41A1 es ROM: este `ld` tampoco llega
-	ld (041a1h),hl		;4055
+	ld hl,00000h		;4052   ; HL a cero: es lo que va a escribir la linea siguiente
+	ld (041a1h),hl		;4055   ; LA OTRA PROTECCION ANTICOPIA: el cero cae en 0x41A1, que no es un dato sino el operando del `jp` de 0x41A0. Desde ROM no llega; en RAM ese salto se queda en `jp 00000h`, o sea un reinicio en seco. Es la pareja de la de 0x4028, y en el RC-727 son VRAM_writeAC y ReadKeys_AC
 	jp 00047h		;4058   ; BIOS WRTVDP - Writes data in the VDP-register | lo que si hace es escribir el registro: B el valor, C el numero
 palabra_de_tabla_de_cuatro:		; Un `add a,a` suelto delante de la rutina de al lado: con el, las entradas de la tabla son de CUATRO bytes en vez de dos
 	add a,a			;405b   ; se dobla A antes de que la de abajo lo vuelva a doblar

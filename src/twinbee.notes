@@ -45,6 +45,7 @@ L 0x4025 arranca_la_pantalla_del_titulo  Parchea 0x4195 -que esta en ROM, asi qu
 L 0x402E cada_cuadro                El gancho de H.KEYI: el juego ENTERO cuelga de aqui
 L 0x4048 remata_la_interrupcion
 L 0x4052 pon_registro_del_vdp       B el valor, C el numero de registro
+C 0x4055 LA OTRA PROTECCION ANTICOPIA: el cero cae en 0x41A1, que no es un dato sino el operando del `jp` de 0x41A0. Desde ROM no llega; en RAM ese salto se queda en `jp 00000h`, o sea un reinicio en seco. Es la pareja de la de 0x4028, y en el RC-727 son VRAM_writeAC y ReadKeys_AC
 L 0x405B palabra_de_tabla_de_cuatro  Un `add a,a` suelto delante de la rutina de al lado: con el, las entradas de la tabla son de CUATRO bytes en vez de dos
 L 0x405C palabra_de_tabla           Devuelve en DE la palabra numero A de la tabla HL
 L 0x4063 es_el_segundo_jugador      El bit 5 de (0xE002); vuelve con Z si NO lo es
@@ -2167,8 +2168,8 @@ C 0x42C2 las variables del segundo
 C 0x42C5 y sus sprites
 
 B 0x4025 EL PARCHE QUE NO PARCHEA. Las escrituras de 0x4028, 0x4055 y 0x40FE apuntan a 0x4195, 0x41A1 y 0x47F7, que estan en la propia ROM del cartucho: el `ld` sale al bus y se pierde. De tener efecto, la primera dejaria un `pop hl / ret` donde hay un `djnz`, la segunda un `jp 00000h` -o sea un reinicio- y la tercera apagaria la pantalla tocando el byte de R1 de la tabla de registros. Las dos primeras estan IGUAL en Knightmare (RC-739) y en The Goonies (RC-734), en las mismas posiciones relativas, asi que vienen del armazon y no de este juego.
-C 0x4025 0xC9E1 seria `pop hl / ret`
-C 0x4028 pero 0x4195 es ROM: no llega
+C 0x4025 0xC9E1 son, puestos en memoria, los bytes E1 C9: `pop hl` / `ret`
+C 0x4028 PROTECCION ANTICOPIA: los bytes 0xE1 0xC9 son `pop hl` y `ret`, y van encima del `djnz` de 0x4195. Desde ROM la escritura NO llega -la ROM no admite escritura- y por eso parece codigo muerto; en una copia cargada en RAM si cuela, y la cadena de la presentacion se corta ahi. Manuel Pazos la identifico en el RC-727, donde esta escrita byte a byte, como ReadKeys_AC
 C 0x402B y a montar el cartel de la presentacion
 C 0x402E limpia la peticion de interrupcion del VDP
 C 0x4032 el sonido, lo primero de todo
@@ -2180,7 +2181,7 @@ C 0x4041 y la escena que toque
 C 0x4045 cerrojo abierto
 C 0x4048 si mientras tanto ha entrado otro cuadro
 C 0x404D se le da otra pasada al sonido
-C 0x4052 0x41A1 es ROM: este `ld` tampoco llega
+C 0x4052 HL a cero: es lo que va a escribir la linea siguiente
 C 0x4058 lo que si hace es escribir el registro: B el valor, C el numero
 C 0x405B se dobla A antes de que la de abajo lo vuelva a doblar
 C 0x405C HL += 2A
