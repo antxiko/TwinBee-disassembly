@@ -47,19 +47,22 @@ HALLAZGOS = {
          "sobrevive es la de <b>k=46</b>: 105 donde tocaria 109, cuatro "
          "unidades de menos en un angulo de 64,7 grados. No rompe la "
          "monotonia, y por eso nadie la vio.</p>"),
-        ("Un solo escenario de 1.761 filas para las cinco fases",
-         "<p>Twin Bee no tiene cinco mapas: tiene <b>uno</b>. El guion de "
-         "<code>0x6D74</code> encadena tramos de la tabla de "
-         "<code>0x6E01</code>, y de ahi salen <b>1.761 codigos de fila</b>, o "
-         "sea <b>73 pantallas</b> de 24. Cada codigo indexa uno de los "
-         "<b>248 bloques de 32 casillas</b> de <code>0x6F8F</code>, que es una "
-         "fila entera de la pantalla, y <code>0x6D17</code> lo copia con "
-         "treinta y dos <code>ldi</code> seguidos. La cuenta cierra sola: "
-         "entre <code>0x6F8F</code> y <code>0x8E8F</code> hay "
-         "<code>0x1F00</code> bytes, que son 248 filas exactas, y el codigo "
-         "mas alto que gastan los tramos es 0xF7&nbsp;=&nbsp;247. Lo que "
-         "cambia de fase a fase no es el mapa: son los <b>dibujos</b> de las "
-         "casillas.</p>"),
+        ("Una tira de 1.761 filas, y las cinco fases la recorren seguidas",
+         "<p>El guion de <code>0x6D74</code> encadena tramos de la tabla de "
+         "<code>0x6E01</code>, y de ahi salen <b>1.761 codigos de fila</b>. "
+         "Cada codigo indexa uno de los <b>248 bloques de 32 casillas</b> de "
+         "<code>0x6F8F</code>, que es una fila entera de la pantalla, y "
+         "<code>0x6D17</code> lo copia con treinta y dos <code>ldi</code> "
+         "seguidos. La cuenta cierra sola: entre <code>0x6F8F</code> y "
+         "<code>0x8E8F</code> hay <code>0x1F00</code> bytes, que son 248 "
+         "filas exactas, y el codigo mas alto que gastan los tramos es "
+         "0xF7&nbsp;=&nbsp;247. La tira no es una fase: la tabla de "
+         "<code>0x6132</code> pone los jefes en las filas 261, 585, 945, 1272 "
+         "y 1760, y al caer uno <code>0x613C</code> sube las casillas de la "
+         "fase siguiente sin mover la pantalla. O sea que cada fase juega "
+         "<b>su tramo</b> con sus dibujos. Comprobado en openMSX: la lista que "
+         "el juego deja en <code>0xE400</code> es esta, byte a byte, y la "
+         "tabla de nombres son los bloques de <code>(0xEBF0)-r</code>.</p>"),
         ("La fase 3 no tiene color propio: se lo permutan",
          "<p><code>sube_el_color_comun</code> (<code>0x9F41</code>) mira la "
          "fase y, si es la tercera, sube el <b>mismo</b> bloque de color que "
@@ -185,18 +188,23 @@ HALLAZGOS = {
          "<b>k=46</b>: 105 where 109 belongs, four units short at an angle of "
          "64.7 degrees. It does not break monotonicity, and that is why nobody "
          "spotted it.</p>"),
-        ("One single 1,761-row scenery for all five stages",
-         "<p>Twin Bee does not have five maps: it has <b>one</b>. The script "
-         "at <code>0x6D74</code> chains stretches from the table at "
-         "<code>0x6E01</code>, and out come <b>1,761 row codes</b>, that is "
-         "<b>73 screens</b> of 24. Each code indexes one of the <b>248 blocks "
-         "of 32 tiles</b> at <code>0x6F8F</code>, which is one whole screen "
-         "row, and <code>0x6D17</code> copies it with thirty-two consecutive "
+        ("One 1,761-row strip, and the five stages run through it back to back",
+         "<p>The script at <code>0x6D74</code> chains stretches from the table "
+         "at <code>0x6E01</code>, and out come <b>1,761 row codes</b>. Each "
+         "code indexes one of the <b>248 blocks of 32 tiles</b> at "
+         "<code>0x6F8F</code>, which is one whole screen row, and "
+         "<code>0x6D17</code> copies it with thirty-two consecutive "
          "<code>ldi</code>. The arithmetic closes by itself: between "
          "<code>0x6F8F</code> and <code>0x8E8F</code> there are "
          "<code>0x1F00</code> bytes, exactly 248 rows, and the highest code "
-         "the stretches use is 0xF7&nbsp;=&nbsp;247. What changes from stage "
-         "to stage is not the map: it is the tile <b>artwork</b>.</p>"),
+         "the stretches use is 0xF7&nbsp;=&nbsp;247. The strip is not one "
+         "stage: the table at <code>0x6132</code> puts the bosses at rows 261, "
+         "585, 945, 1272 and 1760, and when one falls <code>0x613C</code> "
+         "uploads the next stage's tiles without moving the screen. So each "
+         "stage plays <b>its own stretch</b> with its own artwork. Checked in "
+         "openMSX: the list the game leaves at <code>0xE400</code> is this "
+         "one byte for byte, and the name table is the blocks at "
+         "<code>(0xEBF0)-r</code>.</p>"),
         ("Stage 3 has no colour of its own: it gets it permuted",
          "<p><code>sube_el_color_comun</code> (<code>0x9F41</code>) looks at "
          "the stage and, if it is the third, uploads the <b>same</b> colour "
@@ -291,36 +299,42 @@ HALLAZGOS = {
 # una debajo de otra y en orden de fase.
 FASES = [
     ("mapa_fase1.png",
-     "<b>Fase 1.</b> El escenario entero, partido en ocho columnas: 1.761 "
-     "filas, 73 pantallas. Se lee de arriba abajo y de izquierda a derecha. "
-     "Islas verdes con acantilados rosas, campos, casas, un rio con puentes y "
-     "una pista de aterrizaje; ninguna es una captura.",
-     "<b>Stage 1.</b> The whole scenery, cut into eight columns: 1,761 rows, "
-     "73 screens. Read it top to bottom, left to right. Green islands with "
-     "pink cliffs, fields, houses, a river with bridges and a landing strip; "
-     "not one of them is a capture."),
+     "<b>Fase 1.</b> Las filas 0 a 261 de la tira, once pantallas: el mar con "
+     "islas y faros del arranque -abajo a la derecha- y la costa verde con su "
+     "monte al final. Tres columnas, de arriba abajo y de izquierda a derecha; "
+     "ninguna es una captura.",
+     "<b>Stage 1.</b> Rows 0 to 261 of the strip, eleven screens: the sea with "
+     "islands and lighthouses at the start -bottom right- and the green coast "
+     "with its mountain at the end. Three columns, top to bottom and left to "
+     "right; not one of them is a capture."),
     ("mapa_fase2.png",
-     "<b>Fase 2.</b> El mismo mapa con otras casillas: el bloque que sube "
-     "<code>sube_los_patrones_de_la_fase</code> a la casilla 0xC0 es distinto, "
-     "y de la 0x3C a la 0xBF son las mismas en las cinco.",
-     "<b>Stage 2.</b> The same map with different tiles: the block "
-     "<code>sube_los_patrones_de_la_fase</code> uploads at tile 0xC0 is "
-     "another one, and tiles 0x3C to 0xBF are shared by all five."),
+     "<b>Fase 2.</b> Filas 238 a 585, catorce pantallas y media, con su propio "
+     "bloque de casillas a partir de la 0xC0; de la 0x3C a la 0xBF son las "
+     "mismas en las cinco fases.",
+     "<b>Stage 2.</b> Rows 238 to 585, fourteen and a half screens, with its "
+     "own tile block from 0xC0 up; tiles 0x3C to 0xBF are shared by all five "
+     "stages."),
     ("mapa_fase3.png",
-     "<b>Fase 3.</b> La que no tiene color propio: es el color de las demas "
-     "pasado por la permuta de <code>0x47B5</code>.",
-     "<b>Stage 3.</b> The one with no colour of its own: it is the other "
-     "stages' colour run through the permutation at <code>0x47B5</code>."),
+     "<b>Fase 3.</b> Filas 562 a 945, dieciseis pantallas. La que no tiene "
+     "color propio: es el color de las demas pasado por la permuta de "
+     "<code>0x47B5</code>.",
+     "<b>Stage 3.</b> Rows 562 to 945, sixteen screens. The one with no colour "
+     "of its own: it is the other stages' colour run through the permutation "
+     "at <code>0x47B5</code>."),
     ("mapa_fase4.png",
-     "<b>Fase 4.</b> La de la hoja de casillas mas corta: su bloque propio "
-     "acaba en la casilla 0xC5.",
-     "<b>Stage 4.</b> The one with the shortest tile sheet: its own block "
-     "ends at tile 0xC5."),
+     "<b>Fase 4.</b> Filas 922 a 1272, catorce pantallas y media, con la hoja "
+     "de casillas mas corta: su bloque propio acaba en la 0xC5.",
+     "<b>Stage 4.</b> Rows 922 to 1272, fourteen and a half screens, with the "
+     "shortest tile sheet: its own block ends at tile 0xC5."),
     ("mapa_fase5.png",
-     "<b>Fase 5.</b> La mas cargada: llega hasta la casilla 0xEA, treinta y "
-     "cinco mas que la 4.",
-     "<b>Stage 5.</b> The busiest: it reaches tile 0xEA, thirty-five more "
-     "than stage 4."),
+     "<b>Fase 5.</b> Filas 1249 a 1760, veintiuna pantallas, la mas larga y la "
+     "mas cargada: llega hasta la casilla 0xEA. Las sombras negras de los "
+     "acantilados son casillas transparentes sobre el borde negro de partida "
+     "(registro 7 a 0xE0), y solo se ven bien pintadas asi.",
+     "<b>Stage 5.</b> Rows 1249 to 1760, twenty-one screens, the longest and "
+     "the busiest: it reaches tile 0xEA. The black shadows of the cliffs are "
+     "transparent tiles over the black border of play (register 7 at 0xE0), "
+     "and only look right drawn that way."),
 ]
 
 GALERIA = [

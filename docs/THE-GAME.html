@@ -94,11 +94,11 @@ audio{display:block;width:100%;max-width:640px;margin:.75rem 0 1.5rem}
 <div class="w"><nav class="top"><a href="index.html">Home</a><a href="GETTING-STARTED.html">Start</a><a href="THE-GAME.html" style=color:var(--tinta)>The game</a><a href="THE-CARTRIDGE.html">The cartridge</a><a href="THE-CODE.html">The code</a><a href="FINDINGS.html">Findings</a><a href="IN-THE-EMULATOR.html">In the emulator</a><a href="OPEN-QUESTIONS.html">Open questions</a><a href="es/EL-JUEGO.html" style="margin-left:auto;color:var(--oro)">Castellano</a></nav>
 <h1 id="the-game">The game</h1>
 <p><em>Twin Bee</em> is a vertical shoot&#x27;em up Konami published for the MSX in 1986, catalogue number <b>RC-740</b>, on a 32 KB cartridge. Two little ships with arms fly over an island, shoot at clouds and collect the bells that fall out of them.</p>
-<p><img src="imagenes/titulo.png?v=c34ff0a2" alt="The title screen"></p>
+<p><img src="imagenes/titulo.png?v=94b9a2fd" alt="The title screen"></p>
 <h2 id="what-a-game-looks-like">What a game looks like</h2>
 <p>You control a ship that moves in all four directions and fires upwards. Two buttons: one shoots, the other drops a bomb on the ground. Two players can play at once, each with their own ship, their own score and their own lives.</p>
 <p>The stage number climbs one at a time to <b>99</b>, but there are only <b>five</b> sceneries: <code>(0xE076)</code> holds which one is showing, and when its low nibble reaches six it goes back to <code>0x11</code> -the first one again, with the high nibble counting laps. Reaching stage 99 is the only way to finish the game.</p>
-<p><img src="imagenes/pantalla_fase1.png?v=1a7c1cfd" alt="The first screen"></p>
+<p><img src="imagenes/pantalla_fase1.png?v=f44f3e7c" alt="The first screen"></p>
 <h2 id="the-bells">The bells</h2>
 <p>Shoot a cloud and a bell falls out. While it falls it keeps changing colour, and the game lets you keep it in the air by shooting it: that is the whole mechanic. What it gives, though, does <b>not</b> come from the colour you see. It comes from a 32-step counter that advances one place every time a bell is collected, and only <b>five</b> of those thirty-two slots carry a prize:</p>
 <table><tr><th>slot</th><th>prize</th></tr><tr><td>4</td><td>one more power level, up to seven</td></tr><tr><td>8</td><td>the twin shot</td></tr><tr><td>16</td><td>the arm</td></tr><tr><td>20</td><td>the weapon, sixteen uses</td></tr><tr><td>32</td><td>the shield</td></tr></table>
@@ -110,8 +110,9 @@ audio{display:block;width:100%;max-width:640px;margin:.75rem 0 1.5rem}
 <p>While they are joined, the input that counts is the sum of both joysticks, and <code>0x5EC7</code> zeroes it the moment one of the two pulls the other way: that is what pulls them apart. And the drawing of the arm that joins them is not improvised either - it comes out of an 81-value table, nine steps of vertical distance by nine of horizontal.</p>
 <p><img src="imagenes/naves.png?v=bdd3bc28" alt="The common sprites"></p>
 <h2 id="the-scenery">The scenery</h2>
-<p>There is only <b>one</b> scenery, and it is long: 1,761 rows, that is 73 screens of 24. It is built out of 248 blocks of 32 tiles, one whole screen row each, and the map is just the list of those blocks. What changes from stage to stage is not the map: it is the tile artwork.</p>
-<p><img src="imagenes/casillas_fase1.png?v=5e295d18" alt="Stage 1&#x27;s tile sheet"></p>
+<p>The scenery is <b>a single strip of 1,761 rows</b>, built out of 248 blocks of 32 tiles —one whole screen row each—, and the five stages run through it <b>back to back</b>: stage 1 goes from row 0 to row 261, where its boss arrives; stage 2 carries on from there to 585; stage 3 to 945; stage 4 to 1272, and stage 5 to 1760, the end of the strip (the table at <code>0x6132</code>). When a boss falls, <code>0x613C</code> uploads the next scenery&#x27;s tiles without moving the screen. What changes from stage to stage is the artwork; what does <em>not</em> repeat is the terrain: each stage has its own.</p>
+<p>And while playing, VDP register 7 holds <code>0xE0</code>: the border and every transparent tile are <b>black</b>, not the title&#x27;s blue. The maps here are drawn that way, which is how they look.</p>
+<p><img src="imagenes/casillas_fase1.png?v=c9e7274e" alt="Stage 1&#x27;s tile sheet"></p>
 <p>It scrolls one row every sixteen frames -<code>avanza_el_decorado</code> (<code>0x6CD1</code>) is what counts them- and the map is stored <b>bottom to top</b>: the row at the top of the screen is the higher index, and the counter climbs as the game goes on.</p>
 <h2 id="the-enemies">The enemies</h2>
 <p>Fourteen slots of 0x20 bytes each, from <code>0xE160</code>. Byte 1 of a slot says what that enemy <b>is</b>: that number indexes the forty-pointer table at <code>0xAD60</code> and out comes the routine that moves it. Five of those forty do double duty as the boss&#x27;s shots.</p>

@@ -129,7 +129,7 @@ audio{display:block;width:100%;max-width:640px;margin:.75rem 0 1.5rem}
 <p>Leido en el emulador, <code>0xEB88</code> tiene <code>00 00 00 00 01 00 00 00 02 … 04 … 08</code>. Exactamente eso.</p>
 <h2 id="un-escenario-noventa-y-nueve-fases">Un escenario, noventa y nueve fases</h2>
 <p>Hay cinco escenarios y noventa y nueve fases. <code>(0xE07D)</code> es el numero que se ve, en BCD, y sube de uno en uno hasta 99; <code>(0xE076)</code> es el escenario, y cuando su nibble bajo llega a seis vuelve a <code>0x11</code> -el primero otra vez, con el nibble alto contando vueltas. Llegar a la fase 99 es la unica manera de terminar Twin Bee.</p>
-<p>Y el escenario en si es un solo mapa de 1.761 filas -73 pantallas- montado con 248 bloques de 32 casillas. Lo que cambia de fase a fase son los dibujos de las casillas, no el mapa.</p>
+<p>Y el escenario en si es una tira de 1.761 filas montada con 248 bloques de 32 casillas, que las cinco fases recorren seguidas: los jefes llegan en las filas 261, 585, 945, 1272 y 1760 (la tabla de <code>0x6132</code>), y cada fase juega su tramo con sus propios dibujos.</p>
 <h2 id="con-dos-jugadores-los-enemigos-tambien-se-turnan">Con dos jugadores, los enemigos tambien se turnan</h2>
 <p><code>elige_a_quien_apuntar</code> (<code>0xBA72</code>) conmuta <code>(0xE150)</code> con un <code>xor 1</code> en cada llamada. Un enemigo apunta a la primera nave y el siguiente a la segunda. Con un solo jugador vivo, todos van a por el.</p>
 <h2 id="la-segunda-cabecera-y-la-marca-que-busca-nemesis">La segunda cabecera, y la marca que busca Nemesis</h2>

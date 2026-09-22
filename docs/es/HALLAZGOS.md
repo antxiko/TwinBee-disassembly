@@ -149,9 +149,10 @@ su nibble bajo llega a seis vuelve a `0x11` -el primero otra vez, con el nibble
 alto contando vueltas. Llegar a la fase 99 es la unica manera de terminar Twin
 Bee.
 
-Y el escenario en si es un solo mapa de 1.761 filas -73 pantallas- montado con
-248 bloques de 32 casillas. Lo que cambia de fase a fase son los dibujos de las
-casillas, no el mapa.
+Y el escenario en si es una tira de 1.761 filas montada con 248 bloques de 32
+casillas, que las cinco fases recorren seguidas: los jefes llegan en las filas
+261, 585, 945, 1272 y 1760 (la tabla de `0x6132`), y cada fase juega su tramo
+con sus propios dibujos.
 
 ## Con dos jugadores, los enemigos tambien se turnan
 

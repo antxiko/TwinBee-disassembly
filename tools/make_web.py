@@ -70,12 +70,12 @@ TXT = {
                 ("PREGUNTAS-ABIERTAS.html", "Preguntas abiertas")],
         otro=("../", "In English"),
         h_num="El cartucho en cifras", h_find="Lo que aparecio al desmontarlo",
-        h_fas="El escenario entero, y sus cinco paletas",
-        nota_fas="El escenario de Twin Bee es UNO: 1.761 filas, o sea 73 "
-                 "pantallas, montadas con 248 bloques de 32 casillas. Lo que "
-                 "cambia de fase a fase no es el mapa, son los dibujos de las "
-                 "casillas. Cada tira esta partida en ocho columnas para que "
-                 "quepa, y se lee de arriba abajo y de izquierda a derecha.",
+        h_fas="Las cinco fases, cada una con su tramo y su paleta",
+        nota_fas="El escenario de Twin Bee es una tira de 1.761 filas que las "
+                 "cinco fases recorren seguidas: cada mapa es el tramo de su "
+                 "fase, con los jefes en las filas 261, 585, 945, 1272 y 1760. "
+                 "Tres columnas, de arriba abajo y de izquierda a derecha, con "
+                 "el fondo negro de partida.",
         h_scr="Lo que el cartucho dibuja",
         cifras=[("100 %", "del binario explicado"),
                 (str(RUTINAS), "bloques de codigo medidos"),
@@ -123,12 +123,12 @@ TXT = {
         otro=("es/", "En castellano"),
         h_num="The cartridge in numbers",
         h_find="What turned up when we took it apart",
-        h_fas="The whole scenery, and its five palettes",
-        nota_fas="Twin Bee has ONE scenery: 1,761 rows, that is 73 screens, "
-                 "built out of 248 blocks of 32 tiles. What changes from "
-                 "stage to stage is not the map but the tile artwork. Each "
-                 "strip is cut into eight columns so it fits, and reads top "
-                 "to bottom, left to right.",
+        h_fas="The five stages, each with its own stretch and palette",
+        nota_fas="Twin Bee's scenery is a 1,761-row strip that the five "
+                 "stages run through back to back: each map is its stage's "
+                 "stretch, with the bosses at rows 261, 585, 945, 1272 and "
+                 "1760. Three columns, top to bottom and left to right, on "
+                 "the black background of play.",
         h_scr="What the cartridge draws",
         cifras=[("100%", "of the binary explained"),
                 (str(RUTINAS), "code blocks measured"),

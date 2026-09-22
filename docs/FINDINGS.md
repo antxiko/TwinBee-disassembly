@@ -149,9 +149,10 @@ its low nibble hits six it goes back to `0x11` -the first one again, with the
 high nibble counting laps-. Reaching stage 99 is the only way to finish Twin
 Bee.
 
-And the scenery itself is one map of 1,761 rows -73 screens- built out of 248
-blocks of 32 tiles. What changes from stage to stage is the tile artwork, not
-the map.
+And the scenery itself is one strip of 1,761 rows built out of 248 blocks of
+32 tiles, which the five stages run through back to back: the bosses arrive at
+rows 261, 585, 945, 1272 and 1760 (the table at `0x6132`), and each stage plays
+its own stretch with its own tile artwork.
 
 ## With two players, enemies take turns as well
 

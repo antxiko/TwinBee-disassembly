@@ -129,7 +129,7 @@ audio{display:block;width:100%;max-width:640px;margin:.75rem 0 1.5rem}
 <p>Read back in the emulator, <code>0xEB88</code> holds <code>00 00 00 00 01 00 00 00 02 … 04 … 08</code>. Exactly that.</p>
 <h2 id="one-scenery-ninety-nine-stages">One scenery, ninety-nine stages</h2>
 <p>There are five sceneries and ninety-nine stages. <code>(0xE07D)</code> is the number you see, in BCD, climbing one at a time to 99; <code>(0xE076)</code> is the scenery, and when its low nibble hits six it goes back to <code>0x11</code> -the first one again, with the high nibble counting laps-. Reaching stage 99 is the only way to finish Twin Bee.</p>
-<p>And the scenery itself is one map of 1,761 rows -73 screens- built out of 248 blocks of 32 tiles. What changes from stage to stage is the tile artwork, not the map.</p>
+<p>And the scenery itself is one strip of 1,761 rows built out of 248 blocks of 32 tiles, which the five stages run through back to back: the bosses arrive at rows 261, 585, 945, 1272 and 1760 (the table at <code>0x6132</code>), and each stage plays its own stretch with its own tile artwork.</p>
 <h2 id="with-two-players-enemies-take-turns-as-well">With two players, enemies take turns as well</h2>
 <p><code>elige_a_quien_apuntar</code> (<code>0xBA72</code>) flips <code>(0xE150)</code> with an <code>xor 1</code> on every call. One enemy aims at the first ship, the next one at the second. With only one player alive, they all go for that one.</p>
 <h2 id="the-second-header-and-the-mark-nemesis-looks-for">The second header, and the mark Nemesis looks for</h2>

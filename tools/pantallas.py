@@ -33,7 +33,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from descomprime import descomprime, tres_bancos                # noqa: E402
-from vdp import (PALETA, R7, NOMBRES, SPR_ATR, casilla,         # noqa: E402
+from vdp import (PALETA, R7, R7_EN_JUEGO, NOMBRES, SPR_ATR, casilla, con_borde,  # noqa: E402
                  guarda, pinta)
 
 FUENTE = 0x49D0               # -> 0x2080, casilla 0x10
@@ -146,12 +146,12 @@ def aparta_los_sprites(v):
         v[SPR_ATR + 4 * k] = 0xE0
 
 
-def hoja(v, cas0, cas1, banda=0, cols=16):
+def hoja(v, cas0, cas1, banda=0, cols=16, r7=R7):
     """Una hoja con las casillas de cas0 a cas1, para mirarlas de una vez."""
     filas = (cas1 - cas0 + cols - 1) // cols
-    px = [[PALETA[R7 & 0x0F]] * (cols * 8) for _ in range(filas * 8)]
+    px = [[PALETA[r7 & 0x0F]] * (cols * 8) for _ in range(filas * 8)]
     for i in range(cas1 - cas0):
-        d = casilla(v, cas0 + i, banda)
+        d = casilla(v, cas0 + i, banda, r7)
         oy, ox = (i // cols) * 8, (i % cols) * 8
         for y in range(8):
             px[oy + y][ox:ox + 8] = d[y]
@@ -165,21 +165,35 @@ def main():
     sal = sys.argv[3]
     os.makedirs(sal, exist_ok=True)
 
+    # Las pantallas van con el BORDE del MSX alrededor, del color que tiene el
+    # registro 7 en ese momento: azul (0xE4) en la presentacion y el titulo,
+    # negro (0xE0) en cuanto empieza la partida. Lo pidio el usuario: que se
+    # vean como en el monitor, no como un recorte.
     v = presentacion(rom, org)
-    guarda(pinta(v), os.path.join(sal, "presentacion.png"))
+    guarda(con_borde(pinta(v), R7), os.path.join(sal, "presentacion.png"))
     v = titulo(rom, org, v)
-    guarda(pinta(v), os.path.join(sal, "titulo.png"))
+    guarda(con_borde(pinta(v), R7), os.path.join(sal, "titulo.png"))
     # el rotulo solo: las tres filas de once casillas que pone 0x4BF9
     nombres = v[NOMBRES:NOMBRES + 768]
     px = pinta(v, nombres)
     guarda([f[80:168] for f in px[40:64]], os.path.join(sal, "logotipo.png"), 3)
     guarda(hoja(v, 0x10, 0x40), os.path.join(sal, "fuente.png"), 3)
 
-    codigos = mapa(rom, org)[::-1]      # de arriba abajo, como se ve
+    # La primera pantalla de cada fase NO es la de la tira: la tira lleva las
+    # cinco fases seguidas y cada una arranca donde llego el jefe anterior
+    # (mapas.tramo_de_la_fase). Antes se pintaba el arranque de la fase 1 con
+    # las casillas de las cinco; lo cazo el usuario mirando las laminas.
+    from mapas import tramo_de_la_fase
+    codigos = mapa(rom, org)            # indice 0 = la fila de abajo del arranque
     for fase in range(1, FASES + 1):
         vf = vram_de_la_fase(rom, org, fase, titulo(rom, org))
-        guarda(hoja(vf, 0x3C, 0xD2), os.path.join(sal, "casillas_fase%d.png" % fase), 3)
-        guarda(pinta_tira(rom, org, vf, codigos[-24:]),
+        # las casillas se ven JUGANDO (registro 7 a 0xE0: color 0 = negro), y
+        # la fase 5 sube hasta la 0xEA: la hoja llegaba solo a la 0xD2
+        guarda(hoja(vf, 0x3C, 0xEB, r7=R7_EN_JUEGO),
+               os.path.join(sal, "casillas_fase%d.png" % fase), 3)
+        primera, _ultima = tramo_de_la_fase(rom, org, fase)
+        pantalla = codigos[primera:primera + 24][::-1]   # de arriba abajo, como se ve
+        guarda(con_borde(pinta_tira(rom, org, vf, pantalla), R7_EN_JUEGO),
                os.path.join(sal, "pantalla_fase%d.png" % fase))
 
 

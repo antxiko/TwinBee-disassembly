@@ -63,10 +63,18 @@ nine of horizontal.
 
 ## The scenery
 
-There is only **one** scenery, and it is long: 1,761 rows, that is 73 screens
-of 24. It is built out of 248 blocks of 32 tiles, one whole screen row each,
-and the map is just the list of those blocks. What changes from stage to stage
-is not the map: it is the tile artwork.
+The scenery is **a single strip of 1,761 rows**, built out of 248 blocks of 32
+tiles —one whole screen row each—, and the five stages run through it **back
+to back**: stage 1 goes from row 0 to row 261, where its boss arrives; stage 2
+carries on from there to 585; stage 3 to 945; stage 4 to 1272, and stage 5 to
+1760, the end of the strip (the table at `0x6132`). When a boss falls, `0x613C`
+uploads the next scenery's tiles without moving the screen. What changes from
+stage to stage is the artwork; what does *not* repeat is the terrain: each
+stage has its own.
+
+And while playing, VDP register 7 holds `0xE0`: the border and every
+transparent tile are **black**, not the title's blue. The maps here are drawn
+that way, which is how they look.
 
 ![Stage 1's tile sheet](imagenes/casillas_fase1.png)
 

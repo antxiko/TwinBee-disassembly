@@ -17,6 +17,22 @@ De ahi sale la cuenta que lo cierra: entre 0x6F8F y 0x8E8F hay 0x1F00 bytes,
 que son 248 filas de 32 casillas exactas, y el codigo mas alto que usan los
 tramos es 0xF7 = 247. No sobra ni falta un byte.
 
+Y LA TIRA NO ES UNA FASE: SON LAS CINCO SEGUIDAS. La partida arranca con el
+indice (0xEBF0) en 23 (0x5D27) y el hito del jefe en 261 (0x5D37); cuando el
+indice llega al hito, 0x610E saca al jefe y toma el hito siguiente de la
+tabla de 0x6132 -261, 585, 945, 1272, 1760-, y al caer el jefe 0x613C sube
+las casillas del escenario siguiente SIN mover el indice. O sea que cada fase
+juega su tramo de la misma tira: la 1 de la fila 0 a la 261, la 2 de la 238 a
+la 585, la 3 de la 562 a la 945, la 4 de la 922 a la 1272 y la 5 de la 1249 a
+la 1760 -las 24 filas de solape son la pantalla del jefe, que se ve con los
+dos juegos de casillas-. Antes esta herramienta pintaba la tira ENTERA con
+las casillas de cada fase, y salian cinco mapas de 73 pantallas que no
+existen; lo cazo el usuario mirando las laminas.
+
+Comprobado en openMSX (tools/omsx_mapa.tcl): la lista de 0xE400 es identica a
+la que sale de aqui, byte a byte, y la tabla de nombres son los bloques de las
+filas (0xEBF0)-r en tres instantes distintos de la demostracion.
+
 Las casillas salen de 0x994A (los patrones) y 0x9F2F (el color), cada una con
 su tabla por fase. Y la fase 3 no tiene color propio: usa el de las demas
 pasado por la PERMUTA de 0x47B5, que 0x9F67 enciende con el bit 7 de C.
@@ -28,13 +44,20 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from descomprime import descomprime, tres_bancos                # noqa: E402
-from vdp import PALETA, R7, casilla, guarda                     # noqa: E402
+from vdp import PALETA, R7_EN_JUEGO, casilla, guarda            # noqa: E402
+
+# El escenario se ve JUGANDO, y jugando el registro 7 vale 0xE0: el borde y las
+# casillas de color 0 son negras, no azules como en el titulo.
+R7 = R7_EN_JUEGO
 
 GUION_DEL_MAPA = 0x6D74       # la lista de tramos, cerrada con 0xFF
 TABLA_DE_TRAMOS = 0x6E01      # 29 punteros de 16 bits
 FILAS = 0x6F8F                # 248 bloques de 32 casillas
 FIN_DE_FILAS = 0x8E8F
 FASES = 5
+ARRANQUE = 23                 # 0x5D27: la fila de arriba de la primera pantalla
+HITOS = 0x6132                # las cinco filas en las que llega cada jefe
+ALTO_DE_PANTALLA = 24
 
 # Las dos tablas por fase de 0x996E y 0x9F88: un puntero suelto y una pareja.
 PAT_SUELTO = 0x9994           # -> 0x2600
@@ -110,6 +133,21 @@ def fila(rom, org, codigo):
     return rom[a:a + 32]
 
 
+def hitos(rom, org):
+    """Las cinco filas de la tabla de 0x6132 en las que llega cada jefe."""
+    return [palabra(rom, org, HITOS + 2 * i) for i in range(FASES)]
+
+
+def tramo_de_la_fase(rom, org, fase):
+    """(primera, ultima) fila de la tira -indices de 0xE400- que se ven con
+    las casillas de la fase dada. La primera pantalla de la fase 1 va de la
+    fila 23 a la 0; las demas arrancan donde llego el jefe anterior, con su
+    pantalla de 24 filas ya puesta."""
+    h = hitos(rom, org)
+    arranque = ARRANQUE if fase == 1 else h[fase - 2]
+    return arranque - (ALTO_DE_PANTALLA - 1), h[fase - 1]
+
+
 def pinta_tira(rom, org, v, codigos, banda=None):
     """Pinta las filas que se le den, cada una con el banco que le toca en la
     pantalla. `banda` fija el banco; sin ella se usa el de la posicion."""
@@ -119,7 +157,7 @@ def pinta_tira(rom, org, v, codigos, banda=None):
         n = fila(rom, org, cod)
         b = banda if banda is not None else (f // 8) % 3
         for c in range(32):
-            d = casilla(v, n[c], b)
+            d = casilla(v, n[c], b, R7)
             for y in range(8):
                 px[f * 8 + y][c * 8:c * 8 + 8] = d[y]
     return px
@@ -149,13 +187,17 @@ def main():
     sal = sys.argv[3]
     os.makedirs(sal, exist_ok=True)
     from pantallas import titulo
-    codigos = mapa(rom, org)[::-1]          # de arriba abajo, como se ve
-    print("  el mapa son %d filas, %d pantallas de 24" %
-          (len(codigos), len(codigos) // 24))
+    codigos = mapa(rom, org)                # indice 0 = la fila de abajo del arranque
+    print("  la tira son %d filas, %d pantallas de 24, con los jefes en las filas %s" %
+          (len(codigos), len(codigos) // 24, hitos(rom, org)))
     base = titulo(rom, org)
     for fase in range(1, FASES + 1):
+        primera, ultima = tramo_de_la_fase(rom, org, fase)
+        tramo = codigos[primera:ultima + 1][::-1]   # de arriba abajo, como se ve
+        print("  fase %d: filas %d..%d, %d filas, %.1f pantallas" %
+              (fase, primera, ultima, len(tramo), len(tramo) / ALTO_DE_PANTALLA))
         v = vram_de_la_fase(rom, org, fase, base)
-        guarda(en_columnas(rom, org, v, codigos),
+        guarda(en_columnas(rom, org, v, tramo, columnas=3),
                os.path.join(sal, "mapa_fase%d.png" % fase), 1)
 
 

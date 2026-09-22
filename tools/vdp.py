@@ -28,6 +28,12 @@ COLOR = 0x0000
 SPR_PAT = 0x1800
 SPR_ATR = 0x3B00
 R7 = 0xE4
+# Y EL 0xE4 SOLO VALE PARA EL TITULO. En cuanto empieza la partida, 0x47F9
+# (fondo_negro) escribe 0xE0 en el registro 7: el borde y toda casilla de color
+# 0 -transparente- pasan a NEGRO. Medido en openMSX con `debug read {VDP regs}
+# 7`: E4 en el titulo, E0 en la demostracion y en el juego. Los renders del
+# escenario pintaban esas casillas azules; lo cazo el usuario.
+R7_EN_JUEGO = 0xE0
 
 # La paleta del TMS9918, en el orden de los codigos del VDP.
 PALETA = [(0, 0, 0), (0, 0, 0), (33, 200, 66), (94, 220, 120),
@@ -66,32 +72,49 @@ def guarda(lienzo, fn, esc=2):
     print("  %s  %d x %d" % (fn, len(lienzo[0]) * esc, len(lienzo) * esc))
 
 
-def casilla(v, n, banda):
-    """Los 8x8 pixeles de la casilla n en el tercio de pantalla que se pida."""
+def casilla(v, n, banda, r7=R7):
+    """Los 8x8 pixeles de la casilla n en el tercio de pantalla que se pida.
+    `r7` es el registro 7 vigente: su nibble bajo es lo que se ve donde el
+    color es 0 (el titulo va con 0xE4, la partida con R7_EN_JUEGO)."""
     p = PATRONES + banda * 0x800 + n * 8
     c = COLOR + banda * 0x800 + n * 8
     out = []
     for f in range(8):
         forma, col = v[p + f], v[c + f]
-        tinta = PALETA[col >> 4] if col >> 4 else PALETA[R7 & 0x0F]
-        papel = PALETA[col & 0x0F] if col & 0x0F else PALETA[R7 & 0x0F]
+        tinta = PALETA[col >> 4] if col >> 4 else PALETA[r7 & 0x0F]
+        papel = PALETA[col & 0x0F] if col & 0x0F else PALETA[r7 & 0x0F]
         out.append([tinta if forma & (0x80 >> b) else papel for b in range(8)])
     return out
 
 
-def pinta(v, nombres=None):
+def pinta(v, nombres=None, r7=R7):
     """Los 256x192 pixeles del fondo: 24 filas de 32 casillas, cada tercio con
     su banco. Sin `nombres`, se usa la tabla que hay en la VRAM."""
     if nombres is None:
         nombres = v[NOMBRES:NOMBRES + 768]
-    fondo = PALETA[R7 & 0x0F]
+    fondo = PALETA[r7 & 0x0F]
     px = [[fondo] * 256 for _ in range(192)]
     for f in range(24):
         for c in range(32):
-            d = casilla(v, nombres[f * 32 + c], f // 8)
+            d = casilla(v, nombres[f * 32 + c], f // 8, r7)
             for y in range(8):
                 px[f * 8 + y][c * 8:c * 8 + 8] = d[y]
     return px
+
+
+def con_borde(px, r7, lados=32, arriba=24):
+    """La pantalla con el BORDE del MSX alrededor, del color que diga el
+    registro 7 -negro jugando, azul en el titulo-: 256x192 pasan a 320x240,
+    que son las proporciones con las que se ve en un monitor y las de las
+    fotos de openMSX (640x480 a doble tamano)."""
+    fondo = PALETA[r7 & 0x0F]
+    ancho = len(px[0]) + 2 * lados
+    fila_vacia = [fondo] * ancho
+    out = [list(fila_vacia) for _ in range(arriba)]
+    for f in px:
+        out.append([fondo] * lados + list(f) + [fondo] * lados)
+    out += [list(fila_vacia) for _ in range(arriba)]
+    return out
 
 
 def sprite(v, patron, color, base=SPR_PAT):

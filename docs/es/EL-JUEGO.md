@@ -62,10 +62,18 @@ tabla de 81 valores, nueve pasos de distancia vertical por nueve de horizontal.
 
 ## El escenario
 
-Escenario hay **uno**, y es largo: 1.761 filas, o sea 73 pantallas de 24. Se
-monta con 248 bloques de 32 casillas -una fila entera de pantalla cada uno- y
-el mapa no es mas que la lista de esos bloques. Lo que cambia de fase a fase no
-es el mapa: son los dibujos de las casillas.
+El escenario es **una sola tira de 1.761 filas** montada con 248 bloques de 32
+casillas -una fila entera de pantalla cada uno-, y las cinco fases la recorren
+**seguidas**: la fase 1 va de la fila 0 a la 261, donde llega su jefe; la 2
+sigue de ahi a la 585; la 3 a la 945; la 4 a la 1272 y la 5 hasta la 1760, el
+final de la tira (tabla de `0x6132`). Cuando cae un jefe, `0x613C` sube las
+casillas del escenario siguiente sin mover la pantalla. Lo que cambia de fase a
+fase son los dibujos; lo que NO se repite es el terreno: cada fase tiene el
+suyo.
+
+Y jugando, el registro 7 del VDP vale `0xE0`: el borde y las casillas
+transparentes son **negros**, no el azul del titulo. Los mapas de aqui van
+pintados asi, que es como se ven.
 
 ![La hoja de casillas de la fase 1](../imagenes/casillas_fase1.png)
 
