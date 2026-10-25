@@ -155,3 +155,30 @@ note length, a 1 sets the PSG envelope, and anything else is a **note** -volume
 in the high nibble, octave in the low one, with the note code in the byte after
 it-. The periods come from twelve semitones at `0x510E`, and the octaves are
 made by doubling with `add hl,hl`.
+
+## Code shared with other Konami cartridges
+
+This disassembly has been compared, instruction by instruction, with
+every other Konami one in the series. A block counts when the same
+instructions, at least six of them from a label to its `ret` or its
+unconditional jump, are in both cartridges; the addresses are left
+aside, because they change from one cartridge to the next. Of the
+other 57, **39** have at least one block in common with this one;
+these are the ones that share the most:
+
+| Cartridge | Blocks | Instructions | For example (here = there) |
+|---|---:|---:|---|
+| [Penguin Adventure](https://antxiko.github.io/PenguinAdventure-disassembly/) | 24 | 279 | `pon_el_mezclador` (0x4E0F) = `pon_la_mezcla` |
+| [Nemesis / Gradius](https://antxiko.github.io/Nemesis-disassembly/) | 18 | 188 | `pon_el_mezclador` (0x4E0F) = `pon_la_mezcla` |
+| [Knightmare](https://antxiko.github.io/Knightmare-disassembly/) | 16 | 165 | `cada_cuadro` (0x402E) |
+| [Konami’s Soccer](https://antxiko.github.io/KonamisSoccer-disassembly/) | 14 | 135 | `parpadea_la_eleccion` (0x4C11) = `parpadea_el_cursor_del_menu` |
+| [Yie Ar Kung-Fu II](https://antxiko.github.io/YieArKungFu2-disassembly/) | 14 | 122 | `baja_un_paso` (0x4B0A) |
+| [Hyper Sports 3](https://antxiko.github.io/HyperSports3-disassembly/) | 12 | 127 | `cada_cuadro` (0x402E) = `manejador_de_interrupcion` |
+| [The Goonies](https://antxiko.github.io/Goonies-disassembly/) | 11 | 97 | `baja_un_paso` (0x4B0A) |
+| [Konami's Ping Pong](https://antxiko.github.io/KonamisPingPong-disassembly/) | 11 | 98 | `baja_un_paso` (0x4B0A) = `sube_el_rotulo` |
+| [Q*bert](https://antxiko.github.io/Qbert-disassembly/) | 11 | 114 | `pon_el_mezclador` (0x4E0F) |
+| [Road Fighter](https://antxiko.github.io/RoadFighter-disassembly/) | 10 | 98 | `parpadea_la_eleccion` (0x4C11) |
+
+The whole matrix, the 58 cartridges against each other, is on
+[The routines](https://antxiko.github.io/MSX-disassembly-database/THE-ROUTINES.html) in the series database, along
+with the method and the program that measures it.

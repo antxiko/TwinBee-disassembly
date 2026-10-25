@@ -152,3 +152,30 @@ duracion, uno de nibble alto 1 pone la envolvente del PSG, y cualquier otro es
 una **nota** -volumen en el nibble alto, octava en el bajo, con el codigo de
 nota en el byte siguiente-. Los periodos salen de doce semitonos en `0x510E`, y
 las octavas se hacen doblando con `add hl,hl`.
+
+## Código compartido con otros cartuchos de Konami
+
+Este desensamblado se ha comparado, instrucción por instrucción, con
+todos los demás de Konami de la serie. Cuenta un bloque cuando las
+mismas instrucciones, al menos seis desde una etiqueta hasta su `ret`
+o su salto sin condición, están en los dos cartuchos; las direcciones
+no se miran, porque cambian de un cartucho a otro. De los otros 57,
+**39** tienen al menos un bloque en común con este; estos son los
+que más comparten:
+
+| Cartucho | Bloques | Instrucciones | Por ejemplo (aquí = allí) |
+|---|---:|---:|---|
+| [Penguin Adventure](https://antxiko.github.io/PenguinAdventure-disassembly/es/) | 24 | 279 | `pon_el_mezclador` (0x4E0F) = `pon_la_mezcla` |
+| [Nemesis / Gradius](https://antxiko.github.io/Nemesis-disassembly/es/) | 18 | 188 | `pon_el_mezclador` (0x4E0F) = `pon_la_mezcla` |
+| [Knightmare](https://antxiko.github.io/Knightmare-disassembly/es/) | 16 | 165 | `cada_cuadro` (0x402E) |
+| [Konami’s Soccer](https://antxiko.github.io/KonamisSoccer-disassembly/es/) | 14 | 135 | `parpadea_la_eleccion` (0x4C11) = `parpadea_el_cursor_del_menu` |
+| [Yie Ar Kung-Fu II](https://antxiko.github.io/YieArKungFu2-disassembly/es/) | 14 | 122 | `baja_un_paso` (0x4B0A) |
+| [Hyper Sports 3](https://antxiko.github.io/HyperSports3-disassembly/es/) | 12 | 127 | `cada_cuadro` (0x402E) = `manejador_de_interrupcion` |
+| [The Goonies](https://antxiko.github.io/Goonies-disassembly/es/) | 11 | 97 | `baja_un_paso` (0x4B0A) |
+| [Konami's Ping Pong](https://antxiko.github.io/KonamisPingPong-disassembly/es/) | 11 | 98 | `baja_un_paso` (0x4B0A) = `sube_el_rotulo` |
+| [Q*bert](https://antxiko.github.io/Qbert-disassembly/es/) | 11 | 114 | `pon_el_mezclador` (0x4E0F) |
+| [Road Fighter](https://antxiko.github.io/RoadFighter-disassembly/es/) | 10 | 98 | `parpadea_la_eleccion` (0x4C11) |
+
+La matriz entera, los 58 cartuchos entre sí, está en
+[Las rutinas](https://antxiko.github.io/MSX-disassembly-database/es/LAS-RUTINAS.html) de la base de datos de la
+serie, con el método y el programa que la mide.
